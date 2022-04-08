@@ -127,7 +127,12 @@ var config_profile_image_effect_intensity = 0.4
 // "circle" = CIRCLE BACKGORUND
 // "lines" = LINES BACKGORUND
 
-var option_hero_background_mode = 'circle'
+var array_background_mode = ['twisted', 'color', 'square', 'asteroids', 'circle', 'lines']
+array_background_mode.random = function () {
+	return this[Math.floor(Math.random() * this.length)]
+}
+
+var option_hero_background_mode = array_background_mode.random()
 
 // BACKGROUND MODE MOBILE [ SEE OPTIONS BELOW ]
 
