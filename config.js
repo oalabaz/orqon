@@ -127,7 +127,7 @@ var config_profile_image_effect_intensity = 0.4
 // "circle" = CIRCLE BACKGORUND
 // "lines" = LINES BACKGORUND
 
-var option_hero_background_mode = 'square'
+var option_hero_background_mode = 'circle'
 
 // BACKGROUND MODE MOBILE [ SEE OPTIONS BELOW ]
 
