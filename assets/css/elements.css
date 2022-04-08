@@ -1,0 +1,1047 @@
+
+/******************************************************************
+	
+	
+	@ Item          REFRAME - Personal One Page HTML Template
+	@ Version       1.0
+	@ Author		Avanzare
+	@ Website		http://themeforest.net/user/avanzare 
+	
+
+ ******************************************************************
+
+
+	-----------------------------
+	----- TABLE OF CONTENTS -----
+	-----------------------------
+	
+	--  1. Icon Button
+	--  2. Accordion / Pricing Accordion
+	--  3. Seperator Line
+	--  4. Customer Grid
+    --  5. Skill Bar
+    --  6. Number Item
+    --  7. Resume
+    --  8. Pricing Item
+    --  9. Testimonial Carousel
+    --  10. Work Grid
+    --  11. Skill Tags
+	--  12. Pills
+	--  13. Quote
+	--  14. Image Carousel
+    --  15. Card
+    --  16. Card Grid
+    --  17. Tabs
+    --  18. Audio Player
+    --  19. Video Player
+    --  20. Icon Wrapper
+ 
+ 
+ ******************************************************************/
+
+
+
+/** 1. Icon Button
+*******************************************************************/
+
+.icon-button
+{
+    border: 0.1rem solid #fff;
+    font-size: 1.6rem;
+    color: #fff;
+    line-height: 6rem;
+    position: relative;
+    cursor: pointer;
+    text-align: center;
+    line-height: calc(5.6rem + 2px);
+    border-radius: 100%;
+    display: inline-block;
+    width: 5.6rem;
+    overflow: hidden;
+    height: 5.6rem;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none; 
+    -webkit-user-select: none; 
+        -moz-user-select: none; 
+        -ms-user-select: none; 
+            user-select: none; 
+}
+
+.icon-button.icon-button-filled
+{
+    border: 0;
+    height: 6rem;
+    width: 6rem;
+    line-height: 6rem;
+    background: #181818;
+}
+
+.icon-button span
+{
+    color: inherit;
+    font-size: inherit;
+    position: absolute;
+    width: inherit;
+    height: inherit;
+    line-height: inherit;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+
+
+/** 2. Accordion / Pricing Accordion
+*******************************************************************/
+
+.accordion 
+{
+    position: relative;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    margin-top: 10px;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none; 
+}
+
+.accordion .acc_section 
+{
+    position: relative;
+    z-index: 10;
+    overflow: hidden;
+    padding-bottom: 2rem;
+}
+
+.accordion .acc_section .acc_head 
+{
+    position: relative;
+    padding: 2.2rem 5rem 2.2rem 0;
+    display: block;
+    cursor: pointer;
+    border-bottom: 0.1rem solid #fff;
+}
+
+.accordion.pricing-accordion .acc_section .acc_head 
+{
+    border-bottom: 0;
+    padding: 0;
+}
+
+.accordion .acc_section .acc_head .icon
+{
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    width: 1.4rem;
+    height: 1.4rem;
+    -webkit-transform: translateY(-50%) rotate(-45deg);
+        -ms-transform: translateY(-50%) rotate(-45deg);
+            transform: translateY(-50%) rotate(-45deg);
+    border-left: 0.1rem solid #fff;
+    border-bottom: 0.1rem solid #fff;
+    -webkit-transition: .1s ease;
+    -o-transition: .1s ease;
+    transition: .1s ease;
+}
+
+.accordion.pricing-accordion .acc_section .acc_head .icon
+{
+    right: 0;
+}
+
+.accordion .acc_section.acc_active .acc_head .icon
+{
+    -webkit-transform: translateY(-50%) rotate(-225deg);
+        -ms-transform: translateY(-50%) rotate(-225deg);
+            transform: translateY(-50%) rotate(-225deg);
+}
+
+.accordion .acc_section .acc_content 
+{
+    padding: 3rem 0rem 1rem 0rem;
+}
+
+.accordion.pricing-accordion .acc_section .acc_content 
+{
+    padding: 0;
+}
+
+.accordion .acc_section.acc_active > .acc_content 
+{
+    display: block;
+}
+
+
+
+/** 3. Seperator Line
+*******************************************************************/
+
+.seperator-line
+{
+    width: 4rem;
+    height: 0.1rem;
+    background: #fff;
+}
+
+
+
+/** 4. Customer Grid
+*******************************************************************/
+
+.customer-grid
+{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+}
+
+.customer-grid .item
+{
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 33.333333%;
+            flex: 0 0 33.333333%;
+    opacity: .8;
+}
+
+.customer-grid .item img
+{
+    max-width: 65%;
+}
+
+
+
+/** 5. Skill Bar
+*******************************************************************/
+
+.skill-bar .head
+{
+    padding: 2rem 0;
+}
+
+.skill-bar .bar
+{
+    background: rgba(255, 255, 255, 0.2);
+    height: 0.1rem;
+    width: 100%;
+    display: block;
+    position: relative;
+}
+
+.skill-bar .bar .fill
+{
+    position: absolute;
+    background: #fff;
+    height: 100%;
+    top: 0;
+    left: 0;
+}
+
+.skill-bar .bar .number-tag
+{
+    position: absolute;
+    background: #181818;
+    color: #fff;
+    padding: 0.3rem 1.2rem;
+    top: 0;
+    -webkit-transform: translateX(-50%) translateY(-136%);
+        -ms-transform: translateX(-50%) translateY(-136%);
+            transform: translateX(-50%) translateY(-136%);
+}
+
+.skill-bar .bar .number-tag:after
+{
+    content: "";
+    position: absolute;
+    background: #181818;
+    color: #fff;
+    width: 0.9rem;
+    height: 0.9rem;
+    bottom: -0.45rem;
+    z-index: -2;
+    left: 50%;
+    -webkit-transform: translateX(-50%)rotate(45deg);
+        -ms-transform: translateX(-50%)rotate(45deg);
+            transform: translateX(-50%)rotate(45deg);
+}
+
+.skill-bar .bar .number-tag p
+{
+    color: #fff;
+    font-weight: 300;
+}
+
+
+
+/** 6. Number Item
+*******************************************************************/
+
+.number-item
+{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+            flex-direction: row;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+    -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+            justify-content: space-between;
+}
+
+.number-item .text
+{
+    width: 75%;
+}
+
+.number-item .info
+{
+    width: 25%;
+}
+
+
+
+/** 7. Resume
+*******************************************************************/
+
+.resume
+{
+    border-left: 0.1rem solid rgba(255, 255, 255, 0.2);
+}
+
+.resume .item
+{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+            flex-direction: column;
+    margin-left: 5rem;
+    position: relative;
+    padding: 7rem 9rem;
+    background: #181818;
+}
+
+.resume .item:after
+{
+    content: "";
+    position: absolute;
+    left: -5rem;
+    top: 20%;
+    z-index: 11;
+    -webkit-transform: translate(-100%,-50%);
+        -ms-transform: translate(-100%,-50%);
+            transform: translate(-100%,-50%);
+    width: 1px;
+    height: 40px;
+    background: #fff;
+}
+
+.resume .item:before
+{
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 20%;
+    z-index: 11;
+    -webkit-transform: translate(-50%,-50%) rotate(45deg);
+        -ms-transform: translate(-50%,-50%) rotate(45deg);
+            transform: translate(-50%,-50%) rotate(45deg);
+    -webkit-transform-origin: center center;
+        -ms-transform-origin: center center;
+            transform-origin: center center;
+    width: 3.6rem;
+    height: 3.6rem;
+    background: inherit;
+}
+
+
+
+/** 8. Pricing Item
+*******************************************************************/
+
+.pricing-item
+{
+    padding: 5rem 7rem !important;
+}
+
+.pricing-item .price
+{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+            flex-direction: row;
+    -ms-flex-line-pack: center;
+        align-content: center;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+}
+
+.pricing-item .features
+{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+            flex-direction: row;
+    -webkit-box-pack: start;
+        -ms-flex-pack: start;
+            justify-content: flex-start;
+}
+
+.pricing-item .features .feature-item
+{
+    display: inline-block;
+    vertical-align: middle;
+    margin-top: 2rem;
+    margin-right: 2.6rem;
+}
+
+.pricing-item .features .feature-item span
+{
+    display: inline-block;
+    vertical-align: middle;
+    color: #7c7c7c;
+    font-size: 2rem;
+    margin-right: 1rem;
+}
+
+.pricing-item .features .feature-item p
+{
+    display: inline-block;
+    vertical-align: middle;
+}
+
+
+
+/** 9. Testimonial Carousel
+*******************************************************************/
+
+.testimonial-carousel .slick-list 
+{
+    padding: 0 !important;
+}
+
+.testimonial-carousel .item .name,
+.testimonial-carousel .item .role
+{
+    line-height: 1.2em;
+}
+
+.testimonial-carousel .arrow-prev
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 4;
+    -webkit-transform: translate(-50%,-50%);
+        -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+    -webkit-transition: .3s ease;
+    -o-transition: .3s ease;
+    transition: .3s ease;
+}
+
+.testimonial-carousel .arrow-next
+{
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 4;
+    -webkit-transform: translate(50%,50%);
+        -ms-transform: translate(50%,50%);
+            transform: translate(50%,50%);
+    -webkit-transition: .3s ease;
+    -o-transition: .3s ease;
+    transition: .3s ease;
+}
+
+.testimonial-carousel .slick-arrow.slick-disabled
+{
+    opacity: 0;
+}
+
+
+
+/** 10. Work Grid
+*******************************************************************/
+
+.work-grid .item
+{
+    position: relative;
+    padding-bottom: 46%;
+    display: block;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none; 
+}
+
+.work-grid a.item:after 
+{
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: -o-linear-gradient(bottom, rgba(0,0,0,0.5), 40%, rgba(0,0,0,0));
+    background: -webkit-gradient(linear, left bottom, left top, from(rgba(0,0,0,0.5)), color-stop(40%), to(rgba(0,0,0,0)));
+    background: linear-gradient(to top, rgba(0,0,0,0.5), 40%, rgba(0,0,0,0));
+    z-index: -1;
+}
+
+.work-grid .item .cover
+{
+    background-size: cover;
+    background-repeat: no-repeat;
+    position: absolute;
+    background-position: center;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+}
+
+.work-grid .item .info
+{
+    position: absolute;
+    left: 5rem;
+    bottom: 4rem;
+    z-index: 2;
+    overflow: hidden;
+}
+
+.work-grid .item .icon-button
+{
+    position: absolute;
+    right: 5rem;
+    bottom: 3rem;
+    z-index: 2;
+    opacity: 0;
+    -webkit-transition: .25s;
+    -o-transition: .25s;
+    transition: .25s;
+}
+
+.work-grid .item:hover .icon-button
+{
+    opacity: 1;
+    -webkit-transition: .3s ease-out .1s;
+    -o-transition: .3s ease-out .1s;
+    transition: .3s ease-out .1s;
+}
+
+.work-grid .item .info-box
+{
+    display: none;
+}
+
+
+
+/** 11. Skill Tags
+*******************************************************************/
+
+.skill-tags
+{
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+}
+
+.skill-tags li
+{
+    padding: 1.4rem 2.3rem;
+    margin: 1.2rem;
+    font-weight: 300;
+    border-radius: 100px;
+    background: #181818;
+    
+    font-size: 2.1rem;
+    line-height: 1.48em;
+    letter-spacing: 0;
+    font-weight: 400;
+}
+
+
+
+/** 12. Pills
+*******************************************************************/
+
+.pills
+{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+    gap: 2.5rem;
+}
+
+.pill
+{
+    border: 0.1rem solid rgba(255, 255, 255, 0.2);
+    padding: 0 3rem;
+    height: 7.2rem;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+        -ms-flex-pack: center;
+            justify-content: center;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+    border-radius: 200px;
+}
+
+.pill.pill-filled
+{
+    border: none;
+    background: #181818;
+}
+
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+
+    .pill
+    {
+        margin-right: 2.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+}
+
+
+
+/** 13. Quote
+*******************************************************************/
+
+.quote
+{
+    position: relative;
+    padding: 6rem 8rem;
+    background: #181818;
+}
+
+
+
+/** 14. Image Carousel
+*******************************************************************/
+
+.image-carousel
+{
+    height: 30vh;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none; 
+}
+
+.image-carousel .slick-list 
+{
+    padding: 0 !important;
+    height: inherit;
+}
+
+.image-carousel .slick-track
+{
+    height: inherit;
+}
+
+.image-carousel .item
+{
+    height: inherit;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.image-carousel .arrow-prev
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 4;
+    -webkit-transform: translate(-50%,-50%);
+        -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+}
+
+.image-carousel .arrow-next
+{
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    z-index: 4;
+    -webkit-transform: translate(50%,50%);
+        -ms-transform: translate(50%,50%);
+            transform: translate(50%,50%);
+}
+
+.image-carousel .slick-arrow.slick-disabled
+{
+    opacity: 0;
+}
+
+
+
+/** 15. Card
+*******************************************************************/
+
+.card
+{
+    width: 100%;
+    display: inline-block;
+    position: relative;
+    background: #181818;
+}
+
+.card .inner
+{
+    display: block;
+    position: relative;
+    padding: 8rem;
+}
+
+
+
+/** 16. Card Grid
+*******************************************************************/
+
+.card-grid
+{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+}
+
+.card-grid .left-side,
+.card-grid .right-side
+{
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 50%;
+            flex: 0 0 50%;
+}
+
+.card-grid .item
+{
+    padding-bottom: 100%;
+    background: #111;
+    position: relative;
+}
+
+.card-grid .item .item-container
+{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    -webkit-transform: translate(-50%,-50%);
+        -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+}
+
+
+
+/** 17. Tabs
+*******************************************************************/
+
+.tabs ul
+{
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none; 
+    list-style: none;
+    padding: 0;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+    margin: 0;
+    gap: 4rem;
+    border-bottom: 0.1rem solid rgba(255, 255, 255, 0.2);
+}
+
+.tabs ul li
+{
+    padding: 0 0 2.2rem;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+    -webkit-box-pack: center;
+        -ms-flex-pack: center;
+            justify-content: center;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+    -webkit-transition: .15s;
+    -o-transition: .15s;
+    transition: .15s;
+    border-bottom: 0.1rem solid rgba(255, 255, 255, 0);
+}
+
+.tabs ul li.active,
+.tabs ul li:hover
+{
+    border-bottom: 0.1rem solid #fff;
+}
+
+.tabs ul li p
+{
+    -webkit-transition: .15s;
+    -o-transition: .15s;
+    transition: .15s;
+}
+
+.tabs ul li.active p,
+.tabs ul li:hover p
+{
+    color: #fff;
+}
+
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+
+    .tabs ul li
+    {
+        margin-right: 4rem;
+    }
+
+}
+
+
+
+/** 18. Audio Player
+*******************************************************************/
+
+.audio-player
+{
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none; 
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+            justify-content: space-between;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+}
+
+.audio-player audio
+{
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.audio-player .toggle-btn
+{
+    font-size: 1.6rem;
+    color: #fff;
+}
+
+.audio-player .progress-bar
+{
+    height: 0.1rem;
+    width: calc(100% - 7.6rem);
+    position: relative;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.audio-player .progress-bar:after
+{
+    height: 5rem;
+    content: "";
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+        -ms-transform: translateY(-50%);
+            transform: translateY(-50%);
+}
+
+.audio-player .progress-bar .fill
+{
+    width: 0%;
+    will-change: width;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: rgba(255, 255, 255, 1);
+}
+
+
+
+/** 19. Video Player
+*******************************************************************/
+
+.video-player
+{
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none; 
+}
+
+.video-player .toggle-btn
+{
+    position: absolute;
+    left: 50%;
+    cursor: pointer;
+    top: 50%;
+    z-index: 10;
+    -webkit-transform: translate(-50%,-50%);
+        -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+
+    font-size: 2.1rem;
+    color: #fff;
+    will-change: opacity;
+    -webkit-transition: .2s ease;
+    -o-transition: .2s ease;
+    transition: .2s ease;
+}
+
+.video-player.hide-ui .toggle-btn
+{
+    opacity: 0;
+    pointer-events: none;
+}
+
+.video-player .fullscreen-btn
+{
+    position: absolute;
+    right: 2rem;
+    top: 2rem;
+    z-index: 10;
+    cursor: pointer;
+
+    font-size: 1.8rem;
+    color: #fff;
+    will-change: opacity;
+    -webkit-transition: .2s ease;
+    -o-transition: .2s ease;
+    transition: .2s ease;
+}
+
+.video-player.hide-ui .fullscreen-btn
+{
+    opacity: 0;
+    pointer-events: none;
+}
+
+.video-player .progress-bar
+{
+
+    height: 0.1rem;
+    width: 100%;
+    position: absolute;
+    cursor: pointer;
+    left: 0;
+    z-index: 10;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.2);
+    will-change: opacity;
+    -webkit-transition: .2s ease;
+    -o-transition: .2s ease;
+    transition: .2s ease;
+}
+
+.video-player.hide-ui .progress-bar
+{
+    opacity: 0;
+    pointer-events: none;
+}
+
+.video-player .progress-bar:after
+{
+    height: 5rem;
+    content: "";
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+        -ms-transform: translateY(-50%);
+            transform: translateY(-50%);
+}
+
+.video-player .progress-bar .fill
+{
+    width: 0%;
+    will-change: width;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: rgba(255, 255, 255, 1);
+}
+
+
+
+/** 3. ICON WRAPPER
+*******************************************************************/
+
+.icon-wrapper
+{
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+    gap: 5rem;
+}
+
+.icon-wrapper .icongrid
+{
+    font-size: 3.5rem;
+    color: #7c7c7c;
+}
+
+.icon-wrapper .icongrid span
+{
+    font-size: 4.5rem;
+    margin-right: 1.2rem;
+}
+
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+
+    .icon-wrapper .icongrid
+    {
+        margin-right: 5rem;
+        margin-bottom: 5rem;
+    }
+
+}
