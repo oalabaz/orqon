@@ -113,7 +113,7 @@ var config_profile_image_effect = 'cult'
 var config_profile_image_effect_url = 'assets/images/effect_maps/custom.jpg'
 
 // PROFILE PICTURE HOVER EFFECT MAP INTENSITY
-var config_profile_image_effect_intensity = 0.3
+var config_profile_image_effect_intensity = 0.4
 
 /** 4. BACKGROUND CONFIG
  *******************************************************************/
@@ -127,7 +127,7 @@ var config_profile_image_effect_intensity = 0.3
 // "circle" = CIRCLE BACKGORUND
 // "lines" = LINES BACKGORUND
 
-var option_hero_background_mode = 'asteroids'
+var option_hero_background_mode = 'square'
 
 // BACKGROUND MODE MOBILE [ SEE OPTIONS BELOW ]
 
