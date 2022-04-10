@@ -127,7 +127,7 @@ var config_profile_image_effect_intensity = 0.4
 // "circle" = CIRCLE BACKGORUND
 // "lines" = LINES BACKGORUND
 
-var array_background_mode = ['twisted', 'color', 'square', 'asteroids', 'circle', 'lines']
+var array_background_mode = ['twisted', 'square', 'asteroids', 'circle']
 array_background_mode.random = function () {
 	return this[Math.floor(Math.random() * this.length)]
 }
