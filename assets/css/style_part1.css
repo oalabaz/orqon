@@ -1,0 +1,753 @@
+/******************************************************************
+ 
+
+	-----------------------------
+	----- TABLE OF CONTENTS -----
+	-----------------------------
+	
+	--  1. Typography
+    --  2. Basics
+	--  3. Forms
+	--  4. Loading Screen
+	--  5. UI Components
+	--  6. Menu
+	--  7. Ultility
+	--  8. Skeleton Components
+    --  9. Background Components
+    --  10. Plugins
+ 
+ 
+ ******************************************************************/
+
+/** 1. TYPOGRAPHY
+*******************************************************************/
+
+html {
+    font-size: 10px;
+    font-size: calc(100vw / 192);
+}
+
+@media (max-width: 800px) {
+    html {
+        font-size: 8px;
+    }
+}
+
+@media (max-width: 500px) {
+    html {
+        font-size: 6px;
+    }
+}
+
+body {
+    font-size: 1.4rem;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 300;
+
+    color: #fff;
+    background: #212121;
+
+    -webkit-font-smoothing: antialiased;
+}
+
+body.cursor-hidden::-webkit-scrollbar,
+html::-webkit-scrollbar {
+    display: none;
+}
+
+body.cursor-hidden,
+html {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    letter-spacing: -0.005em;
+    line-height: 1.1em;
+    margin-top: 0em;
+    margin-bottom: 0;
+    font-weight: 300;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+h1 {
+    font-size: 10rem;
+    line-height: 1em;
+    font-weight: 200;
+}
+
+h2 {
+    font-size: 6.5rem;
+    font-weight: 200;
+}
+
+h3 {
+    font-size: 5rem;
+}
+
+h4 {
+    font-size: 4rem;
+}
+
+h5 {
+    font-size: 3.4rem;
+    line-height: 1.18em;
+}
+
+h6 {
+    font-size: 3rem;
+    font-weight: 500;
+}
+
+p {
+    font-size: 3.4rem;
+    line-height: 1.4em;
+    letter-spacing: -0.005em;
+    font-weight: 300;
+    margin-top: 0;
+    margin-bottom: 0rem;
+    color: #7c7c7c;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+p.small {
+    font-size: 2.1rem;
+    line-height: 1.48em;
+    letter-spacing: 0;
+    font-weight: 400;
+}
+
+p.tag {
+    font-size: 1.3rem;
+    letter-spacing: 0.14em;
+    font-weight: 700;
+    color: #fff;
+}
+
+a,
+a:hover,
+a:focus {
+    cursor: pointer;
+    -webkit-transition: all 150ms ease;
+    -o-transition: all 150ms ease;
+    transition: all 150ms ease;
+    text-decoration: none;
+    outline: none !important;
+    outline-color: unset !important;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    color: #fff;
+}
+
+span {
+    color: #7c7c7c;
+}
+
+::-moz-selection {
+    background: none;
+    color: #fdc60c;
+}
+
+::selection {
+    background: none;
+    color: #fdc60c;
+}
+
+::-moz-selection {
+    background: none;
+    color: #fdc60c;
+}
+
+/** 2. Basics
+*****************************************************************/
+
+img,
+svg {
+    vertical-align: middle;
+}
+
+button {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    background: none;
+    border: none;
+    color: #fff;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    cursor: pointer;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    font-size: 3.4rem;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    line-height: 1.4em;
+    font-weight: 300;
+    letter-spacing: -0.005em;
+    font-family: inherit;
+    padding: 0;
+    margin: 0;
+    height: 8.7rem;
+}
+
+button.button-filled {
+    background: #161616;
+    padding: 0 4.5rem;
+    border-radius: 200px;
+}
+
+button.button-border {
+    border: 0.1rem solid #fff;
+    border-radius: 200px;
+    padding: 0 4.5rem;
+}
+
+button.button-filled span.icon,
+button.button-border span.icon {
+    font-size: 2.1rem;
+    color: #fff;
+}
+
+button .button-text {
+    font-size: 3.4rem;
+    color: #fff;
+}
+
+ul.default-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+ul.default-list li {
+    font-size: 2.1rem;
+    line-height: 6.5rem;
+}
+
+ul.icon-list span,
+ul.icon-list p {
+    display: inline-block;
+}
+
+ul.icon-list span {
+    margin-right: 1.8rem;
+}
+
+ul.icon-list.icon-filled span {
+    background: #181818;
+    width: 5rem;
+    height: 5rem;
+    border-radius: 100%;
+    text-align: center;
+    line-height: 5rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table tr {
+    position: relative;
+}
+
+table th {
+    text-align: left;
+    margin-bottom: 1rem;
+}
+
+table tbody tr {
+    border-bottom: 0.1rem solid rgba(255, 255, 255, 0.2);
+}
+
+table tbody td {
+    padding: 4rem 0 2.2rem;
+    position: relative;
+}
+
+table tbody tr:first-child td {
+    padding-top: 3rem;
+}
+
+html.no-cursor {
+    cursor: none !important;
+}
+
+html.no-cursor *:hover {
+    cursor: none !important;
+}
+
+.embed-wrapper {
+    position: relative;
+    float: none;
+    clear: both;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56%;
+}
+
+.embed-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+canvas {
+    position: fixed;
+    z-index: -1;
+}
+
+.mobile br {
+    display: none;
+}
+
+/** 3. Forms
+*****************************************************************/
+
+form {
+    position: relative;
+}
+
+input,
+textarea {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    border-bottom: 0.1rem solid #fff;
+    font-size: 3.4rem;
+    letter-spacing: -0.005em;
+    line-height: 1.4em;
+    font-weight: 300;
+    border-radius: 0;
+    padding: 0;
+    color: #fff;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+input {
+    padding-bottom: 2rem;
+}
+
+textarea {
+    height: 14rem;
+}
+
+input:focus,
+textarea:focus {
+    outline: none;
+}
+
+input.error,
+textarea.error {
+    border-color: #ff5252;
+}
+
+form ::-webkit-input-placeholder {
+    color: #fff;
+    opacity: 1;
+}
+
+form ::-moz-placeholder {
+    color: #fff;
+    opacity: 1;
+}
+
+form :-ms-input-placeholder {
+    color: #fff;
+    opacity: 1;
+}
+
+form ::-ms-input-placeholder {
+    color: #fff;
+    opacity: 1;
+}
+
+form ::placeholder {
+    color: #fff;
+    opacity: 1;
+}
+
+form .hpc {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: -999;
+    position: absolute;
+    display: none;
+}
+
+form .button-area {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    margin: 0;
+    padding: 0;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: row;
+    flex-direction: row;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+}
+
+form .success-box {
+    position: absolute;
+    z-index: -100;
+    background: #181818;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: row;
+    flex-direction: row;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-transition: 0.3s ease;
+    -o-transition: 0.3s ease;
+    transition: 0.3s ease;
+}
+
+form.success .success-box {
+    z-index: 100;
+    opacity: 1;
+    pointer-events: all;
+}
+
+form .success-box p {
+    color: #37dd5e;
+}
+
+form .success-box .icon-button {
+    color: #37dd5e;
+    border-color: #37dd5e;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+    -webkit-text-fill-color: #fff;
+    -webkit-box-shadow: 0 0 0px 1000px #161616 inset;
+    -webkit-transition: background-color 5000s ease-in-out 0s;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/** 4. Loading Screen
+*****************************************************************/
+
+.loading-screen {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    z-index: 200;
+    left: 0;
+    background: #161616;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    will-change: transform;
+}
+
+.loading-screen .inner {
+    overflow: hidden;
+}
+
+.loading-screen .text-box {
+    overflow: hidden;
+    margin-bottom: 0.6rem;
+}
+
+.loading-screen .line-frame {
+    overflow: hidden;
+    height: 1px;
+    width: 100%;
+    position: relative;
+}
+
+.loading-screen .line {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.6);
+    -webkit-animation-name: loader_animation;
+    animation-name: loader_animation;
+    will-change: transform;
+    -webkit-animation-duration: 2s;
+    animation-duration: 2s;
+    -webkit-animation-iteration-count: infinite;
+    animation-iteration-count: infinite;
+    -webkit-animation-play-state: running;
+    animation-play-state: running;
+    -webkit-animation-timing-function: cubic-bezier(0.4, 0.1, 0.2, 1);
+    animation-timing-function: cubic-bezier(0.4, 0.1, 0.2, 1);
+}
+
+@-webkit-keyframes loader_animation {
+    0% {
+        -webkit-transform: translate3d(-100%, 0, 0);
+        transform: translate3d(-100%, 0, 0);
+    }
+
+    48% {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+    }
+
+    52% {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+    }
+
+    to {
+        -webkit-transform: translate3d(100%, 0, 0);
+        transform: translate3d(100%, 0, 0);
+    }
+}
+
+@keyframes loader_animation {
+    0% {
+        -webkit-transform: translate3d(-100%, 0, 0);
+        transform: translate3d(-100%, 0, 0);
+    }
+
+    48% {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+    }
+
+    52% {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+    }
+
+    to {
+        -webkit-transform: translate3d(100%, 0, 0);
+        transform: translate3d(100%, 0, 0);
+    }
+}
+
+/** 5. UI Components
+*****************************************************************/
+
+.scroll-bar {
+    position: fixed;
+    top: 0;
+    z-index: 11;
+    right: 0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 2px;
+    height: 100%;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.scroll-bar .inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    border-radius: 30px;
+    height: 10%;
+    background: #fff;
+}
+
+.scroll-progress {
+    position: fixed;
+    top: 0;
+    z-index: 11;
+    right: 0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 2px;
+    height: 100%;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.scroll-progress .inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 0;
+    background: #fff;
+}
+
+.c_cursor_outer {
+    width: 50px;
+    height: 50px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    border-radius: 100%;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.c_cursor_outer .bg {
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    position: absolute;
+    border: 1px solid #e3af00;
+    z-index: 1000;
+    border-radius: 100%;
+    pointer-events: none;
+}
+
+.c_cursor_outer .circle {
+    width: 0;
+    height: 0;
+    position: absolute;
+    border: 1px solid #e3af00;
+    z-index: 1000;
+    top: 50%;
+    left: 50%;
+    opacity: 0;
+    background: none;
+    border-radius: 100%;
+    -webkit-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.c_cursor_inner {
+    width: 6px;
+    height: 6px;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    background: #e3af00;
+    border-radius: 100%;
+    pointer-events: none;
+}
+
+@media screen and (-ms-high-contrast: active),
+(-ms-high-contrast: none) {
+
+    .c_cursor_inner,
+    .c_cursor_outer {
+        display: none;
+    }
+}
+
+.provoke-scroll-bottom {
+    position: fixed;
+    right: 6rem;
+    bottom: 9rem;
+    width: 1px;
+    opacity: 0;
+    z-index: 3;
+    pointer-events: none;
+    -webkit-transition: 0.4s ease;
+    -o-transition: 0.4s ease;
+    transition: 0.4s ease;
+}
+
+.provoke-scroll-bottom.is-active {
+    opacity: 1;
+}
+
+.provoke-scroll-bottom .fill {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 5rem;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.provoke-scroll-bottom .fill .inner {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+}
+
+.provoke-scroll-bottom .text {
+    position: relative;
+    margin-top: 1rem;
+}
+
+.provoke-scroll-bottom p {
+    -webkit-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    transform: rotate(90deg);
+    -webkit-transform-origin: center center;
+    -ms-transform-origin: center center;
+    transform-origin: center center;
+}
+
+/* Mobile */
+
+.mobile .c_cursor_inner,
+.mobile .c_cursor_outer {
+    display: none;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
