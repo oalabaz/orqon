@@ -116,12 +116,12 @@ var config_profile_image_effect_intensity = 0.4
 // "circle" = CIRCLE BACKGORUND
 // "lines" = LINES BACKGORUND
 
-var array_background_mode = ['twisted', 'square', 'asteroids', 'circle']
+var array_background_mode = ['network', 'twisted', 'square', 'asteroids', 'circle']
 array_background_mode.random = function () {
 	return this[Math.floor(Math.random() * this.length)]
 }
 
-var option_hero_background_mode = array_background_mode.random()
+var option_hero_background_mode = 'network'
 
 // BACKGROUND MODE MOBILE [ SEE OPTIONS BELOW ]
 
@@ -234,3 +234,18 @@ var option_hero_background_twisted_speed = 0.005
 
 // HORIZONTAL OFFSET
 var option_hero_background_twisted_x_offset = '10%'
+
+/** 4.7 BACKGROUND CONFIG [ NETWORK BACKGROUND ]
+ *******************************************************************/
+
+// PARTICLE COLOR
+var option_hero_background_network_particle_color = '#ffffff'
+
+// LINE COLOR
+var option_hero_background_network_line_color = '#ffffff'
+
+// BACKGROUND COLOR
+var option_hero_background_network_bg_color = '#212121'
+
+// SCENE OPACITY ( 0 - 1.0 )
+var option_hero_background_network_opacity = 0.2
