@@ -121,7 +121,7 @@ array_background_mode.random = function () {
 	return this[Math.floor(Math.random() * this.length)]
 }
 
-var option_hero_background_mode = 'knowledge'
+var option_hero_background_mode = 'knowledge_core'
 
 // BACKGROUND MODE MOBILE [ SEE OPTIONS BELOW ]
 
@@ -264,3 +264,18 @@ var option_hero_background_knowledge_bg_color = '#111'
 
 // SCENE OPACITY ( 0 - 1.0 )
 var option_hero_background_knowledge_opacity = 0.6
+
+/** 4.9 BACKGROUND CONFIG [ KNOWLEDGE CORE BACKGROUND ]
+ *******************************************************************/
+
+// COLOR 1 (Pink/Red)
+var option_hero_background_knowledge_core_color_1 = '#ff0055'
+
+// COLOR 2 (Cyan/Blue)
+var option_hero_background_knowledge_core_color_2 = '#00aaff'
+
+// BACKGROUND COLOR
+var option_hero_background_knowledge_core_bg_color = '#050505'
+
+// SCENE OPACITY ( 0 - 1.0 )
+var option_hero_background_knowledge_core_opacity = 1
