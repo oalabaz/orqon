@@ -21,6 +21,7 @@
 
 /** 1. TYPOGRAPHY
 *******************************************************************/
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap');
 
 html {
     font-size: 10px;
@@ -41,7 +42,8 @@ html {
 
 body {
     font-size: 1.4rem;
-    font-family: 'Source Sans Pro', sans-serif;
+    font-family: "Google Sans Flex", sans-serif;
+    font-optical-sizing: auto;
     font-weight: 300;
 
     color: #fff;
@@ -72,7 +74,8 @@ h6 {
     margin-top: 0em;
     margin-bottom: 0;
     font-weight: 300;
-    font-family: 'Source Sans Pro', sans-serif;
+    font-family: "Google Sans Flex", sans-serif;
+    font-optical-sizing: auto;
 }
 
 h1 {
@@ -112,7 +115,8 @@ p {
     margin-top: 0;
     margin-bottom: 0rem;
     color: #7c7c7c;
-    font-family: 'Source Sans Pro', sans-serif;
+    font-family: "Google Sans Flex", sans-serif;
+    font-optical-sizing: auto;
 }
 
 p.small {
@@ -338,7 +342,8 @@ textarea {
     border-radius: 0;
     padding: 0;
     color: #fff;
-    font-family: 'Source Sans Pro', sans-serif;
+    font-family: "Google Sans Flex", sans-serif;
+    font-optical-sizing: auto;
 }
 
 input {
@@ -750,7 +755,9 @@ select:-webkit-autofill:focus {
     opacity: 0;
     width: 0;
     height: 0;
-}/** 6. Menu
+}
+
+/** 6. Menu
 *******************************************************************/
 
 .m-menu-button {
@@ -1519,7 +1526,9 @@ _:-ms-fullscreen,
 .mobile .section-container {
     max-width: 60rem;
     margin: 0 auto;
-}/** 9. Background Components
+}
+
+/** 9. Background Components
 *******************************************************************/
 
 .bg-bubbles {
@@ -1895,7 +1904,9 @@ _:-ms-fullscreen,
     transition: 0.2s ease;
     color: #fff;
     line-height: inherit;
-}.options-panel {
+}
+
+.options-panel {
     position: fixed;
     left: 0;
     top: 0;
