@@ -116,12 +116,12 @@ var config_profile_image_effect_intensity = 0.4
 // "circle" = CIRCLE BACKGORUND
 // "lines" = LINES BACKGORUND
 
-var array_background_mode = ['network', 'twisted', 'square', 'asteroids', 'circle']
+var array_background_mode = ['network', 'twisted', 'square', 'asteroids', 'circle', 'lines', 'knowledge', 'knowledge_core']
 array_background_mode.random = function () {
 	return this[Math.floor(Math.random() * this.length)]
 }
 
-var option_hero_background_mode = 'knowledge_core'
+var option_hero_background_mode = array_background_mode.random()
 
 // BACKGROUND MODE MOBILE [ SEE OPTIONS BELOW ]
 
