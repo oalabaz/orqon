@@ -51,7 +51,7 @@ function init_backgrounds() {
 			circleBackground()
 			break
 		case 'lines':
-			linesBackground()
+			knowledgeCoreBackground()
 			break
 		case 'network':
 			networkBackground()
