@@ -334,21 +334,61 @@ function asteroidsBackground() {
 		asteroidGroup.add(asteroid)
 	}
 
-	// --- STARS ---
+	// --- BOKEH STARS ---
 	var starGeometry = new THREE.BufferGeometry()
 	var starCount = 2000
 	var starPositions = new Float32Array(starCount * 3)
+	var starSizes = new Float32Array(starCount)
+	var starColors = new Float32Array(starCount * 3)
 
-	for (var i = 0; i < starCount * 3; i++) {
-		starPositions[i] = (Math.random() - 0.5) * 300
+	var color1 = new THREE.Color(0x00aaff); // Cyan
+	var color2 = new THREE.Color(0xff0055); // Pink/Red
+
+	for (var i = 0; i < starCount; i++) {
+		var x = (Math.random() - 0.5) * 400
+		var y = (Math.random() - 0.5) * 400
+		var z = (Math.random() - 0.5) * 400
+
+		starPositions[i * 3] = x
+		starPositions[i * 3 + 1] = y
+		starPositions[i * 3 + 2] = z
+
+		// Bokeh size variation
+		starSizes[i] = Math.random() * 4 + 1
+
+		// Mix colors
+		var mixedColor = color1.clone().lerp(color2, Math.random())
+		starColors[i * 3] = mixedColor.r
+		starColors[i * 3 + 1] = mixedColor.g
+		starColors[i * 3 + 2] = mixedColor.b
 	}
 
 	starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3))
+	starGeometry.setAttribute('size', new THREE.BufferAttribute(starSizes, 1))
+	starGeometry.setAttribute('color', new THREE.BufferAttribute(starColors, 3))
+
+	// Create a soft circle texture for bokeh
+	var canvas = document.createElement('canvas');
+	canvas.width = 32;
+	canvas.height = 32;
+	var context = canvas.getContext('2d');
+	var gradient = context.createRadialGradient(16, 16, 0, 16, 16, 16);
+	gradient.addColorStop(0, 'rgba(255,255,255,1)');
+	gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
+	gradient.addColorStop(0.5, 'rgba(255,255,255,0.2)');
+	gradient.addColorStop(1, 'rgba(0,0,0,0)');
+	context.fillStyle = gradient;
+	context.fillRect(0, 0, 32, 32);
+	var texture = new THREE.CanvasTexture(canvas);
+
 	var starMaterial = new THREE.PointsMaterial({
-		color: 0xffffff,
-		size: 0.3,
+		size: 2,
+		map: texture,
+		vertexColors: true,
 		transparent: true,
-		opacity: 0.6,
+		opacity: 0.8,
+		depthWrite: false,
+		blending: THREE.AdditiveBlending,
 		sizeAttenuation: true
 	})
 
