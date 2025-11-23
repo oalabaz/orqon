@@ -95,129 +95,41 @@ function colorBackground() {
 function squareBackground() {
 	var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
 	renderer.setSize(window.innerWidth, window.innerHeight)
+	renderer.shadowMap.enabled = true
+	renderer.shadowMap.type = THREE.PCFSoftShadowMap
 	renderer.domElement.id = 'canvas-square'
 	document.getElementById('main').appendChild(renderer.domElement)
 
+	// Isometric-ish camera angle for a structured look
 	var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
-	camera.position.z = 60
+	camera.position.set(10, 10, 10) // Zoomed in
+	camera.lookAt(0, 0, 0)
 
 	var scene = new THREE.Scene()
-	var bgColor = option_hero_background_square_bg || '#212121'
-	scene.fog = new THREE.FogExp2(bgColor, 0.015)
+	var bgColor = option_hero_background_square_bg || '#111111'
+	scene.fog = new THREE.FogExp2(bgColor, 0.025)
+
+	// --- LIGHTING ---
+	var ambientLight = new THREE.AmbientLight(0x404040, 2)
+	scene.add(ambientLight)
+
+	var dirLight = new THREE.DirectionalLight(0xffffff, 1.5)
+	dirLight.position.set(-10, 30, -10)
+	dirLight.castShadow = true
+	dirLight.shadow.mapSize.width = 1024
+	dirLight.shadow.mapSize.height = 1024
+	scene.add(dirLight)
+
+	// Dynamic point light
+	var pointLight = new THREE.PointLight(0x00aaff, 5, 60)
+	pointLight.position.set(0, 10, 0)
+	scene.add(pointLight)
 
 	var group = new THREE.Group()
 	scene.add(group)
 
-	// Determine colors based on mode
-	var mainColor = 0xffffff;
-	if (typeof option_hero_background_square_mode !== 'undefined' && option_hero_background_square_mode === 'black') {
-		mainColor = 0x111111;
-	}
-
-	// Geometry
+	// --- VOXEL GRID ---
 	var geometry = new THREE.BoxGeometry(1, 1, 1)
-
-	// Create Cubes
-	var cubeCount = 300
-	for (var i = 0; i < cubeCount; i++) {
-		var isWireframe = Math.random() > 0.7
-		var material = new THREE.MeshBasicMaterial({
-			color: mainColor,
-			transparent: true,
-			opacity: Math.random() * 0.4 + 0.1,
-			wireframe: isWireframe
-		})
-
-		var mesh = new THREE.Mesh(geometry, material)
-
-		// Spread them out
-		mesh.position.x = (Math.random() - 0.5) * 120
-		mesh.position.y = (Math.random() - 0.5) * 120
-		mesh.position.z = (Math.random() - 0.5) * 120
-
-		// Random rotation
-		mesh.rotation.x = Math.random() * 2 * Math.PI
-		mesh.rotation.y = Math.random() * 2 * Math.PI
-
-		// Random scale
-		var scale = Math.random() * 3 + 0.5
-		mesh.scale.set(scale, scale, scale)
-
-		// Animation data
-		mesh.userData = {
-			velocity: new THREE.Vector3(
-				(Math.random() - 0.5) * 0.02,
-				(Math.random() - 0.5) * 0.02,
-				(Math.random() - 0.5) * 0.02
-			),
-			rotSpeed: new THREE.Vector3(
-				(Math.random() - 0.5) * 0.01,
-				(Math.random() - 0.5) * 0.01,
-				0
-			)
-		}
-
-		group.add(mesh)
-	}
-
-	// Mouse interaction
-	var mouse = new THREE.Vector2()
-	var targetRotation = new THREE.Vector2()
-
-	function onMouseMove(event) {
-		mouse.x = (event.clientX / window.innerWidth) * 2 - 1
-		mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
-	}
-	window.addEventListener('mousemove', onMouseMove, false)
-
-	// Resize
-	window.addEventListener('resize', onWindowResize, false)
-	function onWindowResize() {
-		camera.aspect = window.innerWidth / window.innerHeight
-		camera.updateProjectionMatrix()
-		renderer.setSize(window.innerWidth, window.innerHeight)
-	}
-
-	// Animation
-	function animate() {
-		requestAnimationFrame(animate)
-
-		// Smooth rotation based on mouse
-		targetRotation.x = mouse.y * 0.3
-		targetRotation.y = mouse.x * 0.3
-
-		group.rotation.x += (targetRotation.x - group.rotation.x) * 0.03
-		group.rotation.y += (targetRotation.y - group.rotation.y) * 0.03
-
-		// Animate cubes
-		group.children.forEach(function (cube) {
-			cube.rotation.x += cube.userData.rotSpeed.x
-			cube.rotation.y += cube.userData.rotSpeed.y
-
-			cube.position.add(cube.userData.velocity)
-
-			// Wrap around
-			if (cube.position.x > 60) cube.position.x = -60
-			if (cube.position.x < -60) cube.position.x = 60
-			if (cube.position.y > 60) cube.position.y = -60
-			if (cube.position.y < -60) cube.position.y = 60
-			if (cube.position.z > 60) cube.position.z = -60
-			if (cube.position.z < -60) cube.position.z = 60
-		})
-
-		renderer.render(scene, camera)
-	}
-
-	animate()
-
-	$('#canvas-square').css('opacity', 1)
-	$('body').append('<div class="bg-color" style="background-color:' + bgColor + '"></div>')
-}
-
-/** 4. ASTERIODS BACKGROUND
- *******************************************************************/
-
-function asteroidsBackground() {
 	var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
 	renderer.setSize(window.innerWidth, window.innerHeight)
 	renderer.shadowMap.enabled = true
@@ -471,11 +383,17 @@ function circleBackground() {
 		lastY
 
 	var MAX_OFFSET = 400
-	var SPACING = 6
+	var SPACING = 5
 	var POINTS = MAX_OFFSET / SPACING
 	var PEAK = MAX_OFFSET * 0.25
 	var POINTS_PER_LAP = 6
-	var SHADOW_STRENGTH = 6
+	var SHADOW_STRENGTH = 15
+
+	// Mouse interaction
+	var mouseX = 0
+	var mouseY = 0
+	var targetMouseX = 0
+	var targetMouseY = 0
 
 	canvas.setAttribute('id', 'canvas-circle')
 	setup()
@@ -487,6 +405,7 @@ function circleBackground() {
 		resize()
 		step()
 		window.addEventListener('resize', resize)
+		window.addEventListener('mousemove', onMouseMove)
 	}
 
 	function resize() {
@@ -494,9 +413,18 @@ function circleBackground() {
 		height = canvas.height = window.innerHeight
 	}
 
+	function onMouseMove(e) {
+		targetMouseX = (e.clientX - width / 2) * 0.5
+		targetMouseY = (e.clientY - height / 2) * 0.5
+	}
+
 	function step() {
 		time += velocity
 		velocity += (velocityTarget - velocity) * 0.3
+
+		// Smooth mouse movement
+		mouseX += (targetMouseX - mouseX) * 0.05
+		mouseY += (targetMouseY - mouseY) * 0.05
 
 		clear()
 		render()
@@ -515,9 +443,16 @@ function circleBackground() {
 			cy = height / 2
 
 		context.globalCompositeOperation = 'lighter'
-		context.strokeStyle = option_hero_background_circle_line_color
+
+		// Create gradient
+		var gradient = context.createLinearGradient(0, 0, width, height);
+		gradient.addColorStop(0, option_hero_background_circle_line_color); // Config color
+		gradient.addColorStop(0.5, '#4facfe'); // Blue
+		gradient.addColorStop(1, '#ff0055'); // Pink
+
+		context.strokeStyle = gradient
 		context.shadowColor = option_hero_background_circle_line_color
-		context.lineWidth = 2
+		// context.lineWidth = 2 // Moved to loop for dynamic width
 		context.beginPath()
 
 		for (var i = POINTS; i > 0; i--) {
@@ -534,8 +469,21 @@ function circleBackground() {
 			y += (200 * value) / MAX_OFFSET
 			y += (x / cx) * width * 0.1
 
+			// Mouse interaction distortion
+			var dist = Math.sqrt(Math.pow(x - mouseX, 2) + Math.pow(y - mouseY, 2))
+			if (dist < 200) {
+				var force = (200 - dist) / 200
+				x += (x - mouseX) * force * 0.2
+				y += (y - mouseY) * force * 0.2
+			}
+
 			context.globalAlpha = 1 - value / MAX_OFFSET
 			context.shadowBlur = SHADOW_STRENGTH * o
+
+			// Optimization: Simulate bokeh with line width instead of expensive filter
+			// Distant lines (higher value) are thicker but more transparent
+			var depth = value / MAX_OFFSET;
+			context.lineWidth = 2 + (depth * 6);
 
 			context.lineTo(cx + x, cy + y)
 			context.stroke()
@@ -544,6 +492,7 @@ function circleBackground() {
 			context.moveTo(cx + x, cy + y)
 		}
 
+		context.lineWidth = 2;
 		context.lineTo(cx, cy - 200)
 		context.lineTo(cx, 0)
 		context.stroke()
@@ -919,6 +868,10 @@ function knowledgeBackground() {
 
 	var scene = new THREE.Scene()
 
+	// Add Fog for Depth
+	var bgColor = option_hero_background_knowledge_bg_color || '#111';
+	scene.fog = new THREE.FogExp2(bgColor, 0.0025);
+
 	// Particle System
 	var particleCount = 4000
 	var geometry = new THREE.BufferGeometry()
@@ -946,12 +899,28 @@ function knowledgeBackground() {
 	geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
 	geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1))
 
+	// Create a soft circle texture for bokeh effect
+	var canvas = document.createElement('canvas');
+	canvas.width = 32;
+	canvas.height = 32;
+	var context = canvas.getContext('2d');
+	var gradient = context.createRadialGradient(16, 16, 0, 16, 16, 16);
+	gradient.addColorStop(0, 'rgba(255,255,255,1)');
+	gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
+	gradient.addColorStop(0.5, 'rgba(255,255,255,0.2)');
+	gradient.addColorStop(1, 'rgba(0,0,0,0)');
+	context.fillStyle = gradient;
+	context.fillRect(0, 0, 32, 32);
+	var texture = new THREE.CanvasTexture(canvas);
+
 	// Custom Shader Material for better performance and look
 	var material = new THREE.PointsMaterial({
-		size: 2,
+		size: 4, // Increased size for bokeh effect
+		map: texture, // Use soft texture
 		vertexColors: true,
 		transparent: true,
-		opacity: 0.8,
+		opacity: 0.9,
+		depthWrite: false, // Fix transparency sorting issues
 		blending: THREE.AdditiveBlending,
 		sizeAttenuation: true
 	})

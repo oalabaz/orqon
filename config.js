@@ -191,16 +191,16 @@ var option_hero_background_asteroids_scene_opacity = 0.1
  *******************************************************************/
 
 // LINE COLOR
-var option_hero_background_circle_line_color = '#e3af00'
+var option_hero_background_circle_line_color = '#00f2fe' // Cyan
 
 // BACKGROUND COLOR
-var option_hero_background_circle_bg_color = '#212121'
+var option_hero_background_circle_bg_color = '#050505' // Darker black
 
 // SCENE OPACITY ( 0 - 1.0 )
-var option_hero_background_circle_scene_opacity = 0.2
+var option_hero_background_circle_scene_opacity = 0.8 // More visible
 
 // ROTATION SPEED
-var option_hero_background_circle_speed = 0.035
+var option_hero_background_circle_speed = 0.05
 
 /** 4.5 BACKGROUND CONFIG [ LINES BACKGROUND ]
  *******************************************************************/
