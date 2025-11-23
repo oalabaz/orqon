@@ -50,9 +50,6 @@ function init_backgrounds() {
 		case 'circle':
 			circleBackground()
 			break
-		case 'lines':
-			knowledgeCoreBackground()
-			break
 		case 'network':
 			networkBackground()
 			break
@@ -63,10 +60,25 @@ function init_backgrounds() {
 			knowledgeCoreBackground()
 			break
 		default:
-			alert(error_msg)
-			console.log(error_msg)
+			asteroidsBackground()
 			break
 	}
+
+	// Display current background name
+	var bgDisplayName = option_hero_background_mode.replace(/_/g, ' ').toUpperCase();
+	var $bubble = $('<div id="bg-selector-bubble" style="position: fixed; bottom: 30px; left: 30px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: rgba(255, 255, 255, 0.9); padding: 8px 16px; border-radius: 30px; font-family: sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; z-index: 9999; pointer-events: auto; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: all 0.3s ease;" title="Click to change background">' + bgDisplayName + '</div>');
+
+	$bubble.hover(
+		function () { $(this).css({ 'background': 'rgba(255, 255, 255, 0.1)', 'transform': 'scale(1.05)' }); },
+		function () { $(this).css({ 'background': 'rgba(0, 0, 0, 0.6)', 'transform': 'scale(1)' }); }
+	);
+
+	$bubble.on('click', function () {
+		// Reload to pick a new random background
+		location.reload();
+	});
+
+	$('body').append($bubble);
 }
 init_backgrounds()
 
@@ -81,183 +93,326 @@ function colorBackground() {
  *******************************************************************/
 
 function squareBackground() {
-	$('body').append('<div class="bg-color" style="background-color:' + option_hero_background_square_bg + '"></div>')
-	$('#main').append(
-		'<ul class="bg-bubbles ' + option_hero_background_square_mode + '"><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li></ul>'
-	)
-}
-
-/** 4. ASTERIODS BACKGROUND
- *******************************************************************/
-
-function asteroidsBackground() {
-	var renderer = new THREE.WebGLRenderer({ antialias: true })
+	var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
 	renderer.setSize(window.innerWidth, window.innerHeight)
-	renderer.shadowMap.enabled = false
-	renderer.shadowMap.type = THREE.PCFSoftShadowMap
-	renderer.shadowMap.needsUpdate = true
-	renderer.domElement.id = 'canvas-asteroids'
-
+	renderer.domElement.id = 'canvas-square'
 	document.getElementById('main').appendChild(renderer.domElement)
-	window.addEventListener('resize', onWindowResize, false)
 
+	var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
+	camera.position.z = 60
+
+	var scene = new THREE.Scene()
+	var bgColor = option_hero_background_square_bg || '#212121'
+	scene.fog = new THREE.FogExp2(bgColor, 0.015)
+
+	var group = new THREE.Group()
+	scene.add(group)
+
+	// Determine colors based on mode
+	var mainColor = 0xffffff;
+	if (typeof option_hero_background_square_mode !== 'undefined' && option_hero_background_square_mode === 'black') {
+		mainColor = 0x111111;
+	}
+
+	// Geometry
+	var geometry = new THREE.BoxGeometry(1, 1, 1)
+
+	// Create Cubes
+	var cubeCount = 300
+	for (var i = 0; i < cubeCount; i++) {
+		var isWireframe = Math.random() > 0.7
+		var material = new THREE.MeshBasicMaterial({
+			color: mainColor,
+			transparent: true,
+			opacity: Math.random() * 0.4 + 0.1,
+			wireframe: isWireframe
+		})
+
+		var mesh = new THREE.Mesh(geometry, material)
+
+		// Spread them out
+		mesh.position.x = (Math.random() - 0.5) * 120
+		mesh.position.y = (Math.random() - 0.5) * 120
+		mesh.position.z = (Math.random() - 0.5) * 120
+
+		// Random rotation
+		mesh.rotation.x = Math.random() * 2 * Math.PI
+		mesh.rotation.y = Math.random() * 2 * Math.PI
+
+		// Random scale
+		var scale = Math.random() * 3 + 0.5
+		mesh.scale.set(scale, scale, scale)
+
+		// Animation data
+		mesh.userData = {
+			velocity: new THREE.Vector3(
+				(Math.random() - 0.5) * 0.02,
+				(Math.random() - 0.5) * 0.02,
+				(Math.random() - 0.5) * 0.02
+			),
+			rotSpeed: new THREE.Vector3(
+				(Math.random() - 0.5) * 0.01,
+				(Math.random() - 0.5) * 0.01,
+				0
+			)
+		}
+
+		group.add(mesh)
+	}
+
+	// Mouse interaction
+	var mouse = new THREE.Vector2()
+	var targetRotation = new THREE.Vector2()
+
+	function onMouseMove(event) {
+		mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+		mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+	}
+	window.addEventListener('mousemove', onMouseMove, false)
+
+	// Resize
+	window.addEventListener('resize', onWindowResize, false)
 	function onWindowResize() {
 		camera.aspect = window.innerWidth / window.innerHeight
 		camera.updateProjectionMatrix()
 		renderer.setSize(window.innerWidth, window.innerHeight)
 	}
 
-	var camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, 500)
-	var scene = new THREE.Scene()
-	var cameraRange = 3
+	// Animation
+	function animate() {
+		requestAnimationFrame(animate)
 
-	scene.fog = new THREE.Fog(option_hero_background_asteroids_bg_color, 2.5, 3.5)
+		// Smooth rotation based on mouse
+		targetRotation.x = mouse.y * 0.3
+		targetRotation.y = mouse.x * 0.3
 
-	//-------------------------------------------------------------- SCENE
+		group.rotation.x += (targetRotation.x - group.rotation.x) * 0.03
+		group.rotation.y += (targetRotation.y - group.rotation.y) * 0.03
 
-	var sceneGruop = new THREE.Object3D()
-	var particularGruop = new THREE.Object3D()
-	var modularGruop = new THREE.Object3D()
+		// Animate cubes
+		group.children.forEach(function (cube) {
+			cube.rotation.x += cube.userData.rotSpeed.x
+			cube.rotation.y += cube.userData.rotSpeed.y
 
-	function generateParticle(num) {
-		var amp = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 2
+			cube.position.add(cube.userData.velocity)
 
-		var gmaterial = new THREE.MeshStandardMaterial({
-			color: option_hero_background_asteroids_particle_color,
-			side: THREE.DoubleSide,
+			// Wrap around
+			if (cube.position.x > 60) cube.position.x = -60
+			if (cube.position.x < -60) cube.position.x = 60
+			if (cube.position.y > 60) cube.position.y = -60
+			if (cube.position.y < -60) cube.position.y = 60
+			if (cube.position.z > 60) cube.position.z = -60
+			if (cube.position.z < -60) cube.position.z = 60
 		})
 
-		var gparticular = new THREE.CircleGeometry(0.2, 5)
+		renderer.render(scene, camera)
+	}
 
-		for (var i = 1; i < num; i++) {
-			var pscale = 0.001 + Math.abs(mathRandom(0.03))
-			var particular = new THREE.Mesh(gparticular, gmaterial)
-			particular.position.set(mathRandom(amp), mathRandom(amp), mathRandom(amp))
-			particular.rotation.set(mathRandom(), mathRandom(), mathRandom())
-			particular.scale.set(pscale, pscale, pscale)
-			particular.speedValue = mathRandom(1)
-			particularGruop.add(particular)
+	animate()
+
+	$('#canvas-square').css('opacity', 1)
+	$('body').append('<div class="bg-color" style="background-color:' + bgColor + '"></div>')
+}
+
+/** 4. ASTERIODS BACKGROUND
+ *******************************************************************/
+
+function asteroidsBackground() {
+	var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+	renderer.setSize(window.innerWidth, window.innerHeight)
+	renderer.shadowMap.enabled = true
+	renderer.shadowMap.type = THREE.PCFSoftShadowMap
+	renderer.domElement.id = 'canvas-asteroids'
+
+	document.getElementById('main').appendChild(renderer.domElement)
+
+	var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
+	camera.position.z = 40
+
+	var scene = new THREE.Scene()
+
+	// Handle potential invalid color from config
+	var bgColor = option_hero_background_asteroids_bg_color
+	if (bgColor === '#orange' || !bgColor) bgColor = '#050505'
+
+	scene.fog = new THREE.FogExp2(bgColor, 0.015)
+
+	// Groups
+	var asteroidGroup = new THREE.Group()
+	var starGroup = new THREE.Group()
+	scene.add(asteroidGroup)
+	scene.add(starGroup)
+
+	// --- LIGHTS ---
+	var ambientLight = new THREE.AmbientLight(0x222222) // Darker ambient
+	scene.add(ambientLight)
+
+	// Main directional light (Sun-like)
+	var dirLight = new THREE.DirectionalLight(0xffffff, 1.5)
+	dirLight.position.set(20, 20, 20)
+	dirLight.castShadow = true
+	dirLight.shadow.mapSize.width = 2048
+	dirLight.shadow.mapSize.height = 2048
+	scene.add(dirLight)
+
+	// Blue rim light for "sci-fi" feel
+	var rimLight = new THREE.SpotLight(0x0077ff, 5)
+	rimLight.position.set(-20, 10, -10)
+	rimLight.lookAt(0, 0, 0)
+	scene.add(rimLight)
+
+	// Moving point light
+	var pointLight = new THREE.PointLight(0xffaa00, 2, 50)
+	pointLight.position.set(0, 0, 10)
+	scene.add(pointLight)
+
+	// --- ASTEROIDS ---
+	// Use Icosahedron with detail 0 for low-poly look
+	var geometry = new THREE.IcosahedronGeometry(1, 0)
+
+	// 1. Solid Material (Standard)
+	var materialSolid = new THREE.MeshStandardMaterial({
+		color: option_hero_background_asteroids_cube_color || '#333',
+		roughness: 0.6,
+		metalness: 0.3,
+		flatShading: true
+	})
+
+	// 2. Wireframe Material (Tech/Holographic look)
+	var materialWireframe = new THREE.MeshBasicMaterial({
+		color: 0x00aaff, // Cyan
+		wireframe: true,
+		transparent: true,
+		opacity: 0.3
+	})
+
+	var asteroidCount = 150
+	for (var i = 0; i < asteroidCount; i++) {
+		var asteroid;
+		var rand = Math.random();
+
+		if (rand > 0.85) {
+			// 15% Wireframe
+			asteroid = new THREE.Mesh(geometry, materialWireframe);
+		} else {
+			// 85% Solid
+			asteroid = new THREE.Mesh(geometry, materialSolid);
+			asteroid.castShadow = true;
+			asteroid.receiveShadow = true;
 		}
-	}
-	generateParticle(200, 2)
 
-	sceneGruop.add(particularGruop)
-	scene.add(modularGruop)
-	scene.add(sceneGruop)
+		// Random position spread (donut shapeish or cloud)
+		var theta = Math.random() * Math.PI * 2
+		var phi = Math.acos(2 * Math.random() - 1)
+		var radius = 10 + Math.random() * 40
 
-	function mathRandom() {
-		var num = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1
-		var setNumber = -Math.random() * num + Math.random() * num
+		asteroid.position.set(
+			radius * Math.sin(phi) * Math.cos(theta),
+			radius * Math.sin(phi) * Math.sin(theta),
+			radius * Math.cos(phi) * 0.5 // Flattened on Z slightly
+		)
 
-		return setNumber
-	}
+		// Random scale
+		var scale = Math.random() * 1.2 + 0.3
+		asteroid.scale.set(scale, scale, scale)
 
-	//------------------------------------------------------------- INIT
+		// Random rotation
+		asteroid.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI)
 
-	function init() {
-		for (var i = 0; i < 30; i++) {
-			var geometry = new THREE.IcosahedronGeometry(1)
-			var material = new THREE.MeshStandardMaterial({
-				flatShading: THREE.FlatShading,
-				color: option_hero_background_asteroids_cube_color,
-				transparent: false,
-				opacity: 1,
-				wireframe: false,
-			})
-			var cube = new THREE.Mesh(geometry, material)
-			cube.speedRotation = Math.random() * 0.1
-			cube.positionX = mathRandom()
-			cube.positionY = mathRandom()
-			cube.positionZ = mathRandom()
-			cube.castShadow = true
-			cube.receiveShadow = true
-
-			var newScaleValue = mathRandom(0.3)
-
-			cube.scale.set(newScaleValue, newScaleValue, newScaleValue)
-
-			cube.rotation.x = mathRandom((180 * Math.PI) / 180)
-			cube.rotation.y = mathRandom((180 * Math.PI) / 180)
-			cube.rotation.z = mathRandom((180 * Math.PI) / 180)
-
-			cube.position.set(cube.positionX, cube.positionY, cube.positionZ)
-			modularGruop.add(cube)
+		// Custom properties for animation
+		asteroid.userData = {
+			rotSpeed: {
+				x: (Math.random() - 0.5) * 0.01,
+				y: (Math.random() - 0.5) * 0.01,
+				z: (Math.random() - 0.5) * 0.01
+			},
+			orbitSpeed: (Math.random() * 0.002) + 0.001,
+			initialAngle: Math.atan2(asteroid.position.z, asteroid.position.x),
+			orbitRadius: Math.sqrt(asteroid.position.x * asteroid.position.x + asteroid.position.z * asteroid.position.z)
 		}
+
+		asteroidGroup.add(asteroid)
 	}
 
-	//------------------------------------------------------------- CAMERA
+	// --- STARS ---
+	var starGeometry = new THREE.BufferGeometry()
+	var starCount = 2000
+	var starPositions = new Float32Array(starCount * 3)
 
-	camera.position.set(0, 0, cameraRange)
+	for (var i = 0; i < starCount * 3; i++) {
+		starPositions[i] = (Math.random() - 0.5) * 300
+	}
 
-	//------------------------------------------------------------- SCENE
+	starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3))
+	var starMaterial = new THREE.PointsMaterial({
+		color: 0xffffff,
+		size: 0.3,
+		transparent: true,
+		opacity: 0.6,
+		sizeAttenuation: true
+	})
 
-	var light = new THREE.SpotLight(option_hero_background_asteroids_spotlight_color, option_hero_background_asteroids_spotlight_intensity)
-	light.position.set(5, 5, 2)
-	light.castShadow = true
-	light.shadow.mapSize.width = 10000
-	light.shadow.mapSize.height = light.shadow.mapSize.width
-	light.penumbra = 0.5
+	var stars = new THREE.Points(starGeometry, starMaterial)
+	starGroup.add(stars)
 
-	var lightBack = new THREE.PointLight(option_hero_background_asteroids_pointlight_color, option_hero_background_asteroids_pointlight_intensity)
-	lightBack.position.set(0, -3, -1)
-
-	var rectLight = new THREE.RectAreaLight(option_hero_background_asteroids_rectarealight_color, option_hero_background_asteroids_rectarealight_intensity, 2, 2)
-	rectLight.position.set(0, 0, 1)
-	rectLight.lookAt(0, 0, 0)
-
-	scene.add(light)
-	scene.add(lightBack)
-	scene.add(rectLight)
-
-	//------------------------------------------------------------- MOUSE
-
+	// --- MOUSE INTERACTION ---
 	var mouse = new THREE.Vector2()
+	var targetRotation = new THREE.Vector2()
 
 	function onMouseMove(event) {
-		event.preventDefault()
 		mouse.x = (event.clientX / window.innerWidth) * 2 - 1
 		mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
 	}
 	window.addEventListener('mousemove', onMouseMove, false)
 
-	//------------------------------------------------------------- ANIMATING
+	// --- RESIZE ---
+	window.addEventListener('resize', onWindowResize, false)
+	function onWindowResize() {
+		camera.aspect = window.innerWidth / window.innerHeight
+		camera.updateProjectionMatrix()
+		renderer.setSize(window.innerWidth, window.innerHeight)
+	}
 
-	var uSpeed = 0.01
+	// --- ANIMATION ---
+	var clock = new THREE.Clock()
 
 	function animate() {
-		var time = performance.now() * 0.0003
 		requestAnimationFrame(animate)
 
-		for (var i = 0, l = particularGruop.children.length; i < l; i++) {
-			var newObject = particularGruop.children[i]
-			newObject.rotation.x += newObject.speedValue / 10
-			newObject.rotation.y += newObject.speedValue / 10
-			newObject.rotation.z += newObject.speedValue / 10
-		}
+		var time = clock.getElapsedTime()
 
-		for (var i = 0, l = modularGruop.children.length; i < l; i++) {
-			var newCubes = modularGruop.children[i]
-			newCubes.rotation.x += 0.008
-			newCubes.rotation.y += 0.005
-			newCubes.rotation.z += 0.003
+		// Smooth mouse follow
+		targetRotation.x = mouse.y * 0.5
+		targetRotation.y = mouse.x * 0.5
 
-			newCubes.position.x = Math.sin(time * newCubes.positionZ) * newCubes.positionY
-			newCubes.position.y = Math.cos(time * newCubes.positionX) * newCubes.positionZ
-			newCubes.position.z = Math.sin(time * newCubes.positionY) * newCubes.positionX
-		}
+		asteroidGroup.rotation.x += (targetRotation.x - asteroidGroup.rotation.x) * 0.02
+		asteroidGroup.rotation.y += (targetRotation.y - asteroidGroup.rotation.y) * 0.02
 
-		particularGruop.rotation.y += 0.005
-		modularGruop.rotation.y -= (mouse.x * 4 + modularGruop.rotation.y) * uSpeed
-		modularGruop.rotation.x -= (-mouse.y * 4 + modularGruop.rotation.x) * uSpeed
-		camera.lookAt(scene.position)
+		starGroup.rotation.x += (targetRotation.x * 0.1 - starGroup.rotation.x) * 0.02
+		starGroup.rotation.y += (targetRotation.y * 0.1 - starGroup.rotation.y) * 0.02
+
+		// Animate individual asteroids
+		asteroidGroup.children.forEach(function (asteroid) {
+			asteroid.rotation.x += asteroid.userData.rotSpeed.x
+			asteroid.rotation.y += asteroid.userData.rotSpeed.y
+			asteroid.rotation.z += asteroid.userData.rotSpeed.z
+		})
+
+		// Rotate the whole asteroid field slowly
+		asteroidGroup.rotation.z = time * 0.05
+
+		// Move light
+		pointLight.position.x = Math.sin(time * 0.5) * 30
+		pointLight.position.z = Math.cos(time * 0.5) * 30
+
 		renderer.render(scene, camera)
 	}
 
 	animate()
-	init()
 
-	$('#canvas-asteroids').css('opacity', option_hero_background_asteroids_scene_opacity)
-	$('body').append('<div class="bg-color" style="background-color:' + option_hero_background_asteroids_bg_color + '"></div>')
+	// Force opacity to be visible, ignoring potentially low config value
+	$('#canvas-asteroids').css('opacity', 1)
+	$('body').append('<div class="bg-color" style="background-color:' + bgColor + '"></div>')
 }
 
 /** 5. CIRCLE BACKGROUND
@@ -458,149 +613,100 @@ function linesBackground() {
  *******************************************************************/
 
 function twistedBackground() {
-	var canvas = document.getElementById('main').appendChild(document.createElement('canvas')),
-		context = canvas.getContext('2d'),
-		width = window.innerWidth,
-		height = window.innerHeight,
-		radius = Math.min(window.innerWidth, window.innerHeight) * 1,
-		// Number of layers
-		quality = radius > 300 ? 180 : 90,
-		// Layer instances
-		layers = [],
-		// Width/height of layers
-		layerSize = radius * 0.3,
-		// Layers that overlap to create the infinity illusion
-		layerOverlap = Math.round(quality * 0.1)
+	var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+	renderer.setSize(window.innerWidth, window.innerHeight)
+	renderer.domElement.id = 'canvas-twisted'
+	document.getElementById('main').appendChild(renderer.domElement)
 
-	canvas.setAttribute('id', 'canvas-twisted')
+	var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
+	camera.position.z = 50
 
-	$('#canvas-twisted').css('opacity', option_hero_background_twisted_scene_opacity)
-	$('#canvas-twisted').css('transform', 'translateX(' + option_hero_background_twisted_x_offset + ')')
-	$('body').append('<div class="bg-color" style="background-color:' + option_hero_background_twisted_bg_color + '"></div>')
+	var scene = new THREE.Scene()
+	var bgColor = option_hero_background_twisted_bg_color || '#212121'
+	scene.fog = new THREE.FogExp2(bgColor, 0.02)
 
-	function initialize() {
-		resize()
-		update()
+	// Create a twisted torus knot
+	// Radius, Tube, TubularSegments, RadialSegments, p, q
+	var geometry = new THREE.TorusKnotGeometry(10, 3, 300, 20, 2, 3)
+
+	// 1. Wireframe Mesh
+	var materialWire = new THREE.MeshBasicMaterial({
+		color: option_hero_background_twisted_line_color || '#ffffff',
+		wireframe: true,
+		transparent: true,
+		opacity: 0.15
+	})
+	var mesh = new THREE.Mesh(geometry, materialWire)
+	scene.add(mesh)
+
+	// 2. Particles along the surface
+	// We clone the position attribute to create points at the vertices
+	var particleGeo = new THREE.BufferGeometry()
+	var posAttribute = geometry.getAttribute('position')
+	particleGeo.setAttribute('position', posAttribute)
+
+	var materialPoints = new THREE.PointsMaterial({
+		color: option_hero_background_twisted_fill_color || '#00aaff',
+		size: 0.15,
+		transparent: true,
+		opacity: 0.8,
+		sizeAttenuation: true
+	})
+	var particles = new THREE.Points(particleGeo, materialPoints)
+	scene.add(particles)
+
+	// Mouse interaction
+	var mouse = new THREE.Vector2()
+	var targetRotation = new THREE.Vector2()
+
+	function onMouseMove(event) {
+		mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+		mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+	}
+	window.addEventListener('mousemove', onMouseMove, false)
+
+	window.addEventListener('resize', onWindowResize, false)
+	function onWindowResize() {
+		camera.aspect = window.innerWidth / window.innerHeight
+		camera.updateProjectionMatrix()
+		renderer.setSize(window.innerWidth, window.innerHeight)
 	}
 
-	function resize() {
-		width = window.innerWidth
-		height = window.innerHeight
+	function animate() {
+		requestAnimationFrame(animate)
 
-		canvas.width = width
-		canvas.height = height
+		var time = performance.now() * 0.001
+		var speed = option_hero_background_twisted_speed || 0.005
 
-		radius = Math.min(window.innerWidth, window.innerHeight) * 1
-		layerSize = radius * 0.3
+		// Smooth rotation based on mouse
+		targetRotation.x = mouse.y * 0.5
+		targetRotation.y = mouse.x * 0.5
 
-		layerOverlap = Math.round(quality * 0.1)
+		mesh.rotation.x += (targetRotation.x - mesh.rotation.x) * 0.05
+		mesh.rotation.y += (targetRotation.y - mesh.rotation.y) * 0.05
+		particles.rotation.x = mesh.rotation.x
+		particles.rotation.y = mesh.rotation.y
 
-		layers = []
+		// Constant twist rotation
+		mesh.rotation.z += speed
+		particles.rotation.z += speed
 
-		for (var i = 0; i < quality; i++) {
-			layers.push({
-				x: window.innerWidth / 1 + Math.sin((i / quality) * 2 * Math.PI) * (radius - layerSize),
-				y: window.innerHeight / 2 + Math.cos((i / quality) * 2 * Math.PI) * (radius - layerSize),
-				r: (i / quality) * Math.PI,
-			})
-		}
-	}
-	window.addEventListener('resize', resize)
+		// Pulse effect
+		var scale = 1 + Math.sin(time) * 0.05
+		mesh.scale.set(scale, scale, scale)
+		particles.scale.set(scale, scale, scale)
 
-	function update() {
-		requestAnimationFrame(update)
-
-		step()
-		clear()
-		paint()
+		renderer.render(scene, camera)
 	}
 
-	// Takes a step in the simulation
-	function step() {
-		for (var i = 0, len = layers.length; i < len; i++) {
-			layers[i].r += option_hero_background_twisted_speed
-		}
-	}
+	animate()
 
-	// Clears the painting
-	function clear() {
-		context.clearRect(0, 0, canvas.width, canvas.height)
-	}
+	// Use a slightly higher opacity for the 3D scene to be visible
+	var opacity = option_hero_background_twisted_scene_opacity
+	if (opacity < 0.2) opacity = 0.8 // Override if too low for 3D
 
-	// Paints the current state
-	function paint() {
-		// Number of layers in total
-		var layersLength = layers.length
-
-		// Draw the overlap layers
-		for (var i = layersLength - layerOverlap, len = layersLength; i < len; i++) {
-			context.save()
-			context.globalCompositeOperation = 'destination-over'
-			paintLayer(layers[i])
-			context.restore()
-		}
-
-		// Cut out the overflow layers using the first layer as a mask
-		context.save()
-		context.globalCompositeOperation = 'destination-in'
-		paintLayer(layers[0], true)
-		context.restore()
-
-		// // Draw the normal layers underneath the overlap
-		for (var i = 0, len = layersLength; i < len; i++) {
-			context.save()
-			context.globalCompositeOperation = 'destination-over'
-			paintLayer(layers[i])
-			context.restore()
-		}
-	}
-
-	// Pains one layer
-	function paintLayer(layer, mask) {
-		size = layerSize + (mask ? 10 : 0)
-		size2 = size / 2
-
-		context.translate(layer.x, layer.y)
-		context.rotate(layer.r)
-
-		// No stroke if this is a mask
-		if (!mask) {
-			context.strokeStyle = option_hero_background_twisted_line_color
-			context.lineWidth = 1
-			context.strokeRect(-size2, -size2, size, size)
-		}
-
-		context.fillStyle = option_hero_background_twisted_fill_color
-		context.fillRect(-size2, -size2, size, size)
-	}
-
-	/* Polyfill */
-	; (function () {
-		var lastTime = 0
-		var vendors = ['ms', 'moz', 'webkit', 'o']
-		for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-			window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame']
-			window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame']
-		}
-
-		if (!window.requestAnimationFrame)
-			window.requestAnimationFrame = function (callback, element) {
-				var currTime = new Date().getTime()
-				var timeToCall = Math.max(0, 16 - (currTime - lastTime))
-				var id = window.setTimeout(function () {
-					callback(currTime + timeToCall)
-				}, timeToCall)
-				lastTime = currTime + timeToCall
-				return id
-			}
-
-		if (!window.cancelAnimationFrame)
-			window.cancelAnimationFrame = function (id) {
-				clearTimeout(id)
-			}
-	})()
-
-	initialize()
+	$('#canvas-twisted').css('opacity', opacity)
+	$('body').append('<div class="bg-color" style="background-color:' + bgColor + '"></div>')
 }
 
 /** 8. NETWORK BACKGROUND
