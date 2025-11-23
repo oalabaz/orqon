@@ -43,6 +43,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <!-- META TAGS -->
+    <script>
+        !function (t, e) { var o, n, p, r; e.__SV || (window.posthog && window.posthog.__loaded) || (window.posthog = e, e._i = [], e.init = function (i, s, a) { function g(t, e) { var o = e.split("."); 2 == o.length && (t = t[o[0]], e = o[1]), t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))) } } (p = t.createElement("script")).type = "text/javascript", p.crossOrigin = "anonymous", p.async = !0, p.src = s.api_host.replace(".i.posthog.com", "-assets.i.posthog.com") + "/static/array.js", (r = t.getElementsByTagName("script")[0]).parentNode.insertBefore(p, r); var u = e; for (void 0 !== a ? u = e[a] = [] : a = "posthog", u.people = u.people || [], u.toString = function (t) { var e = "posthog"; return "posthog" !== a && (e += "." + a), t || (e += " (stub)"), e }, u.people.toString = function () { return u.toString(1) + ".people (stub)" }, o = "init Rr Mr fi Cr Ar ci Tr Fr capture Mi calculateEventProperties Lr register register_once register_for_session unregister unregister_for_session Hr getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey displaySurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty Ur jr createPersonProfile zr kr Br opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing get_explicit_consent_status is_capturing clear_opt_in_out_capturing Dr debug M Nr getPageViewId captureTraceFeedback captureTraceMetric $r".split(" "), n = 0; n < o.length; n++)g(u, o[n]); e._i.push([i, s, a]) }, e.__SV = 1) }(document, window.posthog || []);
+        posthog.init('phc_HXsekgAC5xnM5i5umDc226Aq9L3mtfFPFjMEznSKxni', {
+            api_host: 'https://us.i.posthog.com',
+            defaults: '2025-05-24',
+            person_profiles: 'identified_only', // or 'always' to create profiles for anonymous users as well
+        })
+    </script>
 
     <!-- PAGE TITLE -->
     <title>Orqon | Mehmet Orkun Alabaz — Full-Stack App Developer, Music Producer & Emerging Tech Innovator</title>
@@ -234,16 +242,18 @@
 
                             <!-- ABOUT ICONS -->
                             <div class="about-icons m-t-4 scroll-animation">
-                                <a href="https://github.com/oalabaz?tab=repositories" target="_blank" class="icon-link">
+                                <a href="https://github.com/oalabaz?tab=repositories" target="_blank" class="icon-link"
+                                    onclick="posthog.capture('click_apps_icon', { destination: 'github' })">
                                     <span class="ti-mobile"></span>
                                     <span class="icon-label">Apps</span>
                                 </a>
-                                <a href="https://on.soundcloud.com/5kSpHYZx3pQG8ytpMm" target="_blank"
-                                    class="icon-link">
+                                <a href="https://on.soundcloud.com/5kSpHYZx3pQG8ytpMm" target="_blank" class="icon-link"
+                                    onclick="posthog.capture('click_music_icon', { destination: 'soundcloud' })">
                                     <span class="ti-music"></span>
                                     <span class="icon-label">Music</span>
                                 </a>
-                                <a href="https://medium.com/@orkunalabaz" target="_blank" class="icon-link">
+                                <a href="https://medium.com/@orkunalabaz" target="_blank" class="icon-link"
+                                    onclick="posthog.capture('click_articles_icon', { destination: 'medium' })">
                                     <span class="ti-pencil-alt"></span>
                                     <span class="icon-label">Articles</span>
                                 </a>
@@ -800,38 +810,8 @@
                                     </a>
                                     <!-- /ITEM -->
 
-
                                     <!-- ITEM -->
-                                    <a href="assets/images/work/3.jpg" data-glightbox="description: .info-box-3"
-                                        class="item noselect work-lightbox-1 open-lightbox m-t-6 scroll-animation">
-
-
-                                        <div class="icon-button"><span class="ti-arrow-right"></span></div>
-
-                                        <div class="info">
-                                            <p class="color-white">Love</p>
-                                            <div class="seperator-line m-t-1"></div>
-                                        </div>
-                                        <div class="cover"
-                                            style="background-image: url(assets/images/work/preview/3.jpg);"></div>
-
-                                        <!-- INFO BOX -->
-                                        <div class="info-box info-box-3">
-
-                                            <h3 class="m-b-3">Love</h3>
-                                            <div class="seperator-line m-b-3"></div>
-                                            <p>...</p>
-
-                                        </div>
-                                        <!-- /INFO BOX -->
-
-
-                                    </a>
-                                    <!-- /ITEM -->
-
-
-                                    <!-- ITEM -->
-                                    <a href="assets/images/work/4.jpg" data-lightbox="description: .info-box-4"
+                                    <a href="assets/images/work/4.jpg" data-glightbox="description: .info-box-4"
                                         class="item noselect work-lightbox-1 open-lightbox m-t-6 scroll-animation">
 
 
@@ -890,9 +870,11 @@
                                     <!-- ITEM -->
                                     <div class="item m-b-6 scroll-animation">
                                         <p class="color-white m-b-1-5 small">CafeChain<span
-                                                class="m-l-2 color-white">2024-2025</span></p>
+                                                class="m-l-2 color-white">2024-2025</span>
+                                        </p>
                                         <p class="color-white m-b-1">Web3 Coffee Shop Loyalty Platform</p>
-                                        <p>A blockchain-based loyalty program for coffee shops, allowing customers to
+                                        <p>A blockchain-based loyalty program for coffee shops, allowing customers
+                                            to
                                             earn and redeem tokens across multiple locations.</p>
                                         <a href="https://cafechain-xiljh34.gamma.site/" target="_blank"
                                             class="button button-sm m-t-2">View Project</a>
@@ -904,7 +886,8 @@
                                         <p class="color-white m-b-1-5 small">GoddessChain<span
                                                 class="m-l-2 color-white">2023-2024</span></p>
                                         <p class="color-white m-b-1">NFT Marketplace for Art</p>
-                                        <p>A specialized NFT marketplace focused on empowering artists to tokenize and
+                                        <p>A specialized NFT marketplace focused on empowering artists to tokenize
+                                            and
                                             sell their digital art with royalty mechanisms.</p>
                                         <a href="#" target="_blank" class="button button-sm m-t-2">View Project</a>
                                     </div>
@@ -915,7 +898,8 @@
                                         <p class="color-white m-b-1-5 small">Intergalactic<span
                                                 class="m-l-2 color-white">2022-2023</span></p>
                                         <p class="color-white m-b-1">Space Exploration Game</p>
-                                        <p>An interactive web-based space exploration game built with WebGL and Three.js
+                                        <p>An interactive web-based space exploration game built with WebGL and
+                                            Three.js
                                             for immersive user experience.</p>
                                         <a href="#" target="_blank" class="button button-sm m-t-2">View Project</a>
                                     </div>
@@ -949,18 +933,24 @@
                                 <div class="customer-grid scroll-animation">
 
                                     <div class="item m-b-5"><img src="assets/images/clients/1.png"
-                                            class="img-responsive" alt="logo"></div>
+                                            class="img-responsive" alt="logo">
+                                    </div>
                                     <div class="item m-b-5"><img src="assets/images/clients/2.png"
-                                            class="img-responsive" alt="logo"></div>
+                                            class="img-responsive" alt="logo">
+                                    </div>
                                     <div class="item m-b-5"><img src="assets/images/clients/3.png"
-                                            class="img-responsive" alt="logo"></div>
+                                            class="img-responsive" alt="logo">
+                                    </div>
 
                                     <div class="item m-b-5"><img src="assets/images/clients/4.png"
-                                            class="img-responsive" alt="logo"></div>
+                                            class="img-responsive" alt="logo">
+                                    </div>
                                     <div class="item m-b-5"><img src="assets/images/clients/5.png"
-                                            class="img-responsive" alt="logo"></div>
+                                            class="img-responsive" alt="logo">
+                                    </div>
                                     <div class="item m-b-5"><img src="assets/images/clients/6.png"
-                                            class="img-responsive" alt="logo"></div>
+                                            class="img-responsive" alt="logo">
+                                    </div>
 
                                     <div class="item"><img src="assets/images/clients/7.png" class="img-responsive"
                                             alt="logo"></div>
@@ -990,7 +980,8 @@
 
 
                                 <p class="tag m-b-3 scroll-animation">TESTIMONIALS</p>
-                                <h3 class="m-b-4 m-l-1 scroll-animation">What my friends<br> are saying about me?</h3>
+                                <h3 class="m-b-4 m-l-1 scroll-animation">What my friends<br> are saying about me?
+                                </h3>
                                 <div class="seperator-line m-b-6 scroll-animation"></div>
 
 
@@ -1004,7 +995,8 @@
 
                                         <p class="quote">"Orqon is one of the most creative people on the planet.
                                             Develops wonders - million dollar systems. Goes the extra mile in
-                                            development & delivers a product with all the necessary bells & whistles."
+                                            development & delivers a product with all the necessary bells &
+                                            whistles."
                                         </p>
                                         <p class="name m-t-3 color-white">Emre Ekmekci</p>
                                         <p class="role">Founder Groupon Inc. Turkey Region</p>
@@ -1018,7 +1010,8 @@
                                     <div class="item">
 
                                         <p class="quote">"Orqon is an out of the box holistic thinker, with a great
-                                            sense of Design & Technology. Just rub the famous Alabaz lamp, & make your
+                                            sense of Design & Technology. Just rub the famous Alabaz lamp, & make
+                                            your
                                             wish... It might as well come true!"</p>
                                         <p class="name m-t-3 color-white">Aydın Arpa</p>
                                         <p class="role">MagicLeap Inc.</p>
