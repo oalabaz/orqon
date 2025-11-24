@@ -108,7 +108,7 @@ var config_profile_image_effect_intensity = 0.4
  *******************************************************************/
 
 // BACKGROUND MODE
-var array_background_mode = ['network', 'twisted', 'square', 'asteroids', 'circle', 'knowledge', 'knowledge_core', 'tunnel']
+var array_background_mode = ['network', 'twisted', 'square', 'asteroids', 'circle', 'knowledge', 'knowledge_core', 'tunnel', 'galaxy']
 array_background_mode.random = function () {
 	return this[Math.floor(Math.random() * this.length)]
 }

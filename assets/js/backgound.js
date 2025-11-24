@@ -57,6 +57,9 @@ function init_backgrounds() {
 		case 'tunnel':
 			if (typeof tunnelBackground === 'function') tunnelBackground();
 			break
+		case 'galaxy':
+			if (typeof galaxyBackground === 'function') galaxyBackground();
+			break
 		default:
 			if (typeof asteroidsBackground === 'function') asteroidsBackground();
 			break
