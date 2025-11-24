@@ -107,21 +107,13 @@ var config_profile_image_effect_intensity = 0.4
 /** 4. BACKGROUND CONFIG
  *******************************************************************/
 
-// BACKGROUND MODE [ SEE OPTIONS BELOW ]
-
-// "twisted" = TWISTED BACKGORUND
-// "color" = IMAGE BACKGROUND
-// "square" = VIDEO BACKGORUND
-// "asteroids" = ASTEROIDS BACKGORUND
-// "circle" = CIRCLE BACKGORUND
-// "lines" = LINES BACKGORUND
-
+// BACKGROUND MODE
 var array_background_mode = ['network', 'twisted', 'square', 'asteroids', 'circle', 'knowledge', 'knowledge_core', 'tunnel']
 array_background_mode.random = function () {
 	return this[Math.floor(Math.random() * this.length)]
 }
 
-var option_hero_background_mode = 'tunnel'
+var option_hero_background_mode = array_background_mode.random()
 
 // BACKGROUND MODE MOBILE [ SEE OPTIONS BELOW ]
 
