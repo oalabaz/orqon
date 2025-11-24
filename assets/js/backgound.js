@@ -54,6 +54,9 @@ function init_backgrounds() {
 		case 'knowledge_core':
 			if (typeof knowledgeCoreBackground === 'function') knowledgeCoreBackground();
 			break
+		case 'tunnel':
+			if (typeof tunnelBackground === 'function') tunnelBackground();
+			break
 		default:
 			if (typeof asteroidsBackground === 'function') asteroidsBackground();
 			break

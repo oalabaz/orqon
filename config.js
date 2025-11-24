@@ -116,12 +116,12 @@ var config_profile_image_effect_intensity = 0.4
 // "circle" = CIRCLE BACKGORUND
 // "lines" = LINES BACKGORUND
 
-var array_background_mode = ['network', 'twisted', 'square', 'asteroids', 'circle', 'knowledge', 'knowledge_core']
+var array_background_mode = ['network', 'twisted', 'square', 'asteroids', 'circle', 'knowledge', 'knowledge_core', 'tunnel']
 array_background_mode.random = function () {
 	return this[Math.floor(Math.random() * this.length)]
 }
 
-var option_hero_background_mode = array_background_mode.random()
+var option_hero_background_mode = 'tunnel'
 
 // BACKGROUND MODE MOBILE [ SEE OPTIONS BELOW ]
 
@@ -279,3 +279,9 @@ var option_hero_background_knowledge_core_bg_color = '#050505'
 
 // SCENE OPACITY ( 0 - 1.0 )
 var option_hero_background_knowledge_core_opacity = 1
+
+/** 4.10 BACKGROUND CONFIG [ TUNNEL BACKGROUND ]
+ *******************************************************************/
+
+// BACKGROUND COLOR
+var option_hero_background_tunnel_bg = '#000000'
