@@ -12,6 +12,12 @@
 function init_backgrounds() {
 	var error_msg = 'Error! No background is set or something went wrong'
 
+	// Check localStorage for locked background
+	var lockedBg = localStorage.getItem('locked_background_mode');
+	if (lockedBg) {
+		option_hero_background_mode = lockedBg;
+	}
+
 	if (typeof is_mobile_device !== 'undefined' && is_mobile_device == true && typeof option_hero_background_mode_mobile !== 'undefined' && option_hero_background_mode_mobile != 'match') {
 		option_hero_background_mode = option_hero_background_mode_mobile
 	}
@@ -67,16 +73,44 @@ function init_backgrounds() {
 
 	// Display current background name
 	var bgDisplayName = option_hero_background_mode.replace(/_/g, ' ').toUpperCase();
-	var $bubble = $('<div id="bg-selector-bubble" style="position: fixed; bottom: 30px; left: 30px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: rgba(255, 255, 255, 0.9); padding: 8px 16px; border-radius: 30px; font-family: sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; z-index: 9999; pointer-events: auto; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: all 0.3s ease;" title="Click to change background">' + bgDisplayName + '</div>');
+
+	// Check if currently locked
+	var isLocked = (localStorage.getItem('locked_background_mode') === option_hero_background_mode);
+	var lockIconClass = isLocked ? 'ti-lock' : 'ti-unlock';
+	var lockTitle = isLocked ? 'Unlock background' : 'Lock background';
+
+	var $bubble = $('<div id="bg-selector-bubble" style="display: flex; align-items: center; gap: 10px; position: fixed; bottom: 30px; left: 30px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: rgba(255, 255, 255, 0.9); padding: 8px 16px; border-radius: 30px; font-family: sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; z-index: 9999; pointer-events: auto; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: all 0.3s ease;">' +
+		'<span id="bg-name">' + bgDisplayName + '</span>' +
+		'<span id="bg-lock-btn" class="' + lockIconClass + '" style="font-size: 14px; padding: 2px;" title="' + lockTitle + '"></span>' +
+		'</div>');
 
 	$bubble.hover(
 		function () { $(this).css({ 'background': 'rgba(255, 255, 255, 0.1)', 'transform': 'scale(1.05)' }); },
 		function () { $(this).css({ 'background': 'rgba(0, 0, 0, 0.6)', 'transform': 'scale(1)' }); }
 	);
 
-	$bubble.on('click', function () {
+	$bubble.on('click', function (e) {
+		if ($(e.target).closest('#bg-lock-btn').length) return;
 		// Reload to pick a new random background
 		location.reload();
+	});
+
+	$('#bg-lock-btn', $bubble).on('click', function (e) {
+		e.stopPropagation();
+		var $btn = $(this);
+		var currentBg = option_hero_background_mode;
+
+		if ($btn.hasClass('ti-lock')) {
+			// Unlock
+			localStorage.removeItem('locked_background_mode');
+			$btn.removeClass('ti-lock').addClass('ti-unlock');
+			$btn.attr('title', 'Lock background');
+		} else {
+			// Lock
+			localStorage.setItem('locked_background_mode', currentBg);
+			$btn.removeClass('ti-unlock').addClass('ti-lock');
+			$btn.attr('title', 'Unlock background');
+		}
 	});
 
 	$('body').append($bubble);

@@ -7,7 +7,7 @@ function galaxyBackground() {
     var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 150;
     camera.position.y = 20;
-    camera.lookAt(0, 0, 0);
+    camera.lookAt(0, 10, 0);
 
     var scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x000000, 0.001);
@@ -15,14 +15,14 @@ function galaxyBackground() {
     // --- GALAXY PARAMETERS ---
     var parameters = {
         count: 50000,
-        size: 0.05,
-        radius: 40,
+        size: 1,
+        radius: 300,
         branches: 3,
         spin: 1,
         randomness: 0.2,
-        randomnessPower: 3,
+        randomnessPower: 1,
         insideColor: '#ff6030',
-        outsideColor: '#1b3984'
+        outsideColor: '#ff00aeff'
     };
 
     var geometry = null;
