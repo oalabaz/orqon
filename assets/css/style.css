@@ -1365,6 +1365,7 @@ _:-ms-fullscreen,
     left: 0;
     overflow: hidden;
     top: 0;
+    border-radius: 10px;
 }
 
 .left-content .inner-content .picture {
@@ -1396,6 +1397,7 @@ _:-ms-fullscreen,
     left: 0;
     z-index: -2;
     border: 1px solid #fff;
+    border-radius: 10px;
 }
 
 .left-content .inner-content .frame.frame-1 {
