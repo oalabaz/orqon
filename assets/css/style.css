@@ -2316,11 +2316,14 @@ _:-ms-fullscreen,
 
 .about-icons .icon-link:hover {
     color: #ffffff;
+
+
     /* white on hover */
 }
 
 .about-icons .icon-link:hover span {
     color: #ffffff;
+
 }
 
 .about-icons .icon-link span[class^='ti-'] {
