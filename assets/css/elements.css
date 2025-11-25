@@ -281,7 +281,9 @@
 	margin-left: 5rem;
 	position: relative;
 	padding: 7rem 9rem;
-	background: #181818;
+	background-color: rgba(66, 66, 66, 0.2);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
 }
 
 .resume .item:after {
@@ -298,22 +300,7 @@
 	background: #fff;
 }
 
-.resume .item:before {
-	content: '';
-	position: absolute;
-	left: 0;
-	top: 20%;
-	z-index: 11;
-	-webkit-transform: translate(-50%, -50%) rotate(45deg);
-	-ms-transform: translate(-50%, -50%) rotate(45deg);
-	transform: translate(-50%, -50%) rotate(45deg);
-	-webkit-transform-origin: center center;
-	-ms-transform-origin: center center;
-	transform-origin: center center;
-	width: 3.6rem;
-	height: 3.6rem;
-	background: inherit;
-}
+
 
 /** 8. Pricing Item
 *******************************************************************/
@@ -662,6 +649,8 @@
 	-webkit-transform: translate(-50%, -50%);
 	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
+	backdrop-filter: blur(2px);
+	-webkit-backdrop-filter: blur(2px);
 }
 
 /** 17. Tabs
