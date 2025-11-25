@@ -14,9 +14,9 @@ function galaxyBackground() {
 
     // --- GALAXY PARAMETERS ---
     var parameters = {
-        count: 50000,
+        count: 15000,
         size: 1,
-        radius: 300,
+        radius: 100,
         branches: 3,
         spin: 1,
         randomness: 0.2,
