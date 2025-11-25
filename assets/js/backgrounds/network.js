@@ -10,24 +10,54 @@ function networkBackground() {
     camera.position.z = 400
 
     var scene = new THREE.Scene()
-    // scene.background = new THREE.Color(option_hero_background_network_bg_color || '#212121');
 
     var particles = []
-    var particleCount = 100 // Adjust for density
-    var connectionDistance = 100
+    var particleCount = 180 // Increased for better density
+    var connectionDistance = 110
 
     var geometry = new THREE.BufferGeometry()
     var positions = new Float32Array(particleCount * 3)
     var colors = new Float32Array(particleCount * 3)
 
+    // Create a soft glow texture programmatically
+    function getTexture() {
+        var canvas = document.createElement('canvas');
+        canvas.width = 32;
+        canvas.height = 32;
+        var context = canvas.getContext('2d');
+        var gradient = context.createRadialGradient(16, 16, 0, 16, 16, 16);
+        gradient.addColorStop(0, 'rgba(255,255,255,1)');
+        gradient.addColorStop(0.4, 'rgba(255,255,255,0.5)');
+        gradient.addColorStop(1, 'rgba(0,0,0,0)');
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, 32, 32);
+        var texture = new THREE.Texture(canvas);
+        texture.needsUpdate = true;
+        return texture;
+    }
+
     var material = new THREE.PointsMaterial({
-        size: 3,
+        size: 5,
+        map: getTexture(),
         vertexColors: true,
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.9,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
     })
 
-    // Create particles
+    // Palette for a more "amazing" look
+    var palette = [
+        new THREE.Color('#ffffff'), // White
+        new THREE.Color('#00ffff'), // Cyan
+        new THREE.Color('#aaaaaa')  // Grey
+    ];
+
+    // Check if user provided a specific color, if so, mix it in
+    if (typeof option_hero_background_network_particle_color !== 'undefined' && option_hero_background_network_particle_color) {
+        palette.push(new THREE.Color(option_hero_background_network_particle_color));
+    }
+
     for (var i = 0; i < particleCount; i++) {
         var x = Math.random() * 800 - 400
         var y = Math.random() * 800 - 400
@@ -37,17 +67,17 @@ function networkBackground() {
             x: x,
             y: y,
             z: z,
-            vx: (Math.random() - 0.5) * 0.5,
-            vy: (Math.random() - 0.5) * 0.5,
-            vz: (Math.random() - 0.5) * 0.5,
+            vx: (Math.random() - 0.5) * 0.6,
+            vy: (Math.random() - 0.5) * 0.6,
+            vz: (Math.random() - 0.5) * 0.6,
         })
 
         positions[i * 3] = x
         positions[i * 3 + 1] = y
         positions[i * 3 + 2] = z
 
-        // Color gradient or single color
-        var color = new THREE.Color(option_hero_background_network_particle_color || '#ffffff')
+        // Assign random color from palette
+        var color = palette[Math.floor(Math.random() * palette.length)];
         colors[i * 3] = color.r
         colors[i * 3 + 1] = color.g
         colors[i * 3 + 2] = color.b
@@ -61,9 +91,10 @@ function networkBackground() {
 
     // Lines
     var lineMaterial = new THREE.LineBasicMaterial({
-        color: option_hero_background_network_line_color || '#ffffff',
+        color: 0xffffff,
         transparent: true,
-        opacity: 0.2,
+        opacity: 0.15,
+        blending: THREE.AdditiveBlending
     })
 
     var linesGeometry = new THREE.BufferGeometry()
@@ -72,17 +103,15 @@ function networkBackground() {
 
     // Mouse interaction
     var mouse = new THREE.Vector2()
-    var target = new THREE.Vector2()
     var windowHalfX = window.innerWidth / 2
     var windowHalfY = window.innerHeight / 2
 
     function onDocumentMouseMove(event) {
-        mouse.x = (event.clientX - windowHalfX) * 0.05
-        mouse.y = (event.clientY - windowHalfY) * 0.05
+        mouse.x = (event.clientX - windowHalfX)
+        mouse.y = (event.clientY - windowHalfY)
     }
 
     document.addEventListener('mousemove', onDocumentMouseMove, false)
-
     window.addEventListener('resize', onWindowResize, false)
 
     function onWindowResize() {
@@ -96,9 +125,6 @@ function networkBackground() {
     function animate() {
         requestAnimationFrame(animate)
 
-        target.x = (1 - mouse.x) * 0.002
-        target.y = (1 - mouse.y) * 0.002
-
         // Update particles
         var positions = points.geometry.attributes.position.array
         var linePositions = []
@@ -110,7 +136,7 @@ function networkBackground() {
             p.y += p.vy
             p.z += p.vz
 
-            // Bounce off boundaries (virtual box)
+            // Bounce off boundaries
             if (p.x < -400 || p.x > 400) p.vx = -p.vx
             if (p.y < -400 || p.y > 400) p.vy = -p.vy
             if (p.z < -400 || p.z > 400) p.vz = -p.vz
@@ -136,15 +162,26 @@ function networkBackground() {
         // Update lines
         lines.geometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3))
 
-        // Rotate scene slightly based on mouse
-        scene.rotation.x += 0.001 + (mouse.y * 0.0001)
-        scene.rotation.y += 0.001 + (mouse.x * 0.0001)
+        // Rotate scene constantly
+        scene.rotation.y += 0.001
+        scene.rotation.x += 0.0005
+
+        // Mouse influence on camera position for parallax effect
+        camera.position.x += (mouse.x * 0.5 - camera.position.x) * 0.05
+        camera.position.y += (-mouse.y * 0.5 - camera.position.y) * 0.05
+        camera.lookAt(scene.position)
 
         renderer.render(scene, camera)
     }
 
     animate()
 
-    $('#canvas-network').css('opacity', option_hero_background_network_opacity || 0.5)
-    $('body').append('<div class="bg-color" style="background-color:' + (option_hero_background_network_bg_color || '#212121') + '"></div>')
+    $('#canvas-network').css('opacity', option_hero_background_network_opacity || 0.8)
+
+    // Check if background color div exists, if not create it
+    if ($('.bg-color').length === 0) {
+        $('body').append('<div class="bg-color" style="background-color:' + (option_hero_background_network_bg_color || '#1a1a1a') + '"></div>')
+    } else {
+        $('.bg-color').css('background-color', option_hero_background_network_bg_color || '#1a1a1a')
+    }
 }
