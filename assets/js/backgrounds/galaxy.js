@@ -22,7 +22,7 @@ function galaxyBackground() {
         randomness: 0.2,
         randomnessPower: 1,
         insideColor: '#ff6030',
-        outsideColor: '#ff00aeff'
+        outsideColor: '#ffaeff'
     };
 
     var geometry = null;

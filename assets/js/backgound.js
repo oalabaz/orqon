@@ -155,10 +155,11 @@ function init_backgrounds() {
 
 					// Measure dimensions
 					// We need to check if text is wider than the container's max-width
-					// The container has max-width: 300px (defined in CSS string above)
+					// The container has max-width: 300px (defined in CSS).
+					// With padding (24px * 2 = 48px), available space is ~252px.
 					var textWidth = $text.outerWidth();
-					var containerMaxWidth = 300;
-					// Note: We use the max-width value we set in the style. 
+					var containerMaxWidth = 250;
+					// Note: We use the max-width value we set in the style minus padding. 
 					// If the text is shorter, the container shrinks (width: auto).
 
 					// Animate In
