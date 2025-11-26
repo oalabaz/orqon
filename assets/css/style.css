@@ -2492,7 +2492,7 @@ _:-ms-fullscreen,
 *****************************************************************/
 .about-icons {
     display: flex;
-    gap: 8rem;
+    gap: 4rem;
     align-items: center;
 }
 
