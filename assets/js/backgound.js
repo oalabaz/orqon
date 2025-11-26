@@ -79,7 +79,11 @@ function init_backgrounds() {
 	var lockIconClass = isLocked ? 'ti-lock' : 'ti-unlock';
 	var lockTitle = isLocked ? 'Unlock background' : 'Lock background';
 
-	var $bubble = $('<div id="bg-selector-bubble" style="display: flex; align-items: center; gap: 10px; position: fixed; bottom: 30px; left: 30px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: rgba(255, 255, 255, 0.9); padding: 8px 16px; border-radius: 30px; font-family: sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; z-index: 9999; pointer-events: auto; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: all 0.3s ease;">' +
+	// Wrapper for bottom controls
+	var $controlsWrapper = $('<div id="bottom-controls-wrapper" style="position: fixed; bottom: 30px; left: 30px; display: flex; gap: 15px; align-items: center; z-index: 9999; pointer-events: none;"></div>');
+
+	// 1. Background Selector Bubble
+	var $bubble = $('<div id="bg-selector-bubble" style="display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: rgba(255, 255, 255, 0.9); padding: 8px 16px; border-radius: 30px; font-family: sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; pointer-events: auto; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: all 0.3s ease;">' +
 		'<span id="bg-name">' + bgDisplayName + '</span>' +
 		'<span id="bg-lock-btn" class="' + lockIconClass + '" style="font-size: 14px; padding: 2px;" title="' + lockTitle + '"></span>' +
 		'</div>');
@@ -113,7 +117,98 @@ function init_backgrounds() {
 		}
 	});
 
-	$('body').append($bubble);
+	// 2. News Ticker
+	var newsItems = [
+		{ text: "NEW SINGLE 'STARLIT' OUT NOW ON SOUNDCLOUD - CLICK TO LISTEN", link: "https://soundcloud.com/oalabaz/starlit" },
+		{ text: "CHECK OUT MY LATEST MEDIUM ARTICLE", link: "https://medium.com/@orkunalabaz/sten-a-thermodynamic-framework-for-solar-routed-space-power-6d0dd8203bd8" }
+	];
+
+	var $ticker = $('<div id="news-ticker" class="ticker" >' +
+		'<span id="ticker-text" style="display: inline-block;"></span>' +
+		'</div>');
+
+	$ticker.hover(
+		function () { $(this).css({ 'background': 'rgba(255, 255, 255, 0.1)', 'transform': 'scale(1)' }); },
+		function () { $(this).css({ 'background': 'rgba(0, 0, 0, 0.6)', 'transform': 'scale(1)' }); }
+	);
+
+	var currentNewsIndex = 0;
+
+	function cycleTicker() {
+		var item = newsItems[currentNewsIndex];
+		var $text = $ticker.find('#ticker-text');
+
+		// Update click handler
+		$ticker.off('click').on('click', function () {
+			window.open(item.link, '_blank');
+		});
+
+		if (typeof gsap !== 'undefined') {
+			// Animate Out
+			gsap.to($text, {
+				opacity: 0, y: -10, duration: 0.3, onComplete: function () {
+					// Set New Text
+					$text.text(item.text);
+
+					// Reset properties
+					gsap.set($text, { x: 0, y: 10, opacity: 0 });
+
+					// Measure dimensions
+					// We need to check if text is wider than the container's max-width
+					// The container has max-width: 300px (defined in CSS string above)
+					var textWidth = $text.outerWidth();
+					var containerMaxWidth = 300;
+					// Note: We use the max-width value we set in the style. 
+					// If the text is shorter, the container shrinks (width: auto).
+
+					// Animate In
+					gsap.to($text, {
+						opacity: 1, y: 0, duration: 0.3, onComplete: function () {
+
+							// Check if scrolling is needed
+							if (textWidth > containerMaxWidth) {
+								var scrollDist = textWidth - containerMaxWidth + 40; // +40 for padding/safety
+								var scrollDuration = scrollDist / 40; // Speed: 40px/sec
+								if (scrollDuration < 2) scrollDuration = 2; // Min duration
+
+								// Scroll Animation (Marquee)
+								gsap.to($text, {
+									x: -scrollDist,
+									duration: scrollDuration,
+									ease: "none",
+									delay: 0.5,
+									yoyo: true,
+									repeat: 1,
+									repeatDelay: 1,
+									onComplete: nextCycle
+								});
+							} else {
+								// No scroll needed, just wait
+								gsap.delayedCall(4, nextCycle);
+							}
+						}
+					});
+				}
+			});
+		} else {
+			// Fallback if GSAP not loaded
+			$text.text(item.text);
+			setTimeout(nextCycle, 4000);
+		}
+	}
+
+	function nextCycle() {
+		currentNewsIndex = (currentNewsIndex + 1) % newsItems.length;
+		cycleTicker();
+	}
+
+	// Start the cycle
+	cycleTicker();
+
+	// Append to wrapper and body
+	$controlsWrapper.append($bubble);
+	$controlsWrapper.append($ticker);
+	$('body').append($controlsWrapper);
 }
 
 // Call init when DOM is ready or immediately if at end of body

@@ -2544,6 +2544,30 @@ _:-ms-fullscreen,
     color: inherit;
 }
 
+.ticker {
+    max-width: 100px;
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 12px 16px;
+    border-radius: 30px;
+    font-family: sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    pointer-events: auto;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 300px;
+}
+
 @keyframes animate {
     from {
         filter: hue-rotate(0deg);
