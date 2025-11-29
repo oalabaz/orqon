@@ -389,34 +389,41 @@ function orbitBackground() {
     function createTextSprite(text, color) {
         var canvas = document.createElement('canvas');
         var context = canvas.getContext('2d');
-        canvas.width = 128;
-        canvas.height = 32;
+        canvas.width = 512;
+        canvas.height = 128;
         
-        context.font = '14px Consolas, Monaco, monospace';
+        // Clear with transparent background
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        
+        context.font = 'bold 48px Consolas, Monaco, monospace';
         context.fillStyle = color || '#aabbcc';
         context.textAlign = 'center';
         context.textBaseline = 'middle';
-        context.fillText(text, 64, 16);
+        context.fillText(text, 256, 64);
         
         var texture = new THREE.CanvasTexture(canvas);
         texture.needsUpdate = true;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
         
         var spriteMaterial = new THREE.SpriteMaterial({
             map: texture,
             transparent: true,
-            opacity: 0.7,
+            opacity: 0.9,
             depthWrite: false,
-            depthTest: false
+            depthTest: false,
+            sizeAttenuation: true
         });
         
         var sprite = new THREE.Sprite(spriteMaterial);
-        sprite.scale.set(20, 5, 1);
+        sprite.scale.set(60, 15, 1);
+        sprite.renderOrder = 999; // Render on top
         return sprite;
     }
     
     // Sun label
-    var sunLabel = createTextSprite('☉ SUN', '#ffcc88');
-    sunLabel.position.set(0, -18, 0);
+    var sunLabel = createTextSprite('SUN', '#ffcc88');
+    sunLabel.position.set(0, -35, 0);
     sunGroup.add(sunLabel);
 
     // --- PLANETARY ORBITS with gradient effect ---
@@ -454,8 +461,8 @@ function orbitBackground() {
     scene.add(earthMesh);
     
     // Earth label
-    var earthLabel = createTextSprite('⊕ EARTH', '#6688aa');
-    earthLabel.position.set(0, -6, 0);
+    var earthLabel = createTextSprite('EARTH', '#88aacc');
+    earthLabel.position.set(0, -18, 0);
     earthMesh.add(earthLabel);
 
     // --- MARS ---
@@ -467,8 +474,8 @@ function orbitBackground() {
     scene.add(marsMesh);
     
     // Mars label
-    var marsLabel = createTextSprite('♂ MARS', '#aa6644');
-    marsLabel.position.set(0, -5, 0);
+    var marsLabel = createTextSprite('MARS', '#cc8866');
+    marsLabel.position.set(0, -16, 0);
     marsMesh.add(marsLabel);
 
     // --- JUPITER with advanced shaders ---
@@ -642,9 +649,9 @@ function orbitBackground() {
     jupiterGroup.add(new THREE.Mesh(rimGeometry, rimMaterial));
     
     // Jupiter label
-    var jupiterLabel = createTextSprite('♃ JUPITER', '#ddaa77');
-    jupiterLabel.position.set(0, -75, 0);
-    jupiterLabel.scale.set(35, 9, 1);
+    var jupiterLabel = createTextSprite('JUPITER', '#eebb77');
+    jupiterLabel.position.set(0, -110, 0);
+    jupiterLabel.scale.set(80, 20, 1);
     jupiterGroup.add(jupiterLabel);
     
     // --- GALILEAN MOONS ---
@@ -684,8 +691,8 @@ function orbitBackground() {
         // Moon label
         var colorHex = '#' + moonData.color.toString(16).padStart(6, '0');
         var moonLabel = createTextSprite(moonData.name.toUpperCase(), colorHex);
-        moonLabel.position.set(0, -moonData.radius - 2.5, 0);
-        moonLabel.scale.set(12, 3, 1);
+        moonLabel.position.set(0, -moonData.radius - 8, 0);
+        moonLabel.scale.set(18, 4.5, 1);
         moonGroup.add(moonLabel);
         
         // Store orbital data
@@ -967,10 +974,69 @@ function orbitBackground() {
     cometGroup.add(new THREE.Mesh(outerComaGeometry, outerComaMaterial));
     
     // Comet label
-    var cometLabel = createTextSprite('☄ 3I/ATLAS', '#aaddff');
-    cometLabel.position.set(0, -12, 0);
-    cometLabel.scale.set(22, 5.5, 1);
+    var cometLabel = createTextSprite('3I/ATLAS', '#aaddff');
+    cometLabel.position.set(0, -35, 0);
+    cometLabel.scale.set(80, 20, 1);
     cometGroup.add(cometLabel);
+    
+    // Comet date/time label (dynamic, updated each frame)
+    var cometDateCanvas = document.createElement('canvas');
+    var cometDateContext = cometDateCanvas.getContext('2d');
+    cometDateCanvas.width = 2048;
+    cometDateCanvas.height = 256;
+    
+    var cometDateTexture = new THREE.CanvasTexture(cometDateCanvas);
+    cometDateTexture.minFilter = THREE.LinearFilter;
+    cometDateTexture.magFilter = THREE.LinearFilter;
+    
+    var cometDateMaterial = new THREE.SpriteMaterial({
+        map: cometDateTexture,
+        transparent: true,
+        opacity: 1.0,
+        depthWrite: false,
+        depthTest: false
+    });
+    var cometDateSprite = new THREE.Sprite(cometDateMaterial);
+    cometDateSprite.position.set(0, -65, 0);
+    cometDateSprite.scale.set(160, 20, 1);
+    cometDateSprite.renderOrder = 999;
+    cometGroup.add(cometDateSprite);
+    
+    // Function to update date label
+    function updateCometDateLabel(progress) {
+        // Calculate simulated date based on animation progress
+        // Start from perihelion date (Oct 29, 2025) and span 10 years
+        var perihelionDate = new Date('2025-10-29');
+        var journeyDays = 3650; // ~10 years
+        var dayOffset = Math.floor(progress * journeyDays);
+        
+        var simulatedDate = new Date(perihelionDate);
+        simulatedDate.setDate(simulatedDate.getDate() + dayOffset);
+        
+        // Format: "25'NOV 15 14:32:08"
+        var months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        var year = String(simulatedDate.getFullYear()).slice(-2); // Last 2 digits
+        var month = months[simulatedDate.getMonth()];
+        var day = String(simulatedDate.getDate()).padStart(2, '0');
+        
+        // Add ticking time based on fractional day
+        var fracDay = (progress * journeyDays) % 1;
+        var hours = String(Math.floor(fracDay * 24)).padStart(2, '0');
+        var minutes = String(Math.floor((fracDay * 24 * 60) % 60)).padStart(2, '0');
+        var seconds = String(Math.floor((fracDay * 24 * 60 * 60) % 60)).padStart(2, '0');
+        
+        var dateStr = year + "'" + month + ' ' + day + ' ' + hours + ':' + minutes + ':' + seconds;
+        
+        // Clear and redraw with larger font
+        cometDateContext.clearRect(0, 0, 2048, 256);
+        cometDateContext.font = 'bold 128px Consolas, Monaco, monospace';
+        cometDateContext.fillStyle = '#aaddff';
+        cometDateContext.textAlign = 'center';
+        cometDateContext.textBaseline = 'middle';
+        cometDateContext.fillText(dateStr, 1024, 128);
+        
+        cometDateTexture.needsUpdate = true;
+    }
     
     scene.add(cometGroup);
 
@@ -1239,6 +1305,9 @@ function orbitBackground() {
         var currentCurve = (window._orbitTrajectoryData && window._orbitTrajectoryData.curve) || trajectoryCurve;
         var cometPos = currentCurve.getPoint(animationProgress);
         cometGroup.position.copy(cometPos);
+        
+        // Update comet date/time label
+        updateCometDateLabel(animationProgress);
         
         // Update lit trail - shows comet's traveled path with gradient fade
         if (trajectoryData && trajectoryData.litTrailGeometry) {
