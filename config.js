@@ -113,7 +113,7 @@ array_background_mode.random = function () {
 	return this[Math.floor(Math.random() * this.length)]
 }
 
-var option_hero_background_mode = array_background_mode.random()
+var option_hero_background_mode = 'orbit'
 
 // BACKGROUND MODE MOBILE [ SEE OPTIONS BELOW ]
 
