@@ -1,525 +1,548 @@
 function orbitBackground() {
     var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.domElement.id = 'canvas-orbit';
     document.getElementById('main').appendChild(renderer.domElement);
 
     var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 10000);
-    camera.position.z = 400;
-    camera.position.y = 150;
+    camera.position.z = 350;
+    camera.position.y = 200;
+    camera.position.x = 100;
     camera.lookAt(0, 0, 0);
 
     var scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x000000, 0.001);
 
     // --- SCALE PARAMETERS ---
-    var AU_TO_PIXELS = 40; // 1 AU = 40 pixels for visualization
-    var SUN_MASS = 1.989e30; // kg
-    var JUPITER_MASS = 1.898e27; // kg
+    var AU_TO_PIXELS = 45;
+    var SUN_MASS = 1.989e30;
+    var JUPITER_MASS = 1.898e27;
     
-    // --- C/2024 G3 ATLAS Comet Data ---
-    // Orbital elements from JPL Horizons (approximate current values)
+    // --- 3I/ATLAS Post-Perihelion - Heading to Jupiter's Hill Radius ---
     var cometData = {
-        name: 'C/2024 G3 (ATLAS)',
-        eccentricity: 0.9997, // Near-parabolic orbit
-        perihelionDistance: 0.091, // AU - very close to Sun
-        inclination: 45.0, // degrees (approximate)
-        longitudeAscendingNode: 150.0, // degrees (approximate)
-        argumentPerihelion: 130.0, // degrees (approximate)
-        perihelionDate: new Date('2025-01-13'), // Perihelion passage
+        name: '3I/ATLAS',
+        perihelionDate: new Date('2025-10-29T11:44:00Z'),
+        perihelionDistance: 1.3564,
+        vInfinity: 58,
         color: 0x00ffff,
-        tailColor: 0x66ffff
+        tailColor: 0x44ddff
     };
     
-    // Jupiter orbital data for Hill radius reference
+    // Jupiter data
     var jupiterData = {
-        semiMajorAxis: 5.2, // AU
-        eccentricity: 0.0489,
+        semiMajorAxis: 5.2,
         mass: JUPITER_MASS,
-        color: 0xffa500
+        color: 0xffaa44,
+        currentAngle: Math.PI * 0.3
     };
 
     // Calculate Jupiter's Hill Radius
-    // Hill radius = a * (m / 3M)^(1/3)
     var jupiterHillRadius = jupiterData.semiMajorAxis * Math.pow(JUPITER_MASS / (3 * SUN_MASS), 1/3);
     var jupiterHillRadiusPixels = jupiterHillRadius * AU_TO_PIXELS;
 
-    // --- TRAJECTORY DATA FROM NASA JPL HORIZONS ---
-    var trajectoryPoints = [];
-    var currentCometPosition = new THREE.Vector3();
-    var cometVelocity = new THREE.Vector3();
-    var dataLoaded = false;
-    var apiError = false;
-    var lastFetchTime = 0;
-    var fetchInterval = 60000; // Refresh every 60 seconds
+    // Animation progress (0 = perihelion, 1 = at Jupiter Hill radius)
+    var animationProgress = 0;
+    var animationSpeed = 0.0008;
+    var totalJourneyDays = 180;
 
-    // --- INFO TEXT HUD ---
-    var infoDiv = document.createElement('div');
-    infoDiv.id = 'orbit-info';
-    infoDiv.style.position = 'absolute';
-    infoDiv.style.top = '20px';
-    infoDiv.style.left = '20px';
-    infoDiv.style.color = '#00ffff';
-    infoDiv.style.fontFamily = 'monospace';
-    infoDiv.style.fontSize = '11px';
-    infoDiv.style.pointerEvents = 'none';
-    infoDiv.style.textShadow = '0 0 10px rgba(0, 255, 255, 0.8)';
-    infoDiv.style.lineHeight = '1.5';
-    infoDiv.style.zIndex = '100';
-    infoDiv.style.maxWidth = '320px';
-    infoDiv.style.background = 'rgba(0,0,20,0.7)';
-    infoDiv.style.padding = '12px';
-    infoDiv.style.borderRadius = '8px';
-    infoDiv.style.border = '1px solid rgba(0,255,255,0.3)';
-    infoDiv.innerHTML = '<strong>C/2024 G3 (ATLAS)</strong><br>Loading trajectory data from NASA JPL...';
-    document.body.appendChild(infoDiv);
+    // --- ENHANCED STARFIELD ---
+    function createStarfield() {
+        var starGeometry = new THREE.BufferGeometry();
+        var starCount = 8000;
+        var positions = new Float32Array(starCount * 3);
+        var colors = new Float32Array(starCount * 3);
+        
+        for (var i = 0; i < starCount; i++) {
+            var radius = 1500 + Math.random() * 4000;
+            var theta = Math.random() * Math.PI * 2;
+            var phi = Math.acos(2 * Math.random() - 1);
+            
+            positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+            positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+            positions[i * 3 + 2] = radius * Math.cos(phi);
+            
+            var colorChoice = Math.random();
+            if (colorChoice < 0.7) {
+                colors[i * 3] = 1; colors[i * 3 + 1] = 1; colors[i * 3 + 2] = 1;
+            } else if (colorChoice < 0.85) {
+                colors[i * 3] = 0.8; colors[i * 3 + 1] = 0.9; colors[i * 3 + 2] = 1;
+            } else {
+                colors[i * 3] = 1; colors[i * 3 + 1] = 0.95; colors[i * 3 + 2] = 0.8;
+            }
+        }
+        
+        starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        starGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        
+        var starMaterial = new THREE.PointsMaterial({
+            size: 1.2,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.9,
+            sizeAttenuation: true
+        });
+        
+        return new THREE.Points(starGeometry, starMaterial);
+    }
+    scene.add(createStarfield());
 
-    // --- CREATE SUN ---
-    var sunGeometry = new THREE.SphereGeometry(8, 32, 32);
-    var sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    // --- MILKY WAY BAND ---
+    function createMilkyWay() {
+        var geometry = new THREE.BufferGeometry();
+        var count = 15000;
+        var positions = new Float32Array(count * 3);
+        var colors = new Float32Array(count * 3);
+        
+        for (var i = 0; i < count; i++) {
+            var angle = Math.random() * Math.PI * 2;
+            var radius = 2000 + Math.random() * 2500;
+            var thickness = (Math.random() - 0.5) * 300;
+            
+            positions[i * 3] = Math.cos(angle) * radius;
+            positions[i * 3 + 1] = thickness + (Math.random() - 0.5) * 100;
+            positions[i * 3 + 2] = Math.sin(angle) * radius;
+            
+            var brightness = 0.3 + Math.random() * 0.4;
+            colors[i * 3] = brightness * 0.9;
+            colors[i * 3 + 1] = brightness * 0.85;
+            colors[i * 3 + 2] = brightness;
+        }
+        
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        
+        var material = new THREE.PointsMaterial({
+            size: 0.8,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.4
+        });
+        
+        var milkyWay = new THREE.Points(geometry, material);
+        milkyWay.rotation.x = Math.PI * 0.15;
+        milkyWay.rotation.z = Math.PI * 0.1;
+        return milkyWay;
+    }
+    scene.add(createMilkyWay());
+
+    // --- GLOWING SUN ---
+    var sunGroup = new THREE.Group();
+    
+    var sunGeometry = new THREE.SphereGeometry(10, 64, 64);
+    var sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffee00 });
     var sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
-    scene.add(sunMesh);
+    sunGroup.add(sunMesh);
+    
+    // Sun corona layers
+    for (var i = 1; i <= 4; i++) {
+        var glowGeometry = new THREE.SphereGeometry(10 + i * 4, 32, 32);
+        var glowMaterial = new THREE.MeshBasicMaterial({
+            color: i < 3 ? 0xffaa00 : 0xff6600,
+            transparent: true,
+            opacity: 0.15 / i,
+            side: THREE.BackSide
+        });
+        sunGroup.add(new THREE.Mesh(glowGeometry, glowMaterial));
+    }
+    
+    // Sun light rays
+    var rayCount = 12;
+    for (var i = 0; i < rayCount; i++) {
+        var rayGeometry = new THREE.PlaneGeometry(3, 60);
+        var rayMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffdd44,
+            transparent: true,
+            opacity: 0.1,
+            side: THREE.DoubleSide
+        });
+        var ray = new THREE.Mesh(rayGeometry, rayMaterial);
+        ray.rotation.z = (i / rayCount) * Math.PI * 2;
+        ray.position.z = 0;
+        sunGroup.add(ray);
+    }
+    scene.add(sunGroup);
 
-    // Sun glow effect
-    var sunGlowGeometry = new THREE.SphereGeometry(12, 32, 32);
-    var sunGlowMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffaa00,
-        transparent: true,
-        opacity: 0.3
-    });
-    var sunGlowMesh = new THREE.Mesh(sunGlowGeometry, sunGlowMaterial);
-    sunMesh.add(sunGlowMesh);
-
-    // --- CREATE PLANETARY ORBITS (Reference) ---
-    function createOrbitRing(radius, color, opacity) {
-        var segments = 128;
+    // --- PLANETARY ORBITS with gradient effect ---
+    function createGlowingOrbit(radius, color, glowColor) {
+        var group = new THREE.Group();
+        var segments = 256;
+        
         var points = [];
         for (var i = 0; i <= segments; i++) {
             var angle = (i / segments) * Math.PI * 2;
-            points.push(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+            points.push(new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius));
         }
-        var geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(points), 3));
-        var material = new THREE.LineBasicMaterial({
+        var curve = new THREE.CatmullRomCurve3(points, true);
+        var geometry = new THREE.TubeGeometry(curve, segments, 0.3, 8, true);
+        var material = new THREE.MeshBasicMaterial({
             color: color,
             transparent: true,
-            opacity: opacity
+            opacity: 0.6
         });
-        return new THREE.Line(geometry, material);
+        group.add(new THREE.Mesh(geometry, material));
+        
+        var glowGeometry = new THREE.TubeGeometry(curve, segments, 1.5, 8, true);
+        var glowMaterial = new THREE.MeshBasicMaterial({
+            color: glowColor,
+            transparent: true,
+            opacity: 0.1
+        });
+        group.add(new THREE.Mesh(glowGeometry, glowMaterial));
+        
+        return group;
     }
 
-    // Earth orbit (1 AU)
-    var earthOrbit = createOrbitRing(1 * AU_TO_PIXELS, 0x3366ff, 0.3);
-    scene.add(earthOrbit);
+    scene.add(createGlowingOrbit(1 * AU_TO_PIXELS, 0x4488ff, 0x2266cc));
+    scene.add(createGlowingOrbit(1.52 * AU_TO_PIXELS, 0xff6644, 0xcc4422));
+    scene.add(createGlowingOrbit(5.2 * AU_TO_PIXELS, 0xffaa44, 0xcc8822));
 
-    // Mars orbit (~1.5 AU)
-    var marsOrbit = createOrbitRing(1.52 * AU_TO_PIXELS, 0xff6633, 0.2);
-    scene.add(marsOrbit);
+    // --- EARTH ---
+    var earthGeometry = new THREE.SphereGeometry(3, 32, 32);
+    var earthMaterial = new THREE.MeshBasicMaterial({ color: 0x4488ff });
+    var earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+    var earthAngle = Math.PI * 1.2;
+    earthMesh.position.set(Math.cos(earthAngle) * AU_TO_PIXELS, 0, Math.sin(earthAngle) * AU_TO_PIXELS);
+    scene.add(earthMesh);
 
-    // Jupiter orbit (~5.2 AU)
-    var jupiterOrbit = createOrbitRing(5.2 * AU_TO_PIXELS, 0xffa500, 0.3);
-    scene.add(jupiterOrbit);
+    // --- MARS ---
+    var marsGeometry = new THREE.SphereGeometry(2.5, 32, 32);
+    var marsMaterial = new THREE.MeshBasicMaterial({ color: 0xff6644 });
+    var marsMesh = new THREE.Mesh(marsGeometry, marsMaterial);
+    var marsAngle = Math.PI * 0.8;
+    marsMesh.position.set(Math.cos(marsAngle) * 1.52 * AU_TO_PIXELS, 0, Math.sin(marsAngle) * 1.52 * AU_TO_PIXELS);
+    scene.add(marsMesh);
 
-    // --- CREATE JUPITER ---
-    var jupiterAngle = 0;
-    var jupiterGeometry = new THREE.SphereGeometry(5, 16, 16);
-    var jupiterMaterial = new THREE.MeshBasicMaterial({ color: jupiterData.color });
+    // --- JUPITER with atmosphere bands ---
+    var jupiterGroup = new THREE.Group();
+    
+    var jupiterGeometry = new THREE.SphereGeometry(8, 64, 64);
+    var jupiterMaterial = new THREE.MeshBasicMaterial({ color: 0xffaa44 });
     var jupiterMesh = new THREE.Mesh(jupiterGeometry, jupiterMaterial);
-    jupiterMesh.position.set(5.2 * AU_TO_PIXELS, 0, 0);
-    scene.add(jupiterMesh);
+    jupiterGroup.add(jupiterMesh);
+    
+    for (var i = 0; i < 5; i++) {
+        var bandGeometry = new THREE.TorusGeometry(8.2, 0.3, 8, 64);
+        var bandMaterial = new THREE.MeshBasicMaterial({
+            color: i % 2 === 0 ? 0xdd8833 : 0xeebb66,
+            transparent: true,
+            opacity: 0.6
+        });
+        var band = new THREE.Mesh(bandGeometry, bandMaterial);
+        band.rotation.x = Math.PI / 2;
+        band.position.y = -4 + i * 2;
+        band.scale.set(1, 1, 0.3);
+        jupiterGroup.add(band);
+    }
+    
+    var spotGeometry = new THREE.SphereGeometry(1.5, 16, 16);
+    var spotMaterial = new THREE.MeshBasicMaterial({ color: 0xcc4422 });
+    var spotMesh = new THREE.Mesh(spotGeometry, spotMaterial);
+    spotMesh.position.set(7.5, -1, 2);
+    spotMesh.scale.set(1.5, 1, 0.3);
+    jupiterGroup.add(spotMesh);
+    
+    jupiterGroup.position.set(
+        Math.cos(jupiterData.currentAngle) * 5.2 * AU_TO_PIXELS,
+        0,
+        Math.sin(jupiterData.currentAngle) * 5.2 * AU_TO_PIXELS
+    );
+    scene.add(jupiterGroup);
 
-    // --- CREATE JUPITER'S HILL RADIUS SPHERE ---
-    var hillRadiusSphereGeometry = new THREE.SphereGeometry(jupiterHillRadiusPixels, 32, 16);
-    var hillRadiusSphereMaterial = new THREE.MeshBasicMaterial({
+    // --- JUPITER'S HILL RADIUS SPHERE ---
+    var hillGroup = new THREE.Group();
+    
+    var hillGlowGeometry = new THREE.SphereGeometry(jupiterHillRadiusPixels * 1.1, 64, 32);
+    var hillGlowMaterial = new THREE.MeshBasicMaterial({
         color: 0xff00ff,
         transparent: true,
-        opacity: 0.08,
-        wireframe: true
+        opacity: 0.03,
+        side: THREE.BackSide
     });
-    var hillRadiusSphere = new THREE.Mesh(hillRadiusSphereGeometry, hillRadiusSphereMaterial);
-    jupiterMesh.add(hillRadiusSphere);
-
-    // Hill radius ring (equatorial)
-    var hillRadiusRing = createOrbitRing(jupiterHillRadiusPixels, 0xff00ff, 0.5);
-    jupiterMesh.add(hillRadiusRing);
-
-    // --- CREATE COMET ---
-    var cometGeometry = new THREE.SphereGeometry(2, 16, 16);
-    var cometMaterial = new THREE.MeshBasicMaterial({ color: cometData.color });
-    var cometMesh = new THREE.Mesh(cometGeometry, cometMaterial);
-    scene.add(cometMesh);
-
-    // Comet coma (fuzzy atmosphere)
-    var comaGeometry = new THREE.SphereGeometry(4, 16, 16);
-    var comaMaterial = new THREE.MeshBasicMaterial({
-        color: 0x88ffff,
+    hillGroup.add(new THREE.Mesh(hillGlowGeometry, hillGlowMaterial));
+    
+    var hillWireGeometry = new THREE.SphereGeometry(jupiterHillRadiusPixels, 32, 16);
+    var hillWireMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff44ff,
+        wireframe: true,
         transparent: true,
-        opacity: 0.3
+        opacity: 0.15
     });
-    var comaMesh = new THREE.Mesh(comaGeometry, comaMaterial);
-    cometMesh.add(comaMesh);
-
-    // --- CREATE COMET TRAJECTORY LINE ---
-    var trajectoryGeometry = new THREE.BufferGeometry();
-    var trajectoryMaterial = new THREE.LineBasicMaterial({
-        color: cometData.tailColor,
+    hillGroup.add(new THREE.Mesh(hillWireGeometry, hillWireMaterial));
+    
+    var hillRingGeometry = new THREE.TorusGeometry(jupiterHillRadiusPixels, 0.5, 8, 128);
+    var hillRingMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff66ff,
         transparent: true,
         opacity: 0.7
     });
-    var trajectoryLine = new THREE.Line(trajectoryGeometry, trajectoryMaterial);
-    scene.add(trajectoryLine);
+    var hillRing = new THREE.Mesh(hillRingGeometry, hillRingMaterial);
+    hillRing.rotation.x = Math.PI / 2;
+    hillGroup.add(hillRing);
+    
+    for (var i = 0; i < 3; i++) {
+        var vRing = new THREE.Mesh(hillRingGeometry.clone(), hillRingMaterial.clone());
+        vRing.material.opacity = 0.3;
+        vRing.rotation.y = (i / 3) * Math.PI;
+        hillGroup.add(vRing);
+    }
+    
+    jupiterGroup.add(hillGroup);
 
-    // --- CREATE COMET TAIL ---
-    var tailGeometry = new THREE.BufferGeometry();
-    var tailMaterial = new THREE.LineBasicMaterial({
-        color: 0x88ccff,
+    // --- COMET with particle tail ---
+    var cometGroup = new THREE.Group();
+    
+    var nucleusGeometry = new THREE.SphereGeometry(3, 32, 32);
+    var nucleusMaterial = new THREE.MeshBasicMaterial({ color: 0x88ddff });
+    var nucleusMesh = new THREE.Mesh(nucleusGeometry, nucleusMaterial);
+    cometGroup.add(nucleusMesh);
+    
+    var comaGeometry = new THREE.SphereGeometry(6, 32, 32);
+    var comaMaterial = new THREE.MeshBasicMaterial({
+        color: 0x44ffff,
         transparent: true,
         opacity: 0.4
     });
-    var tailLine = new THREE.Line(tailGeometry, tailMaterial);
-    scene.add(tailLine);
+    var comaMesh = new THREE.Mesh(comaGeometry, comaMaterial);
+    cometGroup.add(comaMesh);
+    
+    var outerComaGeometry = new THREE.SphereGeometry(10, 32, 32);
+    var outerComaMaterial = new THREE.MeshBasicMaterial({
+        color: 0x22aaff,
+        transparent: true,
+        opacity: 0.15
+    });
+    cometGroup.add(new THREE.Mesh(outerComaGeometry, outerComaMaterial));
+    
+    scene.add(cometGroup);
 
-    // --- STARS BACKGROUND ---
-    var starGeometry = new THREE.BufferGeometry();
-    var starCount = 4000;
-    var starPositions = new Float32Array(starCount * 3);
-    for (var i = 0; i < starCount; i++) {
-        starPositions[i * 3] = (Math.random() - 0.5) * 6000;
-        starPositions[i * 3 + 1] = (Math.random() - 0.5) * 6000;
-        starPositions[i * 3 + 2] = (Math.random() - 0.5) * 6000;
-    }
-    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    var starMaterial = new THREE.PointsMaterial({
-        size: 0.5,
-        color: 0xffffff,
+    // --- COMET DUST TAIL ---
+    var tailParticleCount = 2000;
+    var tailGeometry = new THREE.BufferGeometry();
+    var tailPositions = new Float32Array(tailParticleCount * 3);
+    var tailColors = new Float32Array(tailParticleCount * 3);
+    var tailSizes = new Float32Array(tailParticleCount);
+    
+    tailGeometry.setAttribute('position', new THREE.BufferAttribute(tailPositions, 3));
+    tailGeometry.setAttribute('color', new THREE.BufferAttribute(tailColors, 3));
+    tailGeometry.setAttribute('size', new THREE.BufferAttribute(tailSizes, 1));
+    
+    var tailMaterial = new THREE.PointsMaterial({
+        size: 2,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.8,
+        sizeAttenuation: true
+    });
+    var tailParticles = new THREE.Points(tailGeometry, tailMaterial);
+    scene.add(tailParticles);
+
+    // --- ION TAIL ---
+    var ionTailGeometry = new THREE.BufferGeometry();
+    var ionTailMaterial = new THREE.LineBasicMaterial({
+        color: 0x4488ff,
+        transparent: true,
+        opacity: 0.6
+    });
+    var ionTail = new THREE.Line(ionTailGeometry, ionTailMaterial);
+    scene.add(ionTail);
+
+    // --- TRAJECTORY PATH ---
+    var trajectoryGroup = new THREE.Group();
+    
+    var perihelionPos = new THREE.Vector3(cometData.perihelionDistance * AU_TO_PIXELS, 0, 0);
+    var jupiterPos = jupiterGroup.position.clone();
+    var hillEdgePos = jupiterPos.clone().sub(jupiterPos.clone().normalize().multiplyScalar(jupiterHillRadiusPixels * 0.9));
+    
+    var controlPoint1 = new THREE.Vector3(
+        perihelionPos.x + 50,
+        40,
+        perihelionPos.z + 80
+    );
+    var controlPoint2 = new THREE.Vector3(
+        (perihelionPos.x + hillEdgePos.x) / 2,
+        30,
+        (perihelionPos.z + hillEdgePos.z) / 2 + 60
+    );
+    
+    var trajectoryCurve = new THREE.CatmullRomCurve3([
+        perihelionPos,
+        controlPoint1,
+        controlPoint2,
+        hillEdgePos
+    ]);
+    
+    var trajectoryTubeGeometry = new THREE.TubeGeometry(trajectoryCurve, 200, 0.8, 8, false);
+    var trajectoryTubeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00ffff,
         transparent: true,
         opacity: 0.7
     });
-    var stars = new THREE.Points(starGeometry, starMaterial);
-    scene.add(stars);
+    trajectoryGroup.add(new THREE.Mesh(trajectoryTubeGeometry, trajectoryTubeMaterial));
+    
+    var trajectoryGlowGeometry = new THREE.TubeGeometry(trajectoryCurve, 200, 2, 8, false);
+    var trajectoryGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00aaff,
+        transparent: true,
+        opacity: 0.2
+    });
+    trajectoryGroup.add(new THREE.Mesh(trajectoryGlowGeometry, trajectoryGlowMaterial));
+    
+    var perihelionMarkerGeometry = new THREE.SphereGeometry(2, 16, 16);
+    var perihelionMarkerMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    var perihelionMarker = new THREE.Mesh(perihelionMarkerGeometry, perihelionMarkerMaterial);
+    perihelionMarker.position.copy(perihelionPos);
+    trajectoryGroup.add(perihelionMarker);
+    
+    var targetMarkerGeometry = new THREE.TorusGeometry(4, 0.5, 8, 32);
+    var targetMarkerMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff00ff,
+        transparent: true,
+        opacity: 0.8
+    });
+    var targetMarker = new THREE.Mesh(targetMarkerGeometry, targetMarkerMaterial);
+    targetMarker.position.copy(hillEdgePos);
+    targetMarker.lookAt(jupiterGroup.position);
+    trajectoryGroup.add(targetMarker);
+    
+    scene.add(trajectoryGroup);
 
-    // --- FETCH TRAJECTORY FROM NASA JPL HORIZONS API ---
-    function fetchCometData() {
-        var now = new Date();
-        var startDate = new Date(now);
-        startDate.setDate(startDate.getDate() - 60); // 60 days before
-        var endDate = new Date(now);
-        endDate.setDate(endDate.getDate() + 120); // 120 days after
-
-        var formatDate = function(d) {
-            return d.toISOString().split('T')[0];
-        };
-
-        // Build NASA JPL Horizons API URL for C/2024 G3 ATLAS
-        // Using VECTORS type to get heliocentric coordinates
-        var apiUrl = 'https://ssd.jpl.nasa.gov/api/horizons.api?' +
-            'format=json' +
-            '&COMMAND=%27DES%3D2024%20G3%3BCAP%3B%27' + // Comet C/2024 G3
-            '&OBJ_DATA=YES' +
-            '&MAKE_EPHEM=YES' +
-            '&EPHEM_TYPE=VECTORS' +
-            '&CENTER=%27500%4010%27' + // Sun-centered
-            '&START_TIME=%27' + formatDate(startDate) + '%27' +
-            '&STOP_TIME=%27' + formatDate(endDate) + '%27' +
-            '&STEP_SIZE=%271%20d%27' + // Daily steps
-            '&VEC_TABLE=%272%27' + // Position and velocity
-            '&REF_PLANE=ECLIPTIC' +
-            '&REF_SYSTEM=ICRF' +
-            '&OUT_UNITS=%27AU-D%27' + // AU and days
-            '&CSV_FORMAT=YES';
-
-        fetch(apiUrl)
-            .then(function(response) {
-                if (!response.ok) throw new Error('API response not OK');
-                return response.json();
-            })
-            .then(function(data) {
-                if (data.result) {
-                    parseHorizonsData(data.result);
-                    dataLoaded = true;
-                    apiError = false;
-                } else {
-                    throw new Error('No result in response');
-                }
-            })
-            .catch(function(error) {
-                console.warn('NASA JPL Horizons API error, using fallback orbital elements:', error);
-                apiError = true;
-                generateFallbackTrajectory();
-            });
-    }
-
-    function parseHorizonsData(result) {
-        trajectoryPoints = [];
-        var lines = result.split('\n');
-        var inData = false;
-        var currentDate = new Date();
-
-        for (var i = 0; i < lines.length; i++) {
-            var line = lines[i].trim();
-            
-            if (line.includes('$$SOE')) {
-                inData = true;
-                continue;
-            }
-            if (line.includes('$$EOE')) {
-                inData = false;
-                continue;
-            }
-
-            if (inData && line.length > 0) {
-                // Parse CSV format: date, X, Y, Z, VX, VY, VZ
-                var parts = line.split(',');
-                if (parts.length >= 7) {
-                    var x = parseFloat(parts[2]); // X in AU
-                    var y = parseFloat(parts[3]); // Y in AU  
-                    var z = parseFloat(parts[4]); // Z in AU
-                    var vx = parseFloat(parts[5]); // VX in AU/day
-                    var vy = parseFloat(parts[6]); // VY in AU/day
-                    var vz = parseFloat(parts[7]); // VZ in AU/day
-
-                    if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
-                        trajectoryPoints.push({
-                            x: x * AU_TO_PIXELS,
-                            y: z * AU_TO_PIXELS, // Swap Y and Z for visualization
-                            z: y * AU_TO_PIXELS,
-                            vx: vx,
-                            vy: vz,
-                            vz: vy,
-                            date: parts[0]
-                        });
-                    }
-                }
-            }
-        }
-
-        // Update trajectory line
-        if (trajectoryPoints.length > 0) {
-            updateTrajectoryVisualization();
-        }
-    }
-
-    function generateFallbackTrajectory() {
-        // Generate trajectory using Keplerian orbital mechanics
-        trajectoryPoints = [];
-        
-        var e = cometData.eccentricity;
-        var q = cometData.perihelionDistance; // Perihelion in AU
-        var a = q / (1 - e); // Semi-major axis
-        var i = cometData.inclination * Math.PI / 180;
-        var omega = cometData.longitudeAscendingNode * Math.PI / 180;
-        var w = cometData.argumentPerihelion * Math.PI / 180;
-
-        // Generate points along the orbit
-        for (var theta = -Math.PI * 0.9; theta <= Math.PI * 0.9; theta += 0.02) {
-            // Distance from focus (Sun)
-            var r = (a * (1 - e * e)) / (1 + e * Math.cos(theta));
-            
-            if (r > 0 && r < 10) { // Limit to reasonable distance
-                // Position in orbital plane
-                var xOrbit = r * Math.cos(theta);
-                var yOrbit = r * Math.sin(theta);
-
-                // Rotate to ecliptic coordinates
-                var x = (Math.cos(omega) * Math.cos(w) - Math.sin(omega) * Math.sin(w) * Math.cos(i)) * xOrbit +
-                        (-Math.cos(omega) * Math.sin(w) - Math.sin(omega) * Math.cos(w) * Math.cos(i)) * yOrbit;
-                var y = (Math.sin(omega) * Math.cos(w) + Math.cos(omega) * Math.sin(w) * Math.cos(i)) * xOrbit +
-                        (-Math.sin(omega) * Math.sin(w) + Math.cos(omega) * Math.cos(w) * Math.cos(i)) * yOrbit;
-                var z = Math.sin(w) * Math.sin(i) * xOrbit + Math.cos(w) * Math.sin(i) * yOrbit;
-
-                trajectoryPoints.push({
-                    x: x * AU_TO_PIXELS,
-                    y: z * AU_TO_PIXELS,
-                    z: y * AU_TO_PIXELS,
-                    theta: theta
-                });
-            }
-        }
-
-        dataLoaded = true;
-        updateTrajectoryVisualization();
-    }
-
-    function updateTrajectoryVisualization() {
-        if (trajectoryPoints.length < 2) return;
-
-        var positions = [];
-        for (var i = 0; i < trajectoryPoints.length; i++) {
-            positions.push(
-                trajectoryPoints[i].x,
-                trajectoryPoints[i].y,
-                trajectoryPoints[i].z
-            );
-        }
-        trajectoryGeometry.setAttribute('position', 
-            new THREE.BufferAttribute(new Float32Array(positions), 3));
-    }
-
-    function getCurrentCometPosition(time) {
-        // Calculate current position based on time since perihelion
-        var now = new Date();
-        var perihelionDate = cometData.perihelionDate;
-        var daysSincePerihelion = (now - perihelionDate) / (1000 * 60 * 60 * 24);
-        
-        // For highly eccentric orbits, use Kepler's equation
-        var e = cometData.eccentricity;
-        var q = cometData.perihelionDistance;
-        var a = Math.abs(q / (1 - e));
-        
-        // Mean motion (approximate for near-parabolic orbit)
-        var n = 0.01720209895 / Math.pow(a, 1.5); // Radians per day
-        var M = n * daysSincePerihelion;
-        
-        // Solve Kepler's equation for eccentric anomaly
-        var E = M;
-        for (var i = 0; i < 10; i++) {
-            E = M + e * Math.sin(E);
-        }
-        
-        // True anomaly
-        var theta = 2 * Math.atan2(
-            Math.sqrt(1 + e) * Math.sin(E / 2),
-            Math.sqrt(1 - e) * Math.cos(E / 2)
-        );
-        
-        // Distance from Sun
-        var r = a * (1 - e * Math.cos(E));
-        
-        // Position in orbital plane
-        var xOrbit = r * Math.cos(theta);
-        var yOrbit = r * Math.sin(theta);
-        
-        // Rotation angles
-        var i_rad = cometData.inclination * Math.PI / 180;
-        var omega = cometData.longitudeAscendingNode * Math.PI / 180;
-        var w = cometData.argumentPerihelion * Math.PI / 180;
-        
-        // Transform to ecliptic
-        var x = (Math.cos(omega) * Math.cos(w) - Math.sin(omega) * Math.sin(w) * Math.cos(i_rad)) * xOrbit +
-                (-Math.cos(omega) * Math.sin(w) - Math.sin(omega) * Math.cos(w) * Math.cos(i_rad)) * yOrbit;
-        var y = (Math.sin(omega) * Math.cos(w) + Math.cos(omega) * Math.sin(w) * Math.cos(i_rad)) * xOrbit +
-                (-Math.sin(omega) * Math.sin(w) + Math.cos(omega) * Math.cos(w) * Math.cos(i_rad)) * yOrbit;
-        var z = Math.sin(w) * Math.sin(i_rad) * xOrbit + Math.cos(w) * Math.sin(i_rad) * yOrbit;
-        
-        return {
-            position: new THREE.Vector3(x * AU_TO_PIXELS, z * AU_TO_PIXELS, y * AU_TO_PIXELS),
-            distanceAU: r,
-            theta: theta,
-            daysSincePerihelion: daysSincePerihelion
-        };
-    }
-
-    function updateCometTail(cometPos) {
-        // Tail always points away from the Sun
-        var tailLength = Math.max(20, 100 / Math.max(0.1, cometPos.distanceAU));
-        var tailDir = cometPos.position.clone().normalize();
-        
-        var tailPoints = [];
-        tailPoints.push(cometPos.position.x, cometPos.position.y, cometPos.position.z);
-        tailPoints.push(
-            cometPos.position.x + tailDir.x * tailLength,
-            cometPos.position.y + tailDir.y * tailLength,
-            cometPos.position.z + tailDir.z * tailLength
-        );
-        
-        tailGeometry.setAttribute('position', 
-            new THREE.BufferAttribute(new Float32Array(tailPoints), 3));
-    }
+    // --- INFO HUD ---
+    var infoDiv = document.createElement('div');
+    infoDiv.id = 'orbit-info';
+    infoDiv.style.cssText = 'position:absolute;top:20px;left:20px;color:#00ffff;font-family:Courier New,monospace;font-size:12px;pointer-events:none;text-shadow:0 0 15px rgba(0,255,255,0.9),0 0 30px rgba(0,255,255,0.5);line-height:1.6;z-index:100;max-width:340px;background:linear-gradient(135deg,rgba(0,10,30,0.85) 0%,rgba(0,5,20,0.9) 100%);padding:18px;border-radius:12px;border:1px solid rgba(0,255,255,0.4);box-shadow:0 0 30px rgba(0,255,255,0.2),inset 0 0 20px rgba(0,255,255,0.05);';
+    document.body.appendChild(infoDiv);
 
     // --- MOUSE INTERACTION ---
     var mouse = new THREE.Vector2();
     var targetRotation = new THREE.Vector2();
-
-    function onMouseMove(event) {
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    }
-    window.addEventListener('mousemove', onMouseMove, false);
+    
+    window.addEventListener('mousemove', function(e) {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
 
     // --- RESIZE ---
-    window.addEventListener('resize', onWindowResize, false);
-    function onWindowResize() {
+    window.addEventListener('resize', function() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    // --- INITIAL DATA FETCH ---
-    fetchCometData();
+    });
 
     // --- ANIMATION ---
     var clock = new THREE.Clock();
 
     function animate() {
         requestAnimationFrame(animate);
-        var elapsedTime = clock.getElapsedTime();
+        var time = clock.getElapsedTime();
 
-        // Refresh data periodically
-        if (Date.now() - lastFetchTime > fetchInterval) {
-            lastFetchTime = Date.now();
-            fetchCometData();
-        }
-
-        // Update Jupiter position (slow orbit)
-        jupiterAngle += 0.0001;
-        jupiterMesh.position.x = Math.cos(jupiterAngle) * 5.2 * AU_TO_PIXELS;
-        jupiterMesh.position.z = Math.sin(jupiterAngle) * 5.2 * AU_TO_PIXELS;
-
-        // Update comet position
-        var cometPos = getCurrentCometPosition(elapsedTime);
-        cometMesh.position.copy(cometPos.position);
+        animationProgress += animationSpeed;
+        if (animationProgress > 1) animationProgress = 0;
         
-        // Update comet tail
-        updateCometTail(cometPos);
+        var cometPos = trajectoryCurve.getPoint(animationProgress);
+        cometGroup.position.copy(cometPos);
+        
+        var distFromSun = cometPos.length() / AU_TO_PIXELS;
+        var distToJupiter = cometPos.distanceTo(jupiterGroup.position) / AU_TO_PIXELS;
+        var distToHillEdge = cometPos.distanceTo(hillEdgePos) / AU_TO_PIXELS;
+        
+        var sunDir = cometPos.clone().normalize();
+        var tailLength = Math.max(30, 120 / Math.max(0.5, distFromSun));
+        
+        var positions = tailParticles.geometry.attributes.position.array;
+        var colors = tailParticles.geometry.attributes.color.array;
+        var sizes = tailParticles.geometry.attributes.size.array;
+        
+        for (var i = 0; i < tailParticleCount; i++) {
+            var t = i / tailParticleCount;
+            var spread = t * 20;
+            var length = t * tailLength;
+            
+            positions[i * 3] = cometPos.x + sunDir.x * length + (Math.random() - 0.5) * spread;
+            positions[i * 3 + 1] = cometPos.y + sunDir.y * length + (Math.random() - 0.5) * spread * 0.5;
+            positions[i * 3 + 2] = cometPos.z + sunDir.z * length + (Math.random() - 0.5) * spread;
+            
+            var fade = 1 - t;
+            colors[i * 3] = 0.5 + fade * 0.5;
+            colors[i * 3 + 1] = 0.8 + fade * 0.2;
+            colors[i * 3 + 2] = 1;
+            
+            sizes[i] = (1 - t * 0.7) * 3;
+        }
+        tailParticles.geometry.attributes.position.needsUpdate = true;
+        tailParticles.geometry.attributes.color.needsUpdate = true;
+        tailParticles.geometry.attributes.size.needsUpdate = true;
 
-        // Animate coma
-        comaMesh.scale.setScalar(1 + Math.sin(elapsedTime * 2) * 0.1);
+        var ionPoints = [];
+        var ionLength = tailLength * 1.5;
+        for (var i = 0; i <= 20; i++) {
+            var t = i / 20;
+            ionPoints.push(
+                cometPos.x + sunDir.x * t * ionLength,
+                cometPos.y + sunDir.y * t * ionLength,
+                cometPos.z + sunDir.z * t * ionLength
+            );
+        }
+        ionTailGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(ionPoints), 3));
 
-        // Mouse interaction
-        targetRotation.x = mouse.y * 0.2;
-        targetRotation.y = mouse.x * 0.3;
+        comaMesh.scale.setScalar(1 + Math.sin(time * 3) * 0.15);
+        
+        sunGroup.children.forEach(function(child, i) {
+            if (i > 5) {
+                child.rotation.z += 0.001;
+                child.material.opacity = 0.08 + Math.sin(time * 2 + i) * 0.04;
+            }
+        });
 
-        scene.rotation.x += (targetRotation.x - scene.rotation.x) * 0.03;
-        scene.rotation.y += (targetRotation.y - scene.rotation.y) * 0.03;
+        jupiterGroup.rotation.y += 0.002;
+        
+        hillGroup.children[0].material.opacity = 0.02 + Math.sin(time * 1.5) * 0.015;
+        hillGroup.children[1].material.opacity = 0.12 + Math.sin(time * 2) * 0.05;
+        hillRing.material.opacity = 0.5 + Math.sin(time * 2.5) * 0.2;
 
-        // Slow scene rotation
-        scene.rotation.y += 0.0002;
+        targetMarker.rotation.z = time * 2;
+        targetMarker.material.opacity = 0.5 + Math.sin(time * 4) * 0.3;
 
-        // Calculate distance to Jupiter for Hill radius check
-        var distToJupiter = cometMesh.position.distanceTo(jupiterMesh.position) / AU_TO_PIXELS;
-        var inHillSphere = distToJupiter < jupiterHillRadius;
+        targetRotation.x = mouse.y * 0.15;
+        targetRotation.y = mouse.x * 0.25;
+        
+        scene.rotation.x += (targetRotation.x - scene.rotation.x) * 0.02;
+        scene.rotation.y += (targetRotation.y - scene.rotation.y) * 0.02;
+        scene.rotation.y += 0.0003;
 
-        // Update HUD
         var now = new Date();
-        var daysToFrom = Math.round((now - cometData.perihelionDate) / (1000 * 60 * 60 * 24));
-        var perihelionStatus = daysToFrom < 0 ? 
-            Math.abs(daysToFrom) + ' days to perihelion' : 
-            daysToFrom + ' days since perihelion';
+        var daysSincePerihelion = Math.round((now - cometData.perihelionDate) / (1000 * 60 * 60 * 24));
+        var simulatedDay = Math.round(animationProgress * totalJourneyDays);
+        
+        var inHillSphere = distToJupiter < jupiterHillRadius;
+        var approachingHill = distToHillEdge < 0.5;
 
         infoDiv.innerHTML = 
-            '<strong style="color:#00ffff;font-size:13px;">☄ C/2024 G3 (ATLAS)</strong><br>' +
-            '<span style="color:#888;">Real-time trajectory from NASA JPL Horizons</span><br><br>' +
-            '<span style="color:#ffff00;">Distance from Sun:</span> ' + cometPos.distanceAU.toFixed(3) + ' AU<br>' +
-            '<span style="color:#ffff00;">Perihelion:</span> ' + perihelionStatus + '<br>' +
-            '<span style="color:#ffff00;">Perihelion distance:</span> ' + cometData.perihelionDistance + ' AU<br>' +
-            '<span style="color:#ffff00;">Eccentricity:</span> ' + cometData.eccentricity + '<br><br>' +
-            '<span style="color:#ffa500;">Jupiter Hill Radius:</span> ' + jupiterHillRadius.toFixed(4) + ' AU<br>' +
-            '<span style="color:#ffa500;">Comet to Jupiter:</span> ' + distToJupiter.toFixed(3) + ' AU<br>' +
-            (inHillSphere ? '<span style="color:#ff00ff;">⚠ Inside Jupiter Hill Sphere!</span><br>' : '') +
-            '<br><span style="font-size:10px;">' +
-            '<span style="color:#3366ff;">━━</span> Earth orbit (1 AU)<br>' +
-            '<span style="color:#ff6633;">━━</span> Mars orbit (1.5 AU)<br>' +
-            '<span style="color:#ffa500;">━━</span> Jupiter orbit (5.2 AU)<br>' +
-            '<span style="color:#ff00ff;">━━</span> Jupiter Hill radius<br>' +
-            '<span style="color:#66ffff;">━━</span> Comet trajectory</span>' +
-            (apiError ? '<br><br><span style="color:#ff6666;font-size:9px;">Using orbital elements (API unavailable)</span>' : '') +
-            (dataLoaded && !apiError ? '<br><br><span style="color:#66ff66;font-size:9px;">✓ Live data from NASA JPL</span>' : '');
+            '<div style="font-size:16px;font-weight:bold;margin-bottom:10px;color:#00ffff;text-shadow:0 0 20px #00ffff;">☄️ 3I/ATLAS — INTERSTELLAR VISITOR</div>' +
+            '<div style="color:#888;font-size:10px;margin-bottom:12px;">Third interstellar object detected • Post-perihelion trajectory</div>' +
+            '<div style="border-top:1px solid rgba(0,255,255,0.3);padding-top:10px;">' +
+            '<span style="color:#ffdd00;">◉ Distance from Sun:</span> <span style="color:#fff;">' + distFromSun.toFixed(2) + ' AU</span><br>' +
+            '<span style="color:#ffdd00;">◉ Days since perihelion:</span> <span style="color:#fff;">+' + daysSincePerihelion + ' days</span><br>' +
+            '<span style="color:#ffdd00;">◉ Simulation day:</span> <span style="color:#fff;">+' + simulatedDay + ' days</span><br>' +
+            '<span style="color:#ff6666;">◉ V∞:</span> <span style="color:#fff;">' + cometData.vInfinity + ' km/s</span></div>' +
+            '<div style="border-top:1px solid rgba(255,100,255,0.3);margin-top:10px;padding-top:10px;">' +
+            '<span style="color:#ff66ff;">◎ Jupiter Hill Radius:</span> <span style="color:#fff;">' + jupiterHillRadius.toFixed(3) + ' AU</span><br>' +
+            '<span style="color:#ff66ff;">◎ Distance to Jupiter:</span> <span style="color:#fff;">' + distToJupiter.toFixed(2) + ' AU</span><br>' +
+            '<span style="color:#ff66ff;">◎ To Hill boundary:</span> <span style="color:#fff;">' + distToHillEdge.toFixed(3) + ' AU</span></div>' +
+            (inHillSphere ? '<div style="color:#ff00ff;font-size:14px;margin-top:12px;animation:pulse 1s infinite;">⚠️ INSIDE JUPITER HILL SPHERE!</div>' : '') +
+            (approachingHill && !inHillSphere ? '<div style="color:#ffaa00;font-size:12px;margin-top:12px;">⚡ Approaching gravitational capture zone...</div>' : '') +
+            '<div style="margin-top:15px;font-size:9px;opacity:0.7;">' +
+            '<span style="color:#4488ff;">●</span> Earth <span style="color:#ff6644;">●</span> Mars <span style="color:#ffaa44;">●</span> Jupiter<br>' +
+            '<span style="color:#00ffff;">━</span> Trajectory <span style="color:#ff66ff;">◯</span> Hill Sphere</div>';
 
         renderer.render(scene, camera);
     }
 
+    var style = document.createElement('style');
+    style.textContent = '@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }';
+    document.head.appendChild(style);
+
     animate();
 
     $('#canvas-orbit').css('opacity', 1);
-    $('body').append('<div class="bg-color" style="background-color:#000008"></div>');
+    $('body').append('<div class="bg-color" style="background-color:#000005"></div>');
 }
