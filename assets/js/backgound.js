@@ -66,6 +66,9 @@ function init_backgrounds() {
 		case 'galaxy':
 			if (typeof galaxyBackground === 'function') galaxyBackground();
 			break
+		case 'orbit':
+			if (typeof orbitBackground === 'function') orbitBackground();
+			break
 		default:
 			if (typeof asteroidsBackground === 'function') asteroidsBackground();
 			break
