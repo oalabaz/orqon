@@ -1286,7 +1286,6 @@ function orbitBackground() {
                     globalAudioFadeInterval = setInterval(function() {
                         if (audio.volume < 1.0) {
                             audio.volume = Math.min(1.0, audio.volume + 1.0 / 60);
-                            globalVolume = audio.volume;
                         } else {
                             clearInterval(globalAudioFadeInterval);
                             globalAudioFadeInterval = null;
@@ -1311,7 +1310,6 @@ function orbitBackground() {
                 globalAudioFadeInterval = setInterval(function() {
                     if (audio.volume < 1.0) {
                         audio.volume = Math.min(1.0, audio.volume + 0.5 / 40); // Fade up over ~2s
-                        globalVolume = audio.volume;
                     } else {
                         clearInterval(globalAudioFadeInterval);
                         globalAudioFadeInterval = null;
@@ -1342,7 +1340,6 @@ function orbitBackground() {
             globalAudioFadeInterval = setInterval(function() {
                 if (audio.volume > 0.5) {
                     audio.volume = Math.max(0.5, audio.volume - 0.5 / 40); // Fade down over ~2s
-                    globalVolume = audio.volume;
                 } else {
                     clearInterval(globalAudioFadeInterval);
                     globalAudioFadeInterval = null;
