@@ -1377,6 +1377,21 @@ function orbitBackground() {
             unlockFocus();
         }
     });
+    
+    // Mouse wheel zoom when focus is locked - zoom distance from comet
+    var focusZoomDistance = 80;  // Current distance from comet when locked
+    var minFocusDistance = 20;   // Closest zoom
+    var maxFocusDistance = 200;  // Farthest zoom
+    
+    document.addEventListener('wheel', function(e) {
+        if (focusLocked) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Scroll down = zoom out (increase distance), scroll up = zoom in (decrease distance)
+            var zoomDelta = e.deltaY > 0 ? 10 : -10;
+            focusZoomDistance = Math.max(minFocusDistance, Math.min(maxFocusDistance, focusZoomDistance + zoomDelta));
+        }
+    }, { passive: false, capture: true });
     // --- /FOCUS MODE WITH LOCK ---
 
     // --- MOUSE INTERACTION ---
@@ -1450,10 +1465,32 @@ function orbitBackground() {
         
         var time = clock.getElapsedTime();
         
-        // Smooth camera zoom for focus mode
-        var zoomDiff = targetCameraZ - camera.position.z;
-        if (Math.abs(zoomDiff) > 0.05) {
-            camera.position.z += zoomDiff * 0.008; // Very slow buttery smooth interpolation
+        // Get comet position first (needed for focus camera)
+        var currentCurve = (window._orbitTrajectoryData && window._orbitTrajectoryData.curve) || trajectoryCurve;
+        var cometPos = currentCurve.getPoint(animationProgress);
+        cometGroup.position.copy(cometPos);
+        
+        // Camera control based on focus state
+        if (focusLocked) {
+            // When focus locked, orbit camera around comet at focusZoomDistance
+            var orbitAngle = time * 0.1; // Slow orbit
+            var camX = cometPos.x + Math.sin(orbitAngle) * focusZoomDistance * 0.5;
+            var camY = cometPos.y + 30 + Math.sin(time * 0.15) * 10; // Slight vertical bob
+            var camZ = cometPos.z + Math.cos(orbitAngle) * focusZoomDistance;
+            
+            // Smooth interpolation to target position
+            camera.position.x += (camX - camera.position.x) * 0.03;
+            camera.position.y += (camY - camera.position.y) * 0.03;
+            camera.position.z += (camZ - camera.position.z) * 0.03;
+            
+            // Always look at comet
+            camera.lookAt(cometPos);
+        } else {
+            // Normal zoom interpolation
+            var zoomDiff = targetCameraZ - camera.position.z;
+            if (Math.abs(zoomDiff) > 0.05) {
+                camera.position.z += zoomDiff * 0.008;
+            }
         }
 
         parallaxStarLayers.forEach(function(layer, index) {
@@ -1465,11 +1502,6 @@ function orbitBackground() {
 
         animationProgress += animationSpeed;
         if (animationProgress > 1) animationProgress = 0;
-        
-        // Use dynamic trajectory curve (updated by API)
-        var currentCurve = (window._orbitTrajectoryData && window._orbitTrajectoryData.curve) || trajectoryCurve;
-        var cometPos = currentCurve.getPoint(animationProgress);
-        cometGroup.position.copy(cometPos);
         
         // Update comet date/time label
         updateCometDateLabel(animationProgress);
