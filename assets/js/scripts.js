@@ -126,6 +126,26 @@ function entrance_modal_setup() {
 }
 // --- /ENTRANCE MODAL --- //
 
+// --- FOCUS BACKGROUND BUTTON --- //
+function focus_bg_setup() {
+	var btn = document.getElementById('focus-bg-btn');
+	if (!btn) return;
+	
+	btn.addEventListener('click', function() {
+		btn.classList.toggle('active');
+		document.body.classList.toggle('bg-focus-mode');
+	});
+	
+	// ESC key to exit focus mode
+	document.addEventListener('keydown', function(e) {
+		if (e.key === 'Escape' && document.body.classList.contains('bg-focus-mode')) {
+			btn.classList.remove('active');
+			document.body.classList.remove('bg-focus-mode');
+		}
+	});
+}
+// --- /FOCUS BACKGROUND BUTTON --- //
+
 function core_init() {
 	smooth_scroll()
 	accordions_setup()
@@ -144,6 +164,7 @@ function core_init() {
 	//options_panel();
 	image_setup()
 	entrance_modal_setup() // --- ENTRANCE MODAL ---
+	focus_bg_setup() // --- FOCUS BACKGROUND BUTTON ---
 }
 core_init()
 

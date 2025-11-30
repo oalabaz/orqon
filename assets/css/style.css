@@ -4970,3 +4970,82 @@ _:-ms-fullscreen,
         text-shadow: 0 0 40px #00ff9d, 0 0 80px #00ff9d, 0 0 120px #00ff9d;
     }
 }
+/* FOCUS BACKGROUND BUTTON (inside orbit-info) */
+.focus-bg-btn {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: rgba(40, 50, 65, 0.9);
+    border: 1px solid rgba(100, 140, 180, 0.4);
+    color: #8899aa;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+    padding: 0;
+}
+
+.focus-bg-btn:hover {
+    background: rgba(50, 70, 95, 0.95);
+    border-color: rgba(100, 180, 255, 0.6);
+    color: #aaddff;
+    transform: scale(1.1);
+}
+
+.focus-bg-btn.active {
+    background: rgba(60, 100, 140, 0.95);
+    border-color: rgba(100, 200, 255, 0.8);
+    color: #ffffff;
+    box-shadow: 0 0 8px rgba(100, 180, 255, 0.5);
+}
+
+.focus-bg-icon {
+    line-height: 1;
+    font-size: 11px;
+    filter: grayscale(0.3);
+    transition: filter 0.25s ease;
+}
+
+.focus-bg-btn.active .focus-bg-icon {
+    filter: grayscale(0) drop-shadow(0 0 3px rgba(100, 200, 255, 0.7));
+}
+
+/* Focus mode - base transitions for smooth fade */
+#main > .left-content,
+#main > .right-content,
+.menu,
+#orbit-info {
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus mode - hide all content except background */
+body.bg-focus-mode #main > .left-content,
+body.bg-focus-mode #main > .right-content,
+body.bg-focus-mode .menu,
+body.bg-focus-mode .entrance-modal,
+body.bg-focus-mode .loading-screen {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+body.bg-focus-mode #orbit-info {
+    opacity: 0.15 !important;
+}
+
+body.bg-focus-mode #orbit-info:hover {
+    opacity: 0.8 !important;
+    transition: opacity 0.3s ease;
+}
+
+body.bg-focus-mode .focus-bg-btn {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+body.bg-focus-mode #main > canvas,
+body.bg-focus-mode .bg-color {
+    opacity: 1 !important;
+}

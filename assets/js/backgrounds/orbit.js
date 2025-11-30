@@ -10,6 +10,12 @@ function orbitBackground() {
     camera.position.y = 180;
     camera.position.x = -80;
     camera.lookAt(0, 0, 0);
+    
+    // Focus mode camera state
+    var focusModeActive = false;
+    var baseCameraZ = 220;
+    var focusCameraZ = -20; // Zoomed in position (inside the scene)
+    var targetCameraZ = baseCameraZ;
 
     var scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x000002, 0.0008);
@@ -1215,8 +1221,40 @@ function orbitBackground() {
     // --- INFO HUD ---
     var infoDiv = document.createElement('div');
     infoDiv.id = 'orbit-info';
-    infoDiv.style.cssText = 'position:fixed;top:16px;left:16px;color:#aabbcc;font-family:Consolas,Monaco,monospace;font-size:10px;pointer-events:none;text-shadow:0 0 8px rgba(100,120,140,0.4);line-height:1.4;z-index:100;max-width:280px;background:rgba(8,12,18,0.75);padding:10px 12px;border-radius:3px;border:1px solid rgba(100,120,140,0.2);box-shadow:0 2px 12px rgba(0,0,0,0.5);backdrop-filter:blur(4px);';
+    infoDiv.style.cssText = 'position:fixed;top:16px;left:16px;color:#aabbcc;font-family:Consolas,Monaco,monospace;font-size:10px;pointer-events:auto;text-shadow:0 0 8px rgba(100,120,140,0.4);line-height:1.4;z-index:100;max-width:280px;background:rgba(8,12,18,0.75);padding:10px 12px;border-radius:3px;border:1px solid rgba(100,120,140,0.2);box-shadow:0 2px 12px rgba(0,0,0,0.5);backdrop-filter:blur(4px);cursor:pointer;';
     document.body.appendChild(infoDiv);
+    
+    // Create text container for info content
+    var infoText = document.createElement('div');
+    infoText.id = 'orbit-info-text';
+    infoDiv.appendChild(infoText);
+    
+    // --- FOCUS MODE ON HOVER ---
+    function activateFocusMode() {
+        if (!document.body.classList.contains('bg-focus-mode')) {
+            document.body.classList.add('bg-focus-mode');
+            focusModeActive = true;
+            targetCameraZ = focusCameraZ;
+        }
+    }
+    
+    function deactivateFocusMode() {
+        if (document.body.classList.contains('bg-focus-mode')) {
+            document.body.classList.remove('bg-focus-mode');
+            focusModeActive = false;
+            targetCameraZ = baseCameraZ;
+        }
+    }
+    
+    infoDiv.addEventListener('mouseenter', activateFocusMode);
+    infoDiv.addEventListener('mouseleave', deactivateFocusMode);
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && document.body.classList.contains('bg-focus-mode')) {
+            deactivateFocusMode();
+        }
+    });
+    // --- /FOCUS MODE ON HOVER ---
 
     // --- MOUSE INTERACTION ---
     var mouse = new THREE.Vector2();
@@ -1288,6 +1326,12 @@ function orbitBackground() {
         frameCount++;
         
         var time = clock.getElapsedTime();
+        
+        // Smooth camera zoom for focus mode
+        var zoomDiff = targetCameraZ - camera.position.z;
+        if (Math.abs(zoomDiff) > 0.05) {
+            camera.position.z += zoomDiff * 0.008; // Very slow buttery smooth interpolation
+        }
 
         parallaxStarLayers.forEach(function(layer, index) {
             layer.mesh.rotation.y += 0.00008 * (index + 1);
@@ -1440,7 +1484,7 @@ function orbitBackground() {
         var beyondHill = animationProgress > 0.75;
 
         // Only update info div every 10 frames to reduce DOM manipulation
-        if (frameCount % 10 === 0) infoDiv.innerHTML = 
+        if (frameCount % 10 === 0) infoText.innerHTML = 
             '<div style="font-size:11px;font-weight:600;margin-bottom:6px;color:#bbc;letter-spacing:0.5px;">3I/ATLAS</div>' +
             '<div style="font-size:8px;color:#778;margin-bottom:8px;line-height:1.2;">Interstellar visitor • Hyperbolic trajectory<br>Post-perihelion phase</div>' +
             '<div style="border-top:1px solid rgba(100,120,140,0.2);padding-top:6px;margin-bottom:6px;">' +
