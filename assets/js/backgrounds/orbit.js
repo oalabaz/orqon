@@ -1,7 +1,7 @@
 function orbitBackground() {
-    var renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'low-power' });
+    var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(1);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.domElement.id = 'canvas-orbit';
     document.getElementById('main').appendChild(renderer.domElement);
 
@@ -142,32 +142,32 @@ function orbitBackground() {
     }
     
     function generateFallbackOrbit() {
-        // Generate hyperbolic trajectory based on orbital elements
-        // C/2024 G3 ATLAS: e=1.0 (hyperbolic), q=1.3564 AU, i~45°
+        // Generate hyperbolic trajectory that passes through Jupiter's Hill sphere
+        // Modified trajectory to create a close approach for visual effect
         var e = 1.00001; // Slightly hyperbolic
         var q = cometData.perihelionDistance;
-        var a = q / (1 - e); // Semi-major axis (negative for hyperbola)
         var inclination = Math.PI * 0.25; // 45 degrees
+        
+        // Jupiter's position
+        var jupiterX = Math.cos(jupiterData.currentAngle) * jupiterData.semiMajorAxis;
+        var jupiterZ = Math.sin(jupiterData.currentAngle) * jupiterData.semiMajorAxis;
         
         var points = [];
         var numPoints = 400;
         
-        for (var i = 0; i < numPoints; i++) {
-            // True anomaly from -160° to +160° (hyperbolic arc)
-            var nuDeg = -160 + (i / numPoints) * 320;
+        // First half: perihelion approach
+        for (var i = 0; i < numPoints / 2; i++) {
+            var t = i / (numPoints / 2);
+            // Start from far away, curve toward perihelion
+            var nuDeg = -160 + t * 160;
             var nu = nuDeg * Math.PI / 180;
             
-            // Radius from focus
             var r = q * (1 + e) / (1 + e * Math.cos(nu));
-            
-            // Skip if radius is too large (beyond reasonable display)
             if (r > 50) continue;
             
-            // Position in orbital plane
             var xOrbit = r * Math.cos(nu);
             var yOrbit = r * Math.sin(nu);
             
-            // Apply inclination rotation
             var x = xOrbit;
             var y = yOrbit * Math.sin(inclination);
             var z = yOrbit * Math.cos(inclination);
@@ -179,7 +179,64 @@ function orbitBackground() {
             ));
         }
         
-        console.log('Generated fallback orbit with ' + points.length + ' points');
+        // Get perihelion position
+        var perihelionPoint = points[points.length - 1] || new THREE.Vector3(q * AU_TO_PIXELS, 0, 0);
+        
+        // Smooth flyby of Jupiter's Hill sphere using cubic bezier
+        var jupiterPos = new THREE.Vector3(
+            jupiterX * AU_TO_PIXELS,
+            0,
+            jupiterZ * AU_TO_PIXELS
+        );
+        
+        // Calculate smooth flyby waypoints
+        var hillRadiusAU = jupiterHillRadius * hillRadiusVisualScale;
+        var hillRadiusPx = hillRadiusAU * AU_TO_PIXELS;
+        
+        // Entry point at Hill sphere edge
+        var entryPoint = jupiterPos.clone().add(new THREE.Vector3(-hillRadiusPx * 0.9, 0, -hillRadiusPx * 0.5));
+        // Closest approach inside Hill sphere (smooth curve through)
+        var closestPoint = jupiterPos.clone().add(new THREE.Vector3(-hillRadiusPx * 0.2, 5, hillRadiusPx * 0.3));
+        // Exit from Hill sphere
+        var exitPoint = jupiterPos.clone().add(new THREE.Vector3(hillRadiusPx * 0.7, 10, hillRadiusPx * 0.8));
+        // Final escape direction
+        var escapePoint = jupiterPos.clone().add(new THREE.Vector3(hillRadiusPx * 1.5, 20, hillRadiusPx * 1.3));
+        var escapeEnd = jupiterPos.clone().add(new THREE.Vector3(hillRadiusPx * 2.2, 30, hillRadiusPx * 1.7));
+        
+        // Smooth approach from perihelion to Hill sphere entry
+        var numApproach = Math.floor(numPoints * 0.4);
+        for (var j = 0; j < numApproach; j++) {
+            var t2 = j / numApproach;
+            // Smooth cubic interpolation
+            var smoothT = t2 * t2 * (3 - 2 * t2);
+            var pt = new THREE.Vector3(
+                perihelionPoint.x + (entryPoint.x - perihelionPoint.x) * smoothT,
+                perihelionPoint.y + (entryPoint.y - perihelionPoint.y) * smoothT + Math.sin(smoothT * Math.PI) * 20,
+                perihelionPoint.z + (entryPoint.z - perihelionPoint.z) * smoothT
+            );
+            points.push(pt);
+        }
+        
+        // Smooth flyby through Hill sphere (entry -> closest -> exit)
+        var flybyPoints = [entryPoint, closestPoint, exitPoint, escapePoint, escapeEnd];
+        var numFlyby = Math.floor(numPoints * 0.35);
+        for (var k = 0; k < numFlyby; k++) {
+            var t3 = k / numFlyby;
+            var segmentIndex = Math.min(Math.floor(t3 * (flybyPoints.length - 1)), flybyPoints.length - 2);
+            var segmentT = (t3 * (flybyPoints.length - 1)) - segmentIndex;
+            var smoothT3 = segmentT * segmentT * (3 - 2 * segmentT);
+            
+            var p1 = flybyPoints[segmentIndex];
+            var p2 = flybyPoints[segmentIndex + 1];
+            var pt = new THREE.Vector3(
+                p1.x + (p2.x - p1.x) * smoothT3,
+                p1.y + (p2.y - p1.y) * smoothT3,
+                p1.z + (p2.z - p1.z) * smoothT3
+            );
+            points.push(pt);
+        }
+        
+        console.log('Generated fallback orbit with ' + points.length + ' points (smooth flyby through Hill sphere)');
         realOrbitPoints = points;
         orbitDataLoaded = true;
         updateTrajectoryWithRealData();
@@ -828,44 +885,38 @@ function orbitBackground() {
     var perihelionPos = new THREE.Vector3(cometData.perihelionDistance * AU_TO_PIXELS, 0, 0);
     var jupiterPos = jupiterGroup.position.clone();
     
-    // Calculate trajectory points that pass through Hill sphere
-    var hillApproachPos = jupiterPos.clone().add(new THREE.Vector3(-jupiterHillRadiusPixels * 0.7, 0, -jupiterHillRadiusPixels * 0.5));
-    var hillEnterPos = jupiterPos.clone().add(new THREE.Vector3(-jupiterHillRadiusPixels * 0.4, 0, -jupiterHillRadiusPixels * 0.3));
-    var hillCenterPass = jupiterPos.clone().add(new THREE.Vector3(0, 0, jupiterHillRadiusPixels * 0.2));
-    var hillExitPos = jupiterPos.clone().add(new THREE.Vector3(jupiterHillRadiusPixels * 0.5, 0, jupiterHillRadiusPixels * 0.6));
-    var beyondHillPos = jupiterPos.clone().add(new THREE.Vector3(jupiterHillRadiusPixels * 1.3, 0, jupiterHillRadiusPixels * 1.4));
+    // Calculate smooth flyby trajectory through Hill sphere
+    // Entry point - approaching from the inner solar system
+    var hillEntryPos = jupiterPos.clone().add(new THREE.Vector3(-jupiterHillRadiusPixels * 0.9, -5, -jupiterHillRadiusPixels * 0.6));
     
-    // Extended trajectory - comet continues into deep space forever
-    var deepSpace1 = jupiterPos.clone().add(new THREE.Vector3(jupiterHillRadiusPixels * 2.5, 15, jupiterHillRadiusPixels * 3));
-    var deepSpace2 = jupiterPos.clone().add(new THREE.Vector3(jupiterHillRadiusPixels * 4, 30, jupiterHillRadiusPixels * 5));
-    var deepSpace3 = jupiterPos.clone().add(new THREE.Vector3(jupiterHillRadiusPixels * 6, 40, jupiterHillRadiusPixels * 8));
-    var cosmosEnd = jupiterPos.clone().add(new THREE.Vector3(jupiterHillRadiusPixels * 10, 50, jupiterHillRadiusPixels * 14));
+    // Closest approach - grazes through the Hill sphere (smooth curve, no sharp turn)
+    var closestApproach = jupiterPos.clone().add(new THREE.Vector3(-jupiterHillRadiusPixels * 0.2, 0, jupiterHillRadiusPixels * 0.3));
     
-    var controlPoint1 = new THREE.Vector3(
-        perihelionPos.x + 60,
-        35,
-        perihelionPos.z + 100
-    );
-    var controlPoint2 = new THREE.Vector3(
-        (perihelionPos.x + hillApproachPos.x) / 2 + 30,
-        25,
-        (perihelionPos.z + hillApproachPos.z) / 2 + 40
+    // Exit point - heading out to deep space
+    var hillExitPos = jupiterPos.clone().add(new THREE.Vector3(jupiterHillRadiusPixels * 0.8, 10, jupiterHillRadiusPixels * 0.9));
+    
+    // Gentle escape trajectory - stays visible on screen
+    var escapePos1 = jupiterPos.clone().add(new THREE.Vector3(jupiterHillRadiusPixels * 1.4, 20, jupiterHillRadiusPixels * 1.3));
+    var escapePos2 = jupiterPos.clone().add(new THREE.Vector3(jupiterHillRadiusPixels * 2.0, 30, jupiterHillRadiusPixels * 1.6));
+    var escapeEnd = jupiterPos.clone().add(new THREE.Vector3(jupiterHillRadiusPixels * 2.5, 40, jupiterHillRadiusPixels * 1.9));
+    
+    // Smooth approach curve from perihelion
+    var midPoint = new THREE.Vector3(
+        (perihelionPos.x + hillEntryPos.x) / 2,
+        20,
+        (perihelionPos.z + hillEntryPos.z) / 2 + 50
     );
     
     var trajectoryCurve = new THREE.CatmullRomCurve3([
         perihelionPos,
-        controlPoint1,
-        controlPoint2,
-        hillApproachPos,
-        hillEnterPos,
-        hillCenterPass,
+        midPoint,
+        hillEntryPos,
+        closestApproach,
         hillExitPos,
-        beyondHillPos,
-        deepSpace1,
-        deepSpace2,
-        deepSpace3,
-        cosmosEnd
-    ], false, 'catmullrom', 0.3);
+        escapePos1,
+        escapePos2,
+        escapeEnd
+    ], false, 'catmullrom', 0.5);  // Higher tension for smoother curve
     
     // Full journey path - yellowish hyperbolic trajectory line (matching reference image)
     var fullPathPoints = trajectoryCurve.getPoints(500);
@@ -900,6 +951,61 @@ function orbitBackground() {
     });
     var trajectoryLine = new THREE.Line(trajectoryLineGeometry, trajectoryLineMaterial);
     trajectoryGroup.add(trajectoryLine);
+    
+    // --- UNALTERED TRAJECTORY (if course was not corrected by Jupiter) ---
+    // This shows where the comet would have continued on its original hyperbolic path
+    var unalteredPoints = [];
+    var eHyper = 1.00001;
+    var qHyper = cometData.perihelionDistance;
+    var inclinationHyper = Math.PI * 0.25;
+    
+    // Generate the original hyperbolic trajectory (no Jupiter deflection)
+    for (var upi = 0; upi < 300; upi++) {
+        var nuDegU = -160 + (upi / 300) * 320;
+        var nuU = nuDegU * Math.PI / 180;
+        var rU = qHyper * (1 + eHyper) / (1 + eHyper * Math.cos(nuU));
+        if (rU > 60) continue;
+        
+        var xOrbitU = rU * Math.cos(nuU);
+        var yOrbitU = rU * Math.sin(nuU);
+        var xU = xOrbitU;
+        var yU = yOrbitU * Math.sin(inclinationHyper);
+        var zU = yOrbitU * Math.cos(inclinationHyper);
+        
+        unalteredPoints.push(new THREE.Vector3(
+            xU * AU_TO_PIXELS,
+            yU * AU_TO_PIXELS * 0.3,
+            zU * AU_TO_PIXELS
+        ));
+    }
+    
+    // Create subtle dashed line for unaltered path
+    var unalteredPositions = new Float32Array(unalteredPoints.length * 3);
+    for (var upj = 0; upj < unalteredPoints.length; upj++) {
+        unalteredPositions[upj * 3] = unalteredPoints[upj].x;
+        unalteredPositions[upj * 3 + 1] = unalteredPoints[upj].y;
+        unalteredPositions[upj * 3 + 2] = unalteredPoints[upj].z;
+    }
+    var unalteredGeometry = new THREE.BufferGeometry();
+    unalteredGeometry.setAttribute('position', new THREE.BufferAttribute(unalteredPositions, 3));
+    var unalteredMaterial = new THREE.PointsMaterial({
+        color: 0x666688,
+        size: 1.0,
+        transparent: true,
+        opacity: 0.25,
+        sizeAttenuation: true,
+        depthWrite: false
+    });
+    var unalteredPath = new THREE.Points(unalteredGeometry, unalteredMaterial);
+    trajectoryGroup.add(unalteredPath);
+    
+    // Add subtle label for unaltered path
+    var unalteredLabel = createTextSprite('UNALTERED TRAJECTORY', '#556677');
+    var labelPos = unalteredPoints[Math.floor(unalteredPoints.length * 0.7)] || new THREE.Vector3(200, 30, 150);
+    unalteredLabel.position.set(labelPos.x + 20, labelPos.y + 15, labelPos.z);
+    unalteredLabel.scale.set(60, 15, 1);
+    trajectoryGroup.add(unalteredLabel);
+    // --- /UNALTERED TRAJECTORY ---
     
     // Make fullPathDots accessible for real orbit update
     window._orbitFullPathDots = fullPathDots;
@@ -1100,7 +1206,7 @@ function orbitBackground() {
         opacity: 0.35
     });
     var targetMarker = new THREE.Mesh(targetMarkerGeometry, targetMarkerMaterial);
-    targetMarker.position.copy(beyondHillPos);
+    targetMarker.position.copy(escapePos1);
     targetMarker.lookAt(jupiterGroup.position);
     trajectoryGroup.add(targetMarker);
     
@@ -1175,16 +1281,10 @@ function orbitBackground() {
         gsap.to(infoDiv, { duration: 3, boxShadow: '0 0 40px rgba(0,255,255,0.35), inset 0 0 25px rgba(0,255,255,0.08)', repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 4});
     }
 
-    var lastFrameTime = 0;
-    var frameInterval = 1000 / 30; // Cap at 30 FPS
     var frameCount = 0;
     
-    function animate(currentTime) {
+    function animate() {
         requestAnimationFrame(animate);
-        
-        // Throttle to 30 FPS
-        if (currentTime - lastFrameTime < frameInterval) return;
-        lastFrameTime = currentTime;
         frameCount++;
         
         var time = clock.getElapsedTime();
@@ -1207,8 +1307,8 @@ function orbitBackground() {
         // Update comet date/time label
         updateCometDateLabel(animationProgress);
         
-        // Update lit trail - shows comet's traveled path with gradient fade (every 2nd frame)
-        if (frameCount % 2 === 0 && trajectoryData && trajectoryData.litTrailGeometry) {
+        // Update lit trail - shows comet's traveled path with gradient fade
+        if (trajectoryData && trajectoryData.litTrailGeometry) {
             var litPositions = trajectoryData.litTrailGeometry.attributes.position.array;
             var litColors = trajectoryData.litTrailGeometry.attributes.color.array;
             var litSizes = trajectoryData.litTrailGeometry.attributes.size.array;
@@ -1256,9 +1356,8 @@ function orbitBackground() {
         var colors = tailParticles.geometry.attributes.color.array;
         var sizes = tailParticles.geometry.attributes.size.array;
         
-        // Only update particles every 3rd frame for performance
-        if (frameCount % 3 === 0) {
-            for (var i = 0; i < tailParticleCount; i++) {
+        // Update particles for smooth motion
+        for (var i = 0; i < tailParticleCount; i++) {
                 var t = i / tailParticleCount;
                 var spread = t * 20;
                 var length = t * tailLength;
@@ -1278,7 +1377,6 @@ function orbitBackground() {
             tailParticles.geometry.attributes.position.needsUpdate = true;
             tailParticles.geometry.attributes.color.needsUpdate = true;
             tailParticles.geometry.attributes.size.needsUpdate = true;
-        }
 
         var ionPoints = [];
         var ionLength = tailLength * 1.5;
