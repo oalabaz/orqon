@@ -21,14 +21,18 @@ function init_backgrounds() {
 		option_hero_background_mode = 'orbit';
 		localStorage.setItem('locked_background_mode', 'orbit');
 		localStorage.setItem('bg_visited', 'true');
+		localStorage.setItem('bg_index', '0');
 		lockedBg = 'orbit';
 	} else if (lockedBg) {
 		// Background is locked, use the locked background
 		option_hero_background_mode = lockedBg;
 	} else {
-		// Unlocked: randomize background on each refresh
+		// Unlocked: cycle through backgrounds in order
 		if (typeof array_background_mode !== 'undefined' && array_background_mode.length > 0) {
-			option_hero_background_mode = array_background_mode[Math.floor(Math.random() * array_background_mode.length)];
+			var currentIndex = parseInt(localStorage.getItem('bg_index') || '0', 10);
+			currentIndex = (currentIndex + 1) % array_background_mode.length;
+			localStorage.setItem('bg_index', currentIndex.toString());
+			option_hero_background_mode = array_background_mode[currentIndex];
 		}
 	}
 
