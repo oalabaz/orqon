@@ -141,7 +141,7 @@ function universal_volume_slider_setup() {
 	// Slider wrapper (hidden when collapsed) - now on top
         var sliderWrapper = document.createElement('div');
         sliderWrapper.id = 'volume-slider-wrapper';
-        sliderWrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;height:0;width:32px;overflow:hidden;opacity:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);';
+        sliderWrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;height:0;width:48px;overflow:hidden;opacity:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);';
 	
         var volumeValue = document.createElement('span');
         volumeValue.id = 'volume-value';
@@ -155,7 +155,7 @@ function universal_volume_slider_setup() {
         volumeSlider.min = '0';
         volumeSlider.max = '100';
         volumeSlider.value = Math.round(globalVolume * 100);
-        volumeSlider.style.cssText = 'width:110px;height:6px;-webkit-appearance:none;appearance:none;background:linear-gradient(to right, #4dabf7 ' + (globalVolume * 100) + '%, rgba(110,128,160,0.25) ' + (globalVolume * 100) + '%);border-radius:999px;cursor:pointer;outline:none;transform:rotate(-90deg);transform-origin:center center;border:1px solid rgba(120,140,170,0.35);box-shadow:inset 0 1px 3px rgba(0,0,0,0.35);';
+        volumeSlider.style.cssText = 'width:90px;height:6px;-webkit-appearance:none;appearance:none;background:linear-gradient(to right, #4dabf7 ' + (globalVolume * 100) + '%, rgba(110,128,160,0.25) ' + (globalVolume * 100) + '%);border-radius:999px;cursor:pointer;outline:none;transform:rotate(-90deg);transform-origin:center center;border:1px solid rgba(120,140,170,0.35);box-shadow:inset 0 1px 3px rgba(0,0,0,0.35);';
         sliderWrapper.appendChild(volumeSlider);
 	
 	volumeContainer.appendChild(sliderWrapper);
