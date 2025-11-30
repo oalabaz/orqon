@@ -226,7 +226,7 @@ function orbitBackground() {
     // --- ENHANCED STARFIELD ---
     function createStarfield() {
         var starGeometry = new THREE.BufferGeometry();
-        var starCount = 3000;
+        var starCount = 1500;
         var positions = new Float32Array(starCount * 3);
         var colors = new Float32Array(starCount * 3);
         
@@ -360,8 +360,8 @@ function orbitBackground() {
         });
         return new THREE.Points(geometry, material);
     }
-    [0.2, 0.45, 0.75].forEach(function(depth, idx) {
-        var layer = createParallaxStars(depth, 800 + idx * 400);
+    [0.3, 0.7].forEach(function(depth, idx) {
+        var layer = createParallaxStars(depth, 400 + idx * 200);
         parallaxStarLayers.push({ mesh: layer, depth: depth });
         scene.add(layer);
     });
@@ -792,7 +792,7 @@ function orbitBackground() {
     scene.add(cometGroup);
 
     // --- COMET DUST TAIL ---
-    var tailParticleCount = 2000;
+    var tailParticleCount = 800;
     var tailGeometry = new THREE.BufferGeometry();
     var tailPositions = new Float32Array(tailParticleCount * 3);
     var tailColors = new Float32Array(tailParticleCount * 3);
@@ -905,7 +905,7 @@ function orbitBackground() {
     window._orbitFullPathDots = fullPathDots;
     
     // Lit portion - bright animated trail following comet progress
-    var litTrailCount = 80; // number of dots in the lit trail
+    var litTrailCount = 40; // number of dots in the lit trail
     var litTrailGeometry = new THREE.BufferGeometry();
     var litTrailPositions = new Float32Array(litTrailCount * 3);
     var litTrailColors = new Float32Array(litTrailCount * 3);
@@ -1190,9 +1190,10 @@ function orbitBackground() {
         var time = clock.getElapsedTime();
 
         parallaxStarLayers.forEach(function(layer, index) {
-            layer.mesh.rotation.y += 0.00002 * (index + 1);
-            layer.mesh.position.x = Math.sin(time * 0.02 * (layer.depth + 0.3)) * (20 + layer.depth * 60);
-            layer.mesh.position.z = Math.cos(time * 0.015 * (layer.depth + 0.5)) * (15 + layer.depth * 40);
+            layer.mesh.rotation.y += 0.00008 * (index + 1);
+            layer.mesh.position.x = Math.sin(time * 0.05 * (layer.depth + 0.3)) * (60 + layer.depth * 150);
+            layer.mesh.position.z = Math.cos(time * 0.04 * (layer.depth + 0.5)) * (50 + layer.depth * 120);
+            layer.mesh.position.y = Math.sin(time * 0.03 * (layer.depth + 0.2)) * (30 + layer.depth * 80);
         });
 
         animationProgress += animationSpeed;
