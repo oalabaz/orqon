@@ -83,22 +83,22 @@ function universal_volume_slider_setup() {
             }
         }
         
-        // Ease in-out cubic function - slow start, fast middle, slow end
-        function easeInOutCubic(t) {
-            return t < 0.5 
-                ? 4 * t * t * t 
-                : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        // Elastic out function - fast start, overshoots then settles
+        function easeOutElastic(t) {
+            var c4 = (2 * Math.PI) / 3;
+            return t === 0 ? 0 : t === 1 ? 1 
+                : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
         }
         
         function animateStep() {
-            animationProgress += 0.03; // ~33 frames to complete
+            animationProgress += 0.04; // ~25 frames - faster overall
             if (animationProgress >= 1) {
                 animatedVol = targetVol;
                 drawVolumeSlider(animatedVol);
                 animationFrame = null;
             } else {
-                // Cubic ease in-out - slow start, fast middle, slow end
-                var eased = easeInOutCubic(animationProgress);
+                // Elastic out - snappy start, bouncy settle
+                var eased = easeOutElastic(animationProgress);
                 var diff = targetVol - startVol;
                 animatedVol = startVol + diff * eased;
                 drawVolumeSlider(animatedVol);
