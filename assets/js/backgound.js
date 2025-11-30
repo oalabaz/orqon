@@ -12,10 +12,24 @@
 function init_backgrounds() {
 	var error_msg = 'Error! No background is set or something went wrong'
 
-	// Check localStorage for locked background
+	// Check localStorage for background lock state
 	var lockedBg = localStorage.getItem('locked_background_mode');
-	if (lockedBg) {
+	var isFirstVisit = localStorage.getItem('bg_visited') === null;
+	
+	if (isFirstVisit) {
+		// First visit: set orbit as default and lock it
+		option_hero_background_mode = 'orbit';
+		localStorage.setItem('locked_background_mode', 'orbit');
+		localStorage.setItem('bg_visited', 'true');
+		lockedBg = 'orbit';
+	} else if (lockedBg) {
+		// Background is locked, use the locked background
 		option_hero_background_mode = lockedBg;
+	} else {
+		// Unlocked: randomize background on each refresh
+		if (typeof array_background_mode !== 'undefined' && array_background_mode.length > 0) {
+			option_hero_background_mode = array_background_mode[Math.floor(Math.random() * array_background_mode.length)];
+		}
 	}
 
 	if (typeof is_mobile_device !== 'undefined' && is_mobile_device == true && typeof option_hero_background_mode_mobile !== 'undefined' && option_hero_background_mode_mobile != 'match') {
@@ -31,8 +45,8 @@ function init_backgrounds() {
 
 	// Ensure option_hero_background_mode is defined
 	if (typeof option_hero_background_mode === 'undefined') {
-		console.warn("option_hero_background_mode is undefined. Defaulting to 'asteroids'.");
-		option_hero_background_mode = 'asteroids';
+		console.warn("option_hero_background_mode is undefined. Defaulting to 'orbit'.");
+		option_hero_background_mode = 'orbit';
 	}
 
 	switch (option_hero_background_mode) {
