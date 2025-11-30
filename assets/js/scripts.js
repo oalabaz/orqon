@@ -134,59 +134,63 @@ function universal_volume_slider_setup() {
 	// Don't create if already exists
 	if (document.getElementById('volume-slider-container')) return;
 	
-	var volumeContainer = document.createElement('div');
-	volumeContainer.id = 'volume-slider-container';
-	volumeContainer.style.cssText = 'position:fixed;top:50%;left:20px;transform:translateY(-50%);background:rgba(8,12,18,0.9);padding:8px;border-radius:20px;border:1px solid rgba(100,120,140,0.25);box-shadow:0 2px 12px rgba(0,0,0,0.4);backdrop-filter:blur(6px);z-index:1000;display:flex;flex-direction:column;align-items:center;gap:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);cursor:pointer;';
+        var volumeContainer = document.createElement('div');
+        volumeContainer.id = 'volume-slider-container';
+        volumeContainer.style.cssText = 'position:fixed;top:50%;left:20px;transform:translateY(-50%);background:rgba(9,14,22,0.92);padding:10px;border-radius:24px;border:1px solid rgba(120,140,170,0.28);box-shadow:0 6px 24px rgba(0,0,0,0.35);backdrop-filter:blur(8px);z-index:1000;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);cursor:pointer;';
 	
 	// Slider wrapper (hidden when collapsed) - now on top
-	var sliderWrapper = document.createElement('div');
-	sliderWrapper.id = 'volume-slider-wrapper';
-	sliderWrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;height:0;width:20px;overflow:hidden;opacity:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);';
+        var sliderWrapper = document.createElement('div');
+        sliderWrapper.id = 'volume-slider-wrapper';
+        sliderWrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;height:0;width:32px;overflow:hidden;opacity:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);';
 	
-	var volumeValue = document.createElement('span');
-	volumeValue.id = 'volume-value';
-	volumeValue.style.cssText = 'color:#aabbcc;font-size:9px;font-family:Consolas,Monaco,monospace;white-space:nowrap;';
-	volumeValue.textContent = Math.round(globalVolume * 100) + '%';
-	sliderWrapper.appendChild(volumeValue);
+        var volumeValue = document.createElement('span');
+        volumeValue.id = 'volume-value';
+        volumeValue.style.cssText = 'color:#e7f2ff;font-size:10px;font-family:Consolas,Monaco,monospace;background:rgba(73,123,189,0.35);border:1px solid rgba(116,165,226,0.35);padding:4px 8px;border-radius:9999px;box-shadow:0 4px 12px rgba(0,0,0,0.25);min-width:38px;text-align:center;';
+        volumeValue.textContent = Math.round(globalVolume * 100) + '%';
+        sliderWrapper.appendChild(volumeValue);
 	
-	var volumeSlider = document.createElement('input');
-	volumeSlider.type = 'range';
-	volumeSlider.id = 'global-volume-slider';
-	volumeSlider.min = '0';
-	volumeSlider.max = '100';
-	volumeSlider.value = Math.round(globalVolume * 100);
-	volumeSlider.style.cssText = 'width:60px;height:1px;-webkit-appearance:none;appearance:none;background:linear-gradient(to right, #88ccee ' + (globalVolume * 100) + '%, rgba(100,120,140,0.2) ' + (globalVolume * 100) + '%);border-radius:0;cursor:pointer;outline:none;transform:rotate(-90deg);transform-origin:center center;';
-	sliderWrapper.appendChild(volumeSlider);
+        var volumeSlider = document.createElement('input');
+        volumeSlider.type = 'range';
+        volumeSlider.id = 'global-volume-slider';
+        volumeSlider.min = '0';
+        volumeSlider.max = '100';
+        volumeSlider.value = Math.round(globalVolume * 100);
+        volumeSlider.style.cssText = 'width:110px;height:6px;-webkit-appearance:none;appearance:none;background:linear-gradient(to right, #4dabf7 ' + (globalVolume * 100) + '%, rgba(110,128,160,0.25) ' + (globalVolume * 100) + '%);border-radius:999px;cursor:pointer;outline:none;transform:rotate(-90deg);transform-origin:center center;border:1px solid rgba(120,140,170,0.35);box-shadow:inset 0 1px 3px rgba(0,0,0,0.35);';
+        sliderWrapper.appendChild(volumeSlider);
 	
 	volumeContainer.appendChild(sliderWrapper);
 	
 	// Music icon (visible when collapsed) - now on bottom
-	var volumeIcon = document.createElement('span');
-	volumeIcon.id = 'volume-icon';
-	volumeIcon.className = 'ti-music';
-	volumeIcon.style.cssText = 'color:#88aacc;font-size:14px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;';
-	volumeContainer.appendChild(volumeIcon);
+        var volumeIcon = document.createElement('span');
+        volumeIcon.id = 'volume-icon';
+        volumeIcon.className = 'ti-music';
+        volumeIcon.style.cssText = 'color:#9cb6d6;font-size:16px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;border-radius:12px;background:rgba(108,150,205,0.1);border:1px solid rgba(120,160,215,0.18);box-shadow:0 2px 8px rgba(0,0,0,0.25);';
+        volumeContainer.appendChild(volumeIcon);
 	
 	document.body.appendChild(volumeContainer);
 	
 	// Expand on hover (vertical)
 	volumeContainer.addEventListener('mouseenter', function() {
-		sliderWrapper.style.height = '75px';
-		sliderWrapper.style.opacity = '1';
-		sliderWrapper.style.marginBottom = '2px';
-		volumeIcon.style.color = '#aaddff';
-	});
-	volumeContainer.addEventListener('mouseleave', function() {
-		sliderWrapper.style.height = '0';
-		sliderWrapper.style.opacity = '0';
-		sliderWrapper.style.marginBottom = '0';
-		volumeIcon.style.color = '#88aacc';
-	});
-	
-	// Style the slider thumb
-	var sliderStyle = document.createElement('style');
-	sliderStyle.textContent = '#global-volume-slider::-webkit-slider-thumb{-webkit-appearance:none;width:6px;height:6px;background:#aaddff;border-radius:50%;cursor:pointer;box-shadow:0 0 3px rgba(136,204,238,0.5);}#global-volume-slider::-moz-range-thumb{width:6px;height:6px;background:#aaddff;border-radius:50%;cursor:pointer;border:none;box-shadow:0 0 3px rgba(136,204,238,0.5);}#volume-slider-container:hover #global-volume-slider::-webkit-slider-thumb{background:#cceeFF;box-shadow:0 0 6px rgba(136,204,238,0.7);}';
-	document.head.appendChild(sliderStyle);
+                sliderWrapper.style.height = '110px';
+                sliderWrapper.style.opacity = '1';
+                sliderWrapper.style.marginBottom = '4px';
+                volumeIcon.style.color = '#c7e3ff';
+                volumeIcon.style.background = 'rgba(90,160,245,0.22)';
+                volumeIcon.style.borderColor = 'rgba(118,180,255,0.35)';
+        });
+        volumeContainer.addEventListener('mouseleave', function() {
+                sliderWrapper.style.height = '0';
+                sliderWrapper.style.opacity = '0';
+                sliderWrapper.style.marginBottom = '0';
+                volumeIcon.style.color = '#9cb6d6';
+                volumeIcon.style.background = 'rgba(108,150,205,0.1)';
+                volumeIcon.style.borderColor = 'rgba(120,160,215,0.18)';
+        });
+
+        // Style the slider thumb
+        var sliderStyle = document.createElement('style');
+        sliderStyle.textContent = '#global-volume-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:#e7f5ff;border-radius:12px;cursor:pointer;border:2px solid #5c9ded;box-shadow:0 8px 16px rgba(0,0,0,0.25);}#global-volume-slider::-moz-range-thumb{width:16px;height:16px;background:#e7f5ff;border-radius:12px;cursor:pointer;border:2px solid #5c9ded;box-shadow:0 8px 16px rgba(0,0,0,0.25);}#global-volume-slider::-webkit-slider-runnable-track{background:transparent;border-radius:999px;}#global-volume-slider::-moz-range-track{background:transparent;border-radius:999px;}#volume-slider-container:hover #global-volume-slider::-webkit-slider-thumb{background:#f8fbff;border-color:#7ab6ff;box-shadow:0 10px 20px rgba(0,0,0,0.28);}#volume-slider-container:hover #global-volume-slider::-moz-range-thumb{background:#f8fbff;border-color:#7ab6ff;box-shadow:0 10px 20px rgba(0,0,0,0.28);}';
+        document.head.appendChild(sliderStyle);
 	
 	// Track for auto-hide timeout
 	var volumeAutoHideTimeout = null;
@@ -237,9 +241,9 @@ function universal_volume_slider_setup() {
 		var wrapper = document.getElementById('volume-slider-wrapper');
 		var icon = document.getElementById('volume-icon');
 		if (wrapper) {
-			wrapper.style.height = '75px';
-			wrapper.style.opacity = '1';
-			wrapper.style.marginBottom = '2px';
+                        wrapper.style.height = '110px';
+                        wrapper.style.opacity = '1';
+                        wrapper.style.marginBottom = '4px';
 		}
 		if (icon) {
 			icon.style.color = '#aaddff';
@@ -254,23 +258,25 @@ function universal_volume_slider_setup() {
 			var container = document.getElementById('volume-slider-container');
 			if (container && !container.matches(':hover')) {
 				if (wrapper) {
-					wrapper.style.height = '0';
-					wrapper.style.opacity = '0';
-					wrapper.style.marginBottom = '0';
-				}
-				if (icon) {
-					icon.style.color = '#88aacc';
-				}
-			}
-		}, 2000);
-	}
+                                        wrapper.style.height = '0';
+                                        wrapper.style.opacity = '0';
+                                        wrapper.style.marginBottom = '0';
+                                }
+                                if (icon) {
+                                        icon.style.color = '#9cb6d6';
+                                        icon.style.background = 'rgba(108,150,205,0.1)';
+                                        icon.style.borderColor = 'rgba(120,160,215,0.18)';
+                                }
+                        }
+                }, 2000);
+        }
 }
 
 function updateGlobalVolumeDisplay(vol) {
 	var volDisplay = document.getElementById('volume-value');
 	if (volDisplay) volDisplay.textContent = vol + '%';
 	var slider = document.getElementById('global-volume-slider');
-	if (slider) slider.style.background = 'linear-gradient(to right, #88ccee ' + vol + '%, rgba(100,120,140,0.25) ' + vol + '%)';
+        if (slider) slider.style.background = 'linear-gradient(to right, #4dabf7 ' + vol + '%, rgba(110,128,160,0.25) ' + vol + '%)';
 	// Update icon based on volume
 	var icon = document.getElementById('volume-icon');
 	if (icon) {
