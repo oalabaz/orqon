@@ -1264,6 +1264,14 @@ function orbitBackground() {
     
     function lockFocus() {
         focusLocked = true;
+        
+        // Reset zoom distance to starting value when locking
+        focusZoomDistance = 500;
+
+        if (cameraAmbientTween) {
+            cameraAmbientTween.pause();
+        }
+        
         lockIcon.className = 'ti-lock';
         lockIcon.style.color = '#fff';
         lockIcon.title = 'Focus locked (click outside or ESC to unlock)';
@@ -1330,6 +1338,10 @@ function orbitBackground() {
         focusModeActive = false;
         targetCameraZ = baseCameraZ;
         lockIcon.style.opacity = '0';
+
+        if (cameraAmbientTween) {
+            cameraAmbientTween.resume();
+        }
         
         // Fade volume down to 50%
         var audio = document.getElementById('glowmaster-audio');
@@ -1383,16 +1395,16 @@ function orbitBackground() {
     });
     
     // Mouse wheel zoom when focus is locked - zoom distance from comet
-    var focusZoomDistance = 80;  // Current distance from comet when locked
-    var minFocusDistance = 20;   // Closest zoom
-    var maxFocusDistance = 200;  // Farthest zoom
+    var focusZoomDistance = 500;  // Current distance from comet when locked (start far)
+    var minFocusDistance = 2;     // Super close (comet fills screen)
+    var maxFocusDistance = 500;   // Never smaller than initial size
     
     document.addEventListener('wheel', function(e) {
         if (focusLocked) {
             e.preventDefault();
             e.stopPropagation();
             // Scroll down = zoom out (increase distance), scroll up = zoom in (decrease distance)
-            var zoomDelta = e.deltaY > 0 ? 10 : -10;
+            var zoomDelta = e.deltaY > 0 ? 500 : -500;  // Massive zoom steps
             focusZoomDistance = Math.max(minFocusDistance, Math.min(maxFocusDistance, focusZoomDistance + zoomDelta));
         }
     }, { passive: false, capture: true });
@@ -1418,6 +1430,8 @@ function orbitBackground() {
     var clock = new THREE.Clock();
 
     // --- GSAP CINEMATIC INTRO & CONTINUOUS MOTION (added) ---
+    var cameraAmbientTween = null;
+
     if (typeof gsap !== 'undefined') {
         // Collect emissive parts for opacity handling (materials only)
         var sunEmitters = sunGroup.children.filter(function(c){return c.material && c !== sunMesh;});
@@ -1457,7 +1471,7 @@ function orbitBackground() {
             if(m.material) gsap.to(m.material, { duration: 6+ i, opacity: '+=0.03', repeat:-1, yoyo:true, ease:'sine.inOut', delay: 2 + i*0.3 });
         });
         gsap.to(jupiterGroup.rotation, { duration: 40, y: '+=6.283', repeat: -1, ease: 'none' });
-        gsap.to(camera.position, { duration: 12, y: '+=20', x: '-=15', repeat: -1, yoyo: true, ease: 'sine.inOut', onUpdate: function(){ camera.lookAt(0,0,0); } });
+        cameraAmbientTween = gsap.to(camera.position, { duration: 12, y: '+=20', x: '-=15', repeat: -1, yoyo: true, ease: 'sine.inOut', onUpdate: function(){ camera.lookAt(0,0,0); } });
         gsap.to(infoDiv, { duration: 3, boxShadow: '0 0 40px rgba(0,255,255,0.35), inset 0 0 25px rgba(0,255,255,0.08)', repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 4});
     }
 
@@ -1476,17 +1490,34 @@ function orbitBackground() {
         
         // Camera control based on focus state
         if (focusLocked) {
-            // When focus locked, orbit camera around comet at focusZoomDistance
-            var orbitAngle = time * 0.1; // Slow orbit
-            var camX = cometPos.x + Math.sin(orbitAngle) * focusZoomDistance * 0.5;
-            var camY = cometPos.y + 30 + Math.sin(time * 0.15) * 10; // Slight vertical bob
-            var camZ = cometPos.z + Math.cos(orbitAngle) * focusZoomDistance;
+            // When focus locked, position camera at focusZoomDistance from comet
+            // Calculate direction from comet to current camera position
+            var dirX = camera.position.x - cometPos.x;
+            var dirY = camera.position.y - cometPos.y;
+            var dirZ = camera.position.z - cometPos.z;
+            var dist = Math.sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
+            
+            // Normalize direction
+            if (dist > 0.1) {
+                dirX /= dist;
+                dirY /= dist;
+                dirZ /= dist;
+            } else {
+                // Default direction if too close
+                dirX = 0;
+                dirY = 0.3;
+                dirZ = 1;
+            }
+            
+            // Target position at focusZoomDistance along this direction
+            var targetX = cometPos.x + dirX * focusZoomDistance;
+            var targetY = cometPos.y + dirY * focusZoomDistance;
+            var targetZ = cometPos.z + dirZ * focusZoomDistance;
             
             // Smooth interpolation to target position
-            camera.position.x += (camX - camera.position.x) * 0.03;
-            camera.position.y += (camY - camera.position.y) * 0.03;
-            camera.position.z += (camZ - camera.position.z) * 0.03;
-            
+            camera.position.x += (targetX - camera.position.x) * 0.05;
+            camera.position.y += (targetY - camera.position.y) * 0.05;
+            camera.position.z += (targetZ - camera.position.z) * 0.05;
             // Always look at comet
             camera.lookAt(cometPos);
         } else {
