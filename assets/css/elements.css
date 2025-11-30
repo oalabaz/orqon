@@ -66,8 +66,7 @@
 
 .entrance-modal-panel {
     position: relative;
-    max-width: 640px;
-    width: 90%;
+	width: min(640px, 92vw);
     max-height: 85vh;
     overflow-y: auto;
     background: rgba(8, 12, 18, 0.92);
@@ -76,9 +75,9 @@
     box-shadow: 
         0 0 60px rgba(0, 200, 255, 0.15),
         0 0 120px rgba(0, 150, 255, 0.08),
-        inset 0 0 40px rgba(0, 200, 255, 0.03),
-        0 25px 80px rgba(0, 0, 0, 0.6);
-    padding: 3rem 3.5rem;
+		inset 0 0 40px rgba(0, 200, 255, 0.03),
+		0 25px 80px rgba(0, 0, 0, 0.6);
+	padding: clamp(1.75rem, 5vw, 3rem) clamp(1.5rem, 4.5vw, 3.5rem);
     z-index: 10;
     animation: modalSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -123,11 +122,12 @@
 .entrance-modal-content {
     font-family: Consolas, Monaco, 'Courier New', monospace;
     color: #bbc8d4;
-    line-height: 1.6;
+	line-height: 1.7;
+	font-size: clamp(1rem, 1.5vw, 1.1rem);
 }
 
 .entrance-modal-title {
-    font-size: 2rem;
+	font-size: clamp(1.8rem, 3vw, 2.35rem);
     font-weight: 600;
     color: #ddeeff;
     margin-bottom: 2rem;
@@ -142,7 +142,7 @@
 }
 
 .entrance-modal-section h4 {
-    font-size: 1.2rem;
+	font-size: clamp(1.05rem, 2.4vw, 1.35rem);
     font-weight: 600;
     color: #88ccff;
     margin-bottom: 0.8rem;
@@ -150,7 +150,7 @@
 }
 
 .entrance-modal-section p {
-    font-size: 1.1rem;
+	font-size: clamp(1rem, 2vw, 1.2rem);
     color: #99aabb;
     line-height: 1.7;
 }
@@ -179,7 +179,7 @@
 }
 
 .entrance-modal-hint {
-    font-size: 1rem;
+	font-size: clamp(0.95rem, 2vw, 1.1rem);
     color: #667788;
 }
 
@@ -188,10 +188,54 @@
     background: rgba(100, 150, 200, 0.15);
     border: 1px solid rgba(100, 180, 255, 0.25);
     border-radius: 3px;
-    padding: 0.15rem 0.5rem;
+	padding: 0.15rem 0.55rem;
     font-family: inherit;
-    font-size: 0.9rem;
+	font-size: clamp(0.85rem, 1.8vw, 1rem);
     color: #aabbcc;
+}
+
+@media (max-width: 768px) {
+	.entrance-modal {
+		align-items: flex-start;
+		padding: 1.5rem 1.25rem;
+	}
+
+	.entrance-modal-panel {
+		width: 100%;
+		max-height: 92vh;
+		border-radius: 8px;
+		padding: clamp(1.5rem, 6vw, 2.25rem);
+		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65);
+	}
+
+	.entrance-modal-close {
+		width: 3rem;
+		height: 3rem;
+	}
+}
+
+@media (max-width: 480px) {
+	.entrance-modal {
+		padding: 1rem;
+	}
+
+	.entrance-modal-panel {
+		border-width: 1px;
+		padding: clamp(1.25rem, 7vw, 2rem);
+	}
+
+	.entrance-modal-title {
+		margin-bottom: 1.5rem;
+	}
+
+	.entrance-modal-section {
+		margin-bottom: 1.4rem;
+	}
+
+	.entrance-modal-footer {
+		margin-top: 2rem;
+		padding-top: 1.25rem;
+	}
 }
 
 /* Scrollbar styling for modal */

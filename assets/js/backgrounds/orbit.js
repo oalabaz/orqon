@@ -1221,7 +1221,10 @@ function orbitBackground() {
     // --- INFO HUD ---
     var infoDiv = document.createElement('div');
     infoDiv.id = 'orbit-info';
-    infoDiv.style.cssText = 'position:fixed;top:16px;left:16px;color:#aabbcc;font-family:Consolas,Monaco,monospace;font-size:10px;pointer-events:auto;text-shadow:0 0 8px rgba(100,120,140,0.4);line-height:1.4;z-index:100;max-width:280px;background:rgba(8,12,18,0.75);padding:10px 12px;border-radius:3px;border:1px solid rgba(100,120,140,0.2);box-shadow:0 2px 12px rgba(0,0,0,0.5);backdrop-filter:blur(4px);cursor:pointer;';
+    infoDiv.style.cssText = 'position:fixed;top:16px;left:16px;color:#aabbcc;font-family:Consolas,Monaco,monospace;font-size:10px;pointer-events:auto;line-height:1.4;z-index:100;max-width:280px;background:rgba(10,14,22,0.9);padding:28px 14px 14px 14px;border-radius:4px;border:1px solid rgba(110,130,150,0.35);box-shadow:0 6px 16px rgba(0,0,0,0.45);backdrop-filter:blur(3px);cursor:pointer;';
+    infoDiv.setAttribute('role', 'button');
+    infoDiv.setAttribute('aria-pressed', 'false');
+    infoDiv.tabIndex = 0;
     document.body.appendChild(infoDiv);
     
     // Create text container for info content
@@ -1240,6 +1243,10 @@ function orbitBackground() {
     lockIcon.style.cssText = 'position:absolute;top:8px;right:8px;font-size:10px;cursor:pointer;transition:all 0.2s ease;opacity:0;color:#666;';
     infoDiv.appendChild(lockIcon);
     
+    function updateFocusButtonState(isActive) {
+        infoDiv.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    }
+
     function activateFocusMode() {
         if (!focusLocked && !document.body.classList.contains('bg-focus-mode')) {
             document.body.classList.add('bg-focus-mode');
@@ -1249,6 +1256,7 @@ function orbitBackground() {
             lockIcon.style.opacity = '1';
             lockIcon.style.color = '#888';
             lockIcon.className = 'ti-unlock';
+            updateFocusButtonState(true);
         }
     }
     
@@ -1259,10 +1267,30 @@ function orbitBackground() {
             targetCameraZ = baseCameraZ;
             // Hide lock icon
             lockIcon.style.opacity = '0';
+            updateFocusButtonState(false);
         }
     }
     
+    function toggleFocusMode() {
+        if (focusLocked) {
+            unlockFocus();
+            return;
+        }
+
+        if (!document.body.classList.contains('bg-focus-mode')) {
+            activateFocusMode();
+        }
+
+        lockFocus();
+    }
+    
     function lockFocus() {
+        if (focusLocked) return;
+
+        if (!document.body.classList.contains('bg-focus-mode')) {
+            activateFocusMode();
+        }
+
         focusLocked = true;
         
         // Reset zoom distance to starting value when locking
@@ -1274,8 +1302,9 @@ function orbitBackground() {
         
         lockIcon.className = 'ti-lock';
         lockIcon.style.color = '#fff';
-        lockIcon.title = 'Focus locked (click outside or ESC to unlock)';
+        lockIcon.title = 'Focus locked (click outside or press ESC to exit)';
         document.body.classList.add('focus-locked');
+        updateFocusButtonState(true);
         
         var audio = document.getElementById('glowmaster-audio');
         if (audio) {
@@ -1333,11 +1362,7 @@ function orbitBackground() {
         lockIcon.style.color = '#888';
         lockIcon.title = 'Click to lock focus';
         document.body.classList.remove('focus-locked');
-        // Deactivate focus mode
-        document.body.classList.remove('bg-focus-mode');
-        focusModeActive = false;
-        targetCameraZ = baseCameraZ;
-        lockIcon.style.opacity = '0';
+        deactivateFocusMode();
 
         if (cameraAmbientTween) {
             cameraAmbientTween.resume();
@@ -1360,15 +1385,42 @@ function orbitBackground() {
         }
     }
     
-    // Click inside info window locks focus
-    infoDiv.addEventListener('click', function(e) {
-        if (!focusLocked) {
-            if (!document.body.classList.contains('bg-focus-mode')) {
-                activateFocusMode();
-            } else {
-                lockFocus();
-            }
+    function requestFocusToggle() {
+        toggleFocusMode();
+    }
+
+    function shouldIgnoreFocusToggleTarget(target) {
+        return lockIcon.contains(target);
+    }
+
+    function handleInfoPanelPointerUp(e) {
+        if (focusLocked) return;
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        if (shouldIgnoreFocusToggleTarget(e.target)) return;
+        requestFocusToggle();
+    }
+
+    // Info panel acts as a large toggle target; pointer-based to remain stable while text updates
+    infoDiv.addEventListener('pointerup', handleInfoPanelPointerUp);
+
+    infoDiv.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            requestFocusToggle();
         }
+    });
+    
+    lockIcon.addEventListener('pointerup', function(e) {
+        e.stopPropagation();
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        requestFocusToggle();
+    });
+
+    lockIcon.addEventListener('click', function(e) {
+        // Prevent synthetic click double-trigger after pointerup
+        if (e.detail !== 0) return;
+        e.stopPropagation();
+        requestFocusToggle();
     });
     
     lockIcon.addEventListener('mouseenter', function() {
@@ -1378,8 +1430,6 @@ function orbitBackground() {
         lockIcon.style.transform = 'scale(1)';
     });
     
-    infoDiv.addEventListener('mouseenter', activateFocusMode);
-    infoDiv.addEventListener('mouseleave', deactivateFocusMode);
     
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && document.body.classList.contains('bg-focus-mode')) {
