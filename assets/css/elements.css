@@ -25,9 +25,255 @@
     --  18. Audio Player
     --  19. Video Player
     --  20. Icon Wrapper
+    --  21. Entrance Modal
  
  
  ******************************************************************/
+
+/** 21. Entrance Modal (Sci-Fi HUD Theme)
+*******************************************************************/
+
+.entrance-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 300;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.entrance-modal.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.entrance-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.entrance-modal-panel {
+    position: relative;
+    max-width: 640px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: rgba(8, 12, 18, 0.92);
+    border: 1px solid rgba(100, 180, 255, 0.25);
+    border-radius: 4px;
+    box-shadow: 
+        0 0 60px rgba(0, 200, 255, 0.15),
+        0 0 120px rgba(0, 150, 255, 0.08),
+        inset 0 0 40px rgba(0, 200, 255, 0.03),
+        0 25px 80px rgba(0, 0, 0, 0.6);
+    padding: 3rem 3.5rem;
+    z-index: 10;
+    animation: modalSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(30px) scale(0.96);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.entrance-modal-close {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    width: 3.6rem;
+    height: 3.6rem;
+    background: rgba(100, 150, 200, 0.1);
+    border: 1px solid rgba(100, 180, 255, 0.2);
+    border-radius: 50%;
+    color: #aabbcc;
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.25s ease;
+}
+
+.entrance-modal-close:hover {
+    background: rgba(100, 180, 255, 0.2);
+    border-color: rgba(100, 200, 255, 0.4);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(100, 200, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+.entrance-modal-content {
+    font-family: Consolas, Monaco, 'Courier New', monospace;
+    color: #bbc8d4;
+    line-height: 1.6;
+}
+
+.entrance-modal-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #ddeeff;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(100, 180, 255, 0.2);
+    text-shadow: 0 0 20px rgba(100, 200, 255, 0.4);
+    letter-spacing: 1px;
+}
+
+.entrance-modal-section {
+    margin-bottom: 1.8rem;
+}
+
+.entrance-modal-section h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #88ccff;
+    margin-bottom: 0.8rem;
+    text-shadow: 0 0 10px rgba(100, 200, 255, 0.25);
+}
+
+.entrance-modal-section p {
+    font-size: 1.1rem;
+    color: #99aabb;
+    line-height: 1.7;
+}
+
+.entrance-modal-section strong {
+    color: #ccddef;
+    font-weight: 600;
+}
+
+.entrance-modal-section .hud-warning {
+    display: inline-block;
+    background: rgba(200, 180, 100, 0.15);
+    border: 1px solid rgba(200, 180, 100, 0.3);
+    color: #ddcc88;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.entrance-modal-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(100, 180, 255, 0.15);
+    text-align: center;
+}
+
+.entrance-modal-hint {
+    font-size: 1rem;
+    color: #667788;
+}
+
+.entrance-modal-hint kbd {
+    display: inline-block;
+    background: rgba(100, 150, 200, 0.15);
+    border: 1px solid rgba(100, 180, 255, 0.25);
+    border-radius: 3px;
+    padding: 0.15rem 0.5rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: #aabbcc;
+}
+
+/* Scrollbar styling for modal */
+.entrance-modal-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.entrance-modal-panel::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.entrance-modal-panel::-webkit-scrollbar-thumb {
+    background: rgba(100, 180, 255, 0.3);
+    border-radius: 3px;
+}
+
+.entrance-modal-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 180, 255, 0.5);
+}
+
+/* Audio control bubble */
+#audio-control-bubble {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-family: sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    pointer-events: auto;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+#audio-control-bubble:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+#audio-control-bubble .audio-icon {
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+#audio-control-bubble.playing .audio-icon {
+    color: #0bc5fc;
+    text-shadow: 0 0 10px rgba(11, 197, 252, 0.5);
+}
+
+#audio-control-bubble .track-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+#audio-control-bubble .track-name {
+    color: #fff;
+}
+
+#audio-control-bubble .track-artist {
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 400;
+}
+
+#audio-control-bubble .soundcloud-link {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    transition: color 0.3s ease;
+}
+
+#audio-control-bubble .soundcloud-link:hover {
+    color: #ff5500;
+}
 
 /** 1. Icon Button
 *******************************************************************/

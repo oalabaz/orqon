@@ -30,6 +30,99 @@ var is_mobile_device = false
 if (window.mobileAndTabletCheck()) is_mobile_device = true
 if (isIpadOS()) is_mobile_device = true
 
+// --- ENTRANCE MODAL --- //
+var glowmasterAudio = null;
+
+function entrance_modal_setup() {
+	var modal = document.getElementById('entrance-modal');
+	var closeBtn = document.getElementById('modal-close');
+	var overlay = document.querySelector('.entrance-modal-overlay');
+	glowmasterAudio = document.getElementById('glowmaster-audio');
+	
+	if (!modal) return;
+	
+	// Check if already dismissed this session
+	if (sessionStorage.getItem('entranceModalDismissed') === 'true') {
+		modal.classList.add('hidden');
+		return;
+	}
+	
+	function closeModal() {
+		if (modal.classList.contains('hidden')) return;
+		
+		// Animate out with GSAP if available
+		if (typeof gsap !== 'undefined') {
+			gsap.to('.entrance-modal-panel', {
+				duration: 0.4,
+				opacity: 0,
+				y: 20,
+				scale: 0.96,
+				ease: 'power2.in'
+			});
+			gsap.to('.entrance-modal-overlay', {
+				duration: 0.5,
+				opacity: 0,
+				ease: 'power2.in'
+			});
+			gsap.to(modal, {
+				duration: 0.5,
+				opacity: 0,
+				ease: 'power2.in',
+				onComplete: function() {
+					modal.classList.add('hidden');
+					startGlowmasterAudio();
+				}
+			});
+		} else {
+			modal.classList.add('hidden');
+			startGlowmasterAudio();
+		}
+		
+		sessionStorage.setItem('entranceModalDismissed', 'true');
+	}
+	
+	function startGlowmasterAudio() {
+		if (!glowmasterAudio) return;
+		
+		glowmasterAudio.volume = 0.7;
+		glowmasterAudio.play()
+			.then(function() {
+				console.log('Glowmaster playback started');
+				// Update audio control UI if it exists
+				var audioBubble = document.getElementById('audio-control-bubble');
+				if (audioBubble) {
+					audioBubble.classList.add('playing');
+					var icon = audioBubble.querySelector('.audio-icon');
+					if (icon) {
+						icon.classList.remove('ti-control-play');
+						icon.classList.add('ti-control-pause');
+					}
+				}
+			})
+			.catch(function(error) {
+				console.warn('Audio playback failed:', error);
+			});
+	}
+	
+	// Close button click
+	if (closeBtn) {
+		closeBtn.addEventListener('click', closeModal);
+	}
+	
+	// Overlay click (click outside)
+	if (overlay) {
+		overlay.addEventListener('click', closeModal);
+	}
+	
+	// ESC key support
+	document.addEventListener('keydown', function(e) {
+		if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+			closeModal();
+		}
+	});
+}
+// --- /ENTRANCE MODAL --- //
+
 function core_init() {
 	smooth_scroll()
 	accordions_setup()
@@ -47,6 +140,7 @@ function core_init() {
 	window.addEventListener('load', scroll_bar())
 	//options_panel();
 	image_setup()
+	entrance_modal_setup() // --- ENTRANCE MODAL ---
 }
 core_init()
 

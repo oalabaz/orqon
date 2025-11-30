@@ -209,8 +209,61 @@ function init_backgrounds() {
 	// Start the cycle
 	cycleTicker();
 
+	// --- AUDIO CONTROL BUBBLE --- //
+	var $audioBubble = $('<div id="audio-control-bubble">' +
+		'<span class="audio-icon ti-control-play"></span>' +
+		'<div class="track-info">' +
+			'<span class="track-name">GLOWMASTER</span>' +
+			'<span class="track-artist">ORQON</span>' +
+		'</div>' +
+		'<a href="https://soundcloud.com/oalabaz" target="_blank" class="soundcloud-link ti-soundcloud" title="Listen on SoundCloud"></a>' +
+	'</div>');
+
+	$audioBubble.on('click', function(e) {
+		if ($(e.target).closest('.soundcloud-link').length) return;
+		
+		var audio = document.getElementById('glowmaster-audio');
+		if (!audio) return;
+		
+		var $icon = $(this).find('.audio-icon');
+		
+		if (audio.paused) {
+			audio.play().then(function() {
+				$icon.removeClass('ti-control-play').addClass('ti-control-pause');
+				$audioBubble.addClass('playing');
+			}).catch(function(err) {
+				console.warn('Audio play failed:', err);
+			});
+		} else {
+			audio.pause();
+			$icon.removeClass('ti-control-pause').addClass('ti-control-play');
+			$audioBubble.removeClass('playing');
+		}
+	});
+	
+	// Update icon when audio ends/pauses externally
+	$(document).ready(function() {
+		var audio = document.getElementById('glowmaster-audio');
+		if (audio) {
+			audio.addEventListener('ended', function() {
+				$audioBubble.find('.audio-icon').removeClass('ti-control-pause').addClass('ti-control-play');
+				$audioBubble.removeClass('playing');
+			});
+			audio.addEventListener('play', function() {
+				$audioBubble.find('.audio-icon').removeClass('ti-control-play').addClass('ti-control-pause');
+				$audioBubble.addClass('playing');
+			});
+			audio.addEventListener('pause', function() {
+				$audioBubble.find('.audio-icon').removeClass('ti-control-pause').addClass('ti-control-play');
+				$audioBubble.removeClass('playing');
+			});
+		}
+	});
+	// --- /AUDIO CONTROL BUBBLE --- //
+
 	// Append to wrapper and body
 	$controlsWrapper.append($bubble);
+	$controlsWrapper.append($audioBubble);
 	$controlsWrapper.append($ticker);
 	$('body').append($controlsWrapper);
 }

@@ -900,6 +900,22 @@ function orbitBackground() {
         rippleRings.push(rippleMesh);
     }
     
+    // --- HILL RADIUS BUBBLE --- //
+    // Extra translucent bubble around Jupiter to visualize Hill radius
+    var hillBubbleGeometry = new THREE.SphereGeometry(jupiterHillRadiusPixels * 1.05, 48, 24);
+    var hillBubbleMaterial = new THREE.MeshBasicMaterial({
+        color: 0x66aaff,
+        transparent: true,
+        opacity: 0.08,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
+    });
+    var hillBubbleMesh = new THREE.Mesh(hillBubbleGeometry, hillBubbleMaterial);
+    hillBubbleMesh.userData = { baseScale: 1.0, baseOpacity: 0.08 };
+    hillGroup.add(hillBubbleMesh);
+    // --- /HILL RADIUS BUBBLE --- //
+    
     // Impact burst particles
     var burstParticleCount = 200;
     var burstGeometry = new THREE.BufferGeometry();
@@ -1498,6 +1514,18 @@ function orbitBackground() {
                 }
             }
         });
+        
+        // --- HILL RADIUS BUBBLE --- //
+        // Gentle breathing animation for the Hill radius bubble
+        if (hillBubbleMesh) {
+            var breathe = Math.sin(time * 0.5) * 0.5 + 0.5; // 0 to 1 oscillation
+            var scaleOffset = breathe * 0.03; // Scale oscillates 1.0 to 1.03
+            var opacityOffset = breathe * 0.07; // Opacity oscillates 0.05 to 0.12
+            
+            hillBubbleMesh.scale.setScalar(hillBubbleMesh.userData.baseScale + scaleOffset);
+            hillBubbleMaterial.opacity = 0.05 + opacityOffset;
+        }
+        // --- /HILL RADIUS BUBBLE --- //
         
         // Animate burst particles
         if (hillCrossingState.burstActive) {

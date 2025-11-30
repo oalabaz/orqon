@@ -66,8 +66,37 @@
 
 <body>
 
-
-
+    <!-- --- ENTRANCE MODAL --- -->
+    <div id="entrance-modal" class="entrance-modal">
+        <div class="entrance-modal-overlay"></div>
+        <div class="entrance-modal-panel">
+            <button class="entrance-modal-close" id="modal-close" aria-label="Close modal">
+                <span class="ti-close"></span>
+            </button>
+            <div class="entrance-modal-content">
+                <h2 class="entrance-modal-title">Interstellar Object 3I/ATLAS</h2>
+                <div class="entrance-modal-section">
+                    <h4>◈ Hyperbolic Trajectory</h4>
+                    <p>3I/ATLAS is an <strong>interstellar visitor</strong> – an object from beyond our solar system traveling on a <strong>hyperbolic trajectory</strong>. Unlike comets bound to the Sun, its orbit is open-ended: it will pass through once and never return, carrying with it clues about distant star systems.</p>
+                </div>
+                <div class="entrance-modal-section">
+                    <h4>◈ Solar Perihelion & Course Correction</h4>
+                    <p>At <strong>perihelion</strong> (closest approach to the Sun), gravitational forces are strongest. Even tiny velocity changes here – mere meters per second – act as powerful <strong>course corrections</strong>, amplified over vast distances. This "gravitational lever" effect is why spacecraft use planetary flybys to reshape their trajectories.</p>
+                </div>
+                <div class="entrance-modal-section">
+                    <h4>◈ Jupiter's Hill Radius</h4>
+                    <p>The <strong>Hill radius</strong> defines the region where Jupiter's gravity dominates over the Sun's – approximately <strong>0.355 AU</strong> (~53 million km). When the HUD displays <span class="hud-warning">⚠ INSIDE HILL SPHERE</span>, the comet has entered Jupiter's gravitational "domain," where capture or significant deflection becomes possible.</p>
+                </div>
+                <div class="entrance-modal-footer">
+                    <p class="entrance-modal-hint">Press <kbd>ESC</kbd> or click outside to continue</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <audio id="glowmaster-audio" preload="auto" loop>
+        <source src="assets/audio/glowMaster.wav" type="audio/wav">
+    </audio>
+    <!-- --- /ENTRANCE MODAL --- -->
 
     <!-- LOADING SCREEN -->
     <div class="loading-screen">
