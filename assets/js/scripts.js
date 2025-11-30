@@ -126,25 +126,175 @@ function entrance_modal_setup() {
 }
 // --- /ENTRANCE MODAL --- //
 
-// --- FOCUS BACKGROUND BUTTON --- //
-function focus_bg_setup() {
-	var btn = document.getElementById('focus-bg-btn');
-	if (!btn) return;
+// --- GLOBAL VOLUME CONTROL --- //
+var globalVolume = 0.5; // Global volume variable (0 to 1)
+var globalAudioFadeInterval = null; // Global fade interval reference
+
+function universal_volume_slider_setup() {
+	// Don't create if already exists
+	if (document.getElementById('volume-slider-container')) return;
 	
-	btn.addEventListener('click', function() {
-		btn.classList.toggle('active');
-		document.body.classList.toggle('bg-focus-mode');
+	var volumeContainer = document.createElement('div');
+	volumeContainer.id = 'volume-slider-container';
+	volumeContainer.style.cssText = 'position:fixed;top:50%;left:20px;transform:translateY(-50%);background:rgba(8,12,18,0.9);padding:8px;border-radius:20px;border:1px solid rgba(100,120,140,0.25);box-shadow:0 2px 12px rgba(0,0,0,0.4);backdrop-filter:blur(6px);z-index:1000;display:flex;flex-direction:column;align-items:center;gap:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);cursor:pointer;';
+	
+	// Slider wrapper (hidden when collapsed) - now on top
+	var sliderWrapper = document.createElement('div');
+	sliderWrapper.id = 'volume-slider-wrapper';
+	sliderWrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;height:0;width:20px;overflow:hidden;opacity:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);';
+	
+	var volumeValue = document.createElement('span');
+	volumeValue.id = 'volume-value';
+	volumeValue.style.cssText = 'color:#aabbcc;font-size:9px;font-family:Consolas,Monaco,monospace;white-space:nowrap;';
+	volumeValue.textContent = Math.round(globalVolume * 100) + '%';
+	sliderWrapper.appendChild(volumeValue);
+	
+	var volumeSlider = document.createElement('input');
+	volumeSlider.type = 'range';
+	volumeSlider.id = 'global-volume-slider';
+	volumeSlider.min = '0';
+	volumeSlider.max = '100';
+	volumeSlider.value = Math.round(globalVolume * 100);
+	volumeSlider.style.cssText = 'width:60px;height:1px;-webkit-appearance:none;appearance:none;background:linear-gradient(to right, #88ccee ' + (globalVolume * 100) + '%, rgba(100,120,140,0.2) ' + (globalVolume * 100) + '%);border-radius:0;cursor:pointer;outline:none;transform:rotate(-90deg);transform-origin:center center;';
+	sliderWrapper.appendChild(volumeSlider);
+	
+	volumeContainer.appendChild(sliderWrapper);
+	
+	// Music icon (visible when collapsed) - now on bottom
+	var volumeIcon = document.createElement('span');
+	volumeIcon.id = 'volume-icon';
+	volumeIcon.className = 'ti-music';
+	volumeIcon.style.cssText = 'color:#88aacc;font-size:14px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;';
+	volumeContainer.appendChild(volumeIcon);
+	
+	document.body.appendChild(volumeContainer);
+	
+	// Expand on hover (vertical)
+	volumeContainer.addEventListener('mouseenter', function() {
+		sliderWrapper.style.height = '75px';
+		sliderWrapper.style.opacity = '1';
+		sliderWrapper.style.marginBottom = '2px';
+		volumeIcon.style.color = '#aaddff';
+	});
+	volumeContainer.addEventListener('mouseleave', function() {
+		sliderWrapper.style.height = '0';
+		sliderWrapper.style.opacity = '0';
+		sliderWrapper.style.marginBottom = '0';
+		volumeIcon.style.color = '#88aacc';
 	});
 	
-	// ESC key to exit focus mode
-	document.addEventListener('keydown', function(e) {
-		if (e.key === 'Escape' && document.body.classList.contains('bg-focus-mode')) {
-			btn.classList.remove('active');
-			document.body.classList.remove('bg-focus-mode');
+	// Style the slider thumb
+	var sliderStyle = document.createElement('style');
+	sliderStyle.textContent = '#global-volume-slider::-webkit-slider-thumb{-webkit-appearance:none;width:6px;height:6px;background:#aaddff;border-radius:50%;cursor:pointer;box-shadow:0 0 3px rgba(136,204,238,0.5);}#global-volume-slider::-moz-range-thumb{width:6px;height:6px;background:#aaddff;border-radius:50%;cursor:pointer;border:none;box-shadow:0 0 3px rgba(136,204,238,0.5);}#volume-slider-container:hover #global-volume-slider::-webkit-slider-thumb{background:#cceeFF;box-shadow:0 0 6px rgba(136,204,238,0.7);}';
+	document.head.appendChild(sliderStyle);
+	
+	// Track for auto-hide timeout
+	var volumeAutoHideTimeout = null;
+	var lastDisplayedVolume = Math.round(globalVolume * 100);
+	
+	// Volume slider functionality
+	volumeSlider.addEventListener('input', function(e) {
+		e.stopPropagation();
+		var vol = parseInt(this.value);
+		globalVolume = vol / 100;
+		
+		var audio = document.getElementById('glowmaster-audio');
+		if (audio) {
+			// Clear any ongoing fade
+			if (globalAudioFadeInterval) {
+				clearInterval(globalAudioFadeInterval);
+				globalAudioFadeInterval = null;
+			}
+			audio.volume = globalVolume;
 		}
+		updateGlobalVolumeDisplay(vol);
 	});
+	
+	volumeSlider.addEventListener('click', function(e) {
+		e.stopPropagation();
+	});
+	
+	// Update volume display periodically to reflect live changes
+	setInterval(function() {
+		var audio = document.getElementById('glowmaster-audio');
+		var slider = document.getElementById('global-volume-slider');
+		if (audio && slider) {
+			var vol = Math.round(audio.volume * 100);
+			globalVolume = audio.volume;
+			if (parseInt(slider.value) !== vol) {
+				slider.value = vol;
+				updateGlobalVolumeDisplay(vol);
+				// Show slider temporarily when volume is changing (from fades)
+				if (Math.abs(vol - lastDisplayedVolume) >= 1) {
+					showGlobalVolumeSliderTemporarily();
+				}
+			}
+			lastDisplayedVolume = vol;
+		}
+	}, 100);
+	
+	function showGlobalVolumeSliderTemporarily() {
+		var wrapper = document.getElementById('volume-slider-wrapper');
+		var icon = document.getElementById('volume-icon');
+		if (wrapper) {
+			wrapper.style.height = '75px';
+			wrapper.style.opacity = '1';
+			wrapper.style.marginBottom = '2px';
+		}
+		if (icon) {
+			icon.style.color = '#aaddff';
+		}
+		// Clear existing timeout
+		if (volumeAutoHideTimeout) {
+			clearTimeout(volumeAutoHideTimeout);
+		}
+		// Hide after 2 seconds
+		volumeAutoHideTimeout = setTimeout(function() {
+			// Only hide if not being hovered
+			var container = document.getElementById('volume-slider-container');
+			if (container && !container.matches(':hover')) {
+				if (wrapper) {
+					wrapper.style.height = '0';
+					wrapper.style.opacity = '0';
+					wrapper.style.marginBottom = '0';
+				}
+				if (icon) {
+					icon.style.color = '#88aacc';
+				}
+			}
+		}, 2000);
+	}
 }
-// --- /FOCUS BACKGROUND BUTTON --- //
+
+function updateGlobalVolumeDisplay(vol) {
+	var volDisplay = document.getElementById('volume-value');
+	if (volDisplay) volDisplay.textContent = vol + '%';
+	var slider = document.getElementById('global-volume-slider');
+	if (slider) slider.style.background = 'linear-gradient(to right, #88ccee ' + vol + '%, rgba(100,120,140,0.25) ' + vol + '%)';
+	// Update icon based on volume
+	var icon = document.getElementById('volume-icon');
+	if (icon) {
+		if (vol === 0) {
+			icon.className = 'ti-volume';
+		} else {
+			icon.className = 'ti-music';
+		}
+	}
+}
+
+function showGlobalVolumeSlider() {
+	var wrapper = document.getElementById('volume-slider-wrapper');
+	var icon = document.getElementById('volume-icon');
+	if (wrapper) {
+		wrapper.style.height = '120px';
+		wrapper.style.opacity = '1';
+		wrapper.style.marginBottom = '4px';
+	}
+	if (icon) {
+		icon.style.color = '#aaddff';
+	}
+}
+// --- /GLOBAL VOLUME CONTROL --- //
 
 function core_init() {
 	smooth_scroll()
@@ -164,7 +314,7 @@ function core_init() {
 	//options_panel();
 	image_setup()
 	entrance_modal_setup() // --- ENTRANCE MODAL ---
-	focus_bg_setup() // --- FOCUS BACKGROUND BUTTON ---
+	universal_volume_slider_setup() // --- UNIVERSAL VOLUME SLIDER ---
 }
 core_init()
 

@@ -1229,32 +1229,158 @@ function orbitBackground() {
     infoText.id = 'orbit-info-text';
     infoDiv.appendChild(infoText);
     
-    // --- FOCUS MODE ON HOVER ---
+    // --- FOCUS MODE WITH LOCK ---
+    var focusLocked = false;
+    
+    // Lock icon (using ti-unlock/ti-lock icons)
+    var lockIcon = document.createElement('span');
+    lockIcon.id = 'focus-lock-icon';
+    lockIcon.className = 'ti-unlock';
+    lockIcon.title = 'Click to lock focus';
+    lockIcon.style.cssText = 'position:absolute;top:8px;right:8px;font-size:10px;cursor:pointer;transition:all 0.2s ease;opacity:0;color:#666;';
+    infoDiv.appendChild(lockIcon);
+    
     function activateFocusMode() {
-        if (!document.body.classList.contains('bg-focus-mode')) {
+        if (!focusLocked && !document.body.classList.contains('bg-focus-mode')) {
             document.body.classList.add('bg-focus-mode');
             focusModeActive = true;
             targetCameraZ = focusCameraZ;
+            // Show lock icon (gray/unlocked)
+            lockIcon.style.opacity = '1';
+            lockIcon.style.color = '#888';
+            lockIcon.className = 'ti-unlock';
         }
     }
     
     function deactivateFocusMode() {
-        if (document.body.classList.contains('bg-focus-mode')) {
+        if (!focusLocked && document.body.classList.contains('bg-focus-mode')) {
             document.body.classList.remove('bg-focus-mode');
             focusModeActive = false;
             targetCameraZ = baseCameraZ;
+            // Hide lock icon
+            lockIcon.style.opacity = '0';
         }
     }
+    
+    function lockFocus() {
+        focusLocked = true;
+        lockIcon.className = 'ti-lock';
+        lockIcon.style.color = '#fff';
+        lockIcon.title = 'Focus locked (click outside or ESC to unlock)';
+        document.body.classList.add('focus-locked');
+        
+        var audio = document.getElementById('glowmaster-audio');
+        if (audio) {
+            // Clear any existing fade (use global variable from scripts.js)
+            if (typeof globalAudioFadeInterval !== 'undefined' && globalAudioFadeInterval) {
+                clearInterval(globalAudioFadeInterval);
+                globalAudioFadeInterval = null;
+            }
+            
+            if (audio.paused) {
+                // Start music from beginning with fade in to full volume
+                audio.currentTime = 0;
+                audio.volume = 0;
+                audio.play().then(function() {
+                    // Fade in to 1.0 over 3 seconds
+                    globalAudioFadeInterval = setInterval(function() {
+                        if (audio.volume < 1.0) {
+                            audio.volume = Math.min(1.0, audio.volume + 1.0 / 60);
+                            globalVolume = audio.volume;
+                        } else {
+                            clearInterval(globalAudioFadeInterval);
+                            globalAudioFadeInterval = null;
+                        }
+                    }, 50);
+                    
+                    // Update audio control UI
+                    var audioBubble = document.getElementById('audio-control-bubble');
+                    if (audioBubble) {
+                        audioBubble.classList.add('playing');
+                        var icon = audioBubble.querySelector('.audio-icon');
+                        if (icon) {
+                            icon.classList.remove('ti-control-play');
+                            icon.classList.add('ti-control-pause');
+                        }
+                    }
+                }).catch(function(e) {
+                    console.warn('Audio playback failed:', e);
+                });
+            } else {
+                // Already playing, fade up to full volume
+                globalAudioFadeInterval = setInterval(function() {
+                    if (audio.volume < 1.0) {
+                        audio.volume = Math.min(1.0, audio.volume + 0.5 / 40); // Fade up over ~2s
+                        globalVolume = audio.volume;
+                    } else {
+                        clearInterval(globalAudioFadeInterval);
+                        globalAudioFadeInterval = null;
+                    }
+                }, 50);
+            }
+        }
+    }
+    
+    function unlockFocus() {
+        focusLocked = false;
+        lockIcon.className = 'ti-unlock';
+        lockIcon.style.color = '#888';
+        lockIcon.title = 'Click to lock focus';
+        document.body.classList.remove('focus-locked');
+        // Deactivate focus mode
+        document.body.classList.remove('bg-focus-mode');
+        focusModeActive = false;
+        targetCameraZ = baseCameraZ;
+        lockIcon.style.opacity = '0';
+        
+        // Fade volume down to 50%
+        var audio = document.getElementById('glowmaster-audio');
+        if (audio && !audio.paused) {
+            if (typeof globalAudioFadeInterval !== 'undefined' && globalAudioFadeInterval) {
+                clearInterval(globalAudioFadeInterval);
+            }
+            globalAudioFadeInterval = setInterval(function() {
+                if (audio.volume > 0.5) {
+                    audio.volume = Math.max(0.5, audio.volume - 0.5 / 40); // Fade down over ~2s
+                    globalVolume = audio.volume;
+                } else {
+                    clearInterval(globalAudioFadeInterval);
+                    globalAudioFadeInterval = null;
+                }
+            }, 50);
+        }
+    }
+    
+    // Click inside info window locks focus
+    infoDiv.addEventListener('click', function(e) {
+        if (!focusLocked && document.body.classList.contains('bg-focus-mode')) {
+            lockFocus();
+        }
+    });
+    
+    lockIcon.addEventListener('mouseenter', function() {
+        lockIcon.style.transform = 'scale(1.2)';
+    });
+    lockIcon.addEventListener('mouseleave', function() {
+        lockIcon.style.transform = 'scale(1)';
+    });
     
     infoDiv.addEventListener('mouseenter', activateFocusMode);
     infoDiv.addEventListener('mouseleave', deactivateFocusMode);
     
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && document.body.classList.contains('bg-focus-mode')) {
-            deactivateFocusMode();
+            unlockFocus();
         }
     });
-    // --- /FOCUS MODE ON HOVER ---
+    
+    // Any click outside info panel unlocks
+    document.addEventListener('click', function(e) {
+        if (focusLocked && !infoDiv.contains(e.target)) {
+            unlockFocus();
+        }
+    });
+    // --- /FOCUS MODE WITH LOCK ---
 
     // --- MOUSE INTERACTION ---
     var mouse = new THREE.Vector2();

@@ -5035,6 +5035,10 @@ body.bg-focus-mode #orbit-info {
     opacity: 0.15 !important;
 }
 
+body.bg-focus-mode.focus-locked #orbit-info {
+    opacity: 0.9 !important;
+}
+
 body.bg-focus-mode #orbit-info:hover {
     opacity: 0.8 !important;
     transition: opacity 0.3s ease;
