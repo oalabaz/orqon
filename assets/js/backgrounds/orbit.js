@@ -1350,8 +1350,12 @@ function orbitBackground() {
     
     // Click inside info window locks focus
     infoDiv.addEventListener('click', function(e) {
-        if (!focusLocked && document.body.classList.contains('bg-focus-mode')) {
-            lockFocus();
+        if (!focusLocked) {
+            if (!document.body.classList.contains('bg-focus-mode')) {
+                activateFocusMode();
+            } else {
+                lockFocus();
+            }
         }
     });
     
