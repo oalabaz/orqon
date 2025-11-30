@@ -141,7 +141,7 @@ function universal_volume_slider_setup() {
 	// Slider wrapper (hidden when collapsed) - now on top
         var sliderWrapper = document.createElement('div');
         sliderWrapper.id = 'volume-slider-wrapper';
-        sliderWrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;height:0;width:48px;overflow:hidden;opacity:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);';
+        sliderWrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;height:0;width:36px;overflow:hidden;opacity:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);';
 	
         var volumeValue = document.createElement('span');
         volumeValue.id = 'volume-value';
@@ -155,7 +155,7 @@ function universal_volume_slider_setup() {
         volumeSlider.min = '0';
         volumeSlider.max = '100';
         volumeSlider.value = Math.round(globalVolume * 100);
-        volumeSlider.style.cssText = 'width:90px;height:6px;-webkit-appearance:none;appearance:none;background:linear-gradient(to right, #4dabf7 ' + (globalVolume * 100) + '%, rgba(110,128,160,0.25) ' + (globalVolume * 100) + '%);border-radius:999px;cursor:pointer;outline:none;transform:rotate(-90deg);transform-origin:center center;border:1px solid rgba(120,140,170,0.35);box-shadow:inset 0 1px 3px rgba(0,0,0,0.35);';
+        volumeSlider.style.cssText = 'width:80px;height:2px;-webkit-appearance:none;appearance:none;background:linear-gradient(to right, #4dabf7 ' + (globalVolume * 100) + '%, rgba(110,128,160,0.2) ' + (globalVolume * 100) + '%);border-radius:999px;cursor:pointer;outline:none;transform:rotate(-90deg);transform-origin:center center;';
         sliderWrapper.appendChild(volumeSlider);
 	
 	volumeContainer.appendChild(sliderWrapper);
@@ -189,7 +189,7 @@ function universal_volume_slider_setup() {
 
         // Style the slider thumb
         var sliderStyle = document.createElement('style');
-        sliderStyle.textContent = '#global-volume-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:#e7f5ff;border-radius:12px;cursor:pointer;border:2px solid #5c9ded;box-shadow:0 8px 16px rgba(0,0,0,0.25);}#global-volume-slider::-moz-range-thumb{width:16px;height:16px;background:#e7f5ff;border-radius:12px;cursor:pointer;border:2px solid #5c9ded;box-shadow:0 8px 16px rgba(0,0,0,0.25);}#global-volume-slider::-webkit-slider-runnable-track{background:transparent;border-radius:999px;}#global-volume-slider::-moz-range-track{background:transparent;border-radius:999px;}#volume-slider-container:hover #global-volume-slider::-webkit-slider-thumb{background:#f8fbff;border-color:#7ab6ff;box-shadow:0 10px 20px rgba(0,0,0,0.28);}#volume-slider-container:hover #global-volume-slider::-moz-range-thumb{background:#f8fbff;border-color:#7ab6ff;box-shadow:0 10px 20px rgba(0,0,0,0.28);}';
+        sliderStyle.textContent = '#global-volume-slider::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;background:#c7e3ff;border-radius:50%;cursor:pointer;border:none;box-shadow:0 0 6px rgba(100,180,240,0.5);}#global-volume-slider::-moz-range-thumb{width:10px;height:10px;background:#c7e3ff;border-radius:50%;cursor:pointer;border:none;box-shadow:0 0 6px rgba(100,180,240,0.5);}#volume-slider-container:hover #global-volume-slider::-webkit-slider-thumb{background:#e0f0ff;box-shadow:0 0 10px rgba(100,180,240,0.7);}#volume-slider-container:hover #global-volume-slider::-moz-range-thumb{background:#e0f0ff;box-shadow:0 0 10px rgba(100,180,240,0.7);}';
         document.head.appendChild(sliderStyle);
 	
 	// Track for auto-hide timeout
