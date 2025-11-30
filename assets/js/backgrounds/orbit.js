@@ -1,7 +1,7 @@
 function orbitBackground() {
-    var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    var renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: 'low-power' });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(1);
     renderer.domElement.id = 'canvas-orbit';
     document.getElementById('main').appendChild(renderer.domElement);
 
@@ -38,8 +38,11 @@ function orbitBackground() {
     };
 
     // Calculate Jupiter's Hill Radius
+    // Real Hill radius is ~0.355 AU, but we scale it up for visibility
     var jupiterHillRadius = jupiterData.semiMajorAxis * Math.pow(JUPITER_MASS / (3 * SUN_MASS), 1/3);
-    var jupiterHillRadiusPixels = jupiterHillRadius * AU_TO_PIXELS;
+    // Scale up the visual Hill radius to be more visible (about 5x larger than reality)
+    var hillRadiusVisualScale = 5.0;
+    var jupiterHillRadiusPixels = jupiterHillRadius * AU_TO_PIXELS * hillRadiusVisualScale;
 
     // Animation progress (0 = perihelion, 1 = at Jupiter Hill radius)
     var animationProgress = 0;
@@ -426,39 +429,97 @@ function orbitBackground() {
     sunLabel.position.set(0, -35, 0);
     sunGroup.add(sunLabel);
 
-    // --- PLANETARY ORBITS with gradient effect ---
-    function createGlowingOrbit(radius, color) {
+    // --- PLANETARY ORBITS with dotted line effect ---
+    function createDottedOrbit(radius, color, dotSize) {
         var group = new THREE.Group();
-        var segments = 128;
+        var segments = 200;
+        dotSize = dotSize || 1.2;
         
-        var points = [];
-        for (var i = 0; i <= segments; i++) {
+        var positions = new Float32Array(segments * 3);
+        for (var i = 0; i < segments; i++) {
             var angle = (i / segments) * Math.PI * 2;
-            points.push(new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius));
+            positions[i * 3] = Math.cos(angle) * radius;
+            positions[i * 3 + 1] = 0;
+            positions[i * 3 + 2] = Math.sin(angle) * radius;
         }
-        var curve = new THREE.CatmullRomCurve3(points, true);
-        var geometry = new THREE.TubeGeometry(curve, segments, 0.15, 8, true);
-        var material = new THREE.MeshBasicMaterial({
+        
+        var geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        
+        var material = new THREE.PointsMaterial({
             color: color,
+            size: dotSize,
             transparent: true,
-            opacity: 0.15
+            opacity: 0.5,
+            sizeAttenuation: true,
+            blending: THREE.AdditiveBlending
         });
-        group.add(new THREE.Mesh(geometry, material));
+        
+        group.add(new THREE.Points(geometry, material));
+        
+        // Add subtle glow ring
+        var glowMaterial = new THREE.PointsMaterial({
+            color: color,
+            size: dotSize * 2.5,
+            transparent: true,
+            opacity: 0.1,
+            sizeAttenuation: true,
+            blending: THREE.AdditiveBlending
+        });
+        group.add(new THREE.Points(geometry.clone(), glowMaterial));
         
         return group;
     }
 
-    scene.add(createGlowingOrbit(1 * AU_TO_PIXELS, 0x556688));
-    scene.add(createGlowingOrbit(1.52 * AU_TO_PIXELS, 0x664433));
-    scene.add(createGlowingOrbit(5.2 * AU_TO_PIXELS, 0x776644));
+    // Venus orbit (0.72 AU) - yellowish
+    scene.add(createDottedOrbit(0.72 * AU_TO_PIXELS, 0xccaa66, 1.0));
+    // Earth orbit (1 AU) - blue
+    scene.add(createDottedOrbit(1 * AU_TO_PIXELS, 0x6688cc, 1.0));
+    // Mars orbit (1.52 AU) - reddish-orange
+    scene.add(createDottedOrbit(1.52 * AU_TO_PIXELS, 0xcc6644, 1.0));
+    // Jupiter orbit (5.2 AU) - cyan/teal
+    scene.add(createDottedOrbit(5.2 * AU_TO_PIXELS, 0x55aaaa, 1.0));
+
+    // --- VENUS ---
+    var venusGeometry = new THREE.SphereGeometry(2.5, 32, 32);
+    var venusMaterial = new THREE.MeshBasicMaterial({ color: 0xddcc88 });
+    var venusMesh = new THREE.Mesh(venusGeometry, venusMaterial);
+    var venusAngle = Math.PI * 1.6;
+    venusMesh.position.set(Math.cos(venusAngle) * 0.72 * AU_TO_PIXELS, 0, Math.sin(venusAngle) * 0.72 * AU_TO_PIXELS);
+    scene.add(venusMesh);
+    
+    // Venus glow
+    var venusGlowGeometry = new THREE.SphereGeometry(3.5, 16, 16);
+    var venusGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0xddcc88,
+        transparent: true,
+        opacity: 0.2,
+        side: THREE.BackSide
+    });
+    venusMesh.add(new THREE.Mesh(venusGlowGeometry, venusGlowMaterial));
+    
+    // Venus label
+    var venusLabel = createTextSprite('VENUS', '#ddcc88');
+    venusLabel.position.set(0, -16, 0);
+    venusMesh.add(venusLabel);
 
     // --- EARTH ---
     var earthGeometry = new THREE.SphereGeometry(3, 32, 32);
-    var earthMaterial = new THREE.MeshBasicMaterial({ color: 0x556688 });
+    var earthMaterial = new THREE.MeshBasicMaterial({ color: 0x6688cc });
     var earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
     var earthAngle = Math.PI * 1.2;
     earthMesh.position.set(Math.cos(earthAngle) * AU_TO_PIXELS, 0, Math.sin(earthAngle) * AU_TO_PIXELS);
     scene.add(earthMesh);
+    
+    // Earth glow
+    var earthGlowGeometry = new THREE.SphereGeometry(4, 16, 16);
+    var earthGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0x6688cc,
+        transparent: true,
+        opacity: 0.2,
+        side: THREE.BackSide
+    });
+    earthMesh.add(new THREE.Mesh(earthGlowGeometry, earthGlowMaterial));
     
     // Earth label
     var earthLabel = createTextSprite('EARTH', '#88aacc');
@@ -467,264 +528,84 @@ function orbitBackground() {
 
     // --- MARS ---
     var marsGeometry = new THREE.SphereGeometry(2.5, 32, 32);
-    var marsMaterial = new THREE.MeshBasicMaterial({ color: 0x664433 });
+    var marsMaterial = new THREE.MeshBasicMaterial({ color: 0xcc6644 });
     var marsMesh = new THREE.Mesh(marsGeometry, marsMaterial);
     var marsAngle = Math.PI * 0.8;
     marsMesh.position.set(Math.cos(marsAngle) * 1.52 * AU_TO_PIXELS, 0, Math.sin(marsAngle) * 1.52 * AU_TO_PIXELS);
     scene.add(marsMesh);
+    
+    // Mars glow
+    var marsGlowGeometry = new THREE.SphereGeometry(3.5, 16, 16);
+    var marsGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0xcc6644,
+        transparent: true,
+        opacity: 0.2,
+        side: THREE.BackSide
+    });
+    marsMesh.add(new THREE.Mesh(marsGlowGeometry, marsGlowMaterial));
     
     // Mars label
     var marsLabel = createTextSprite('MARS', '#cc8866');
     marsLabel.position.set(0, -16, 0);
     marsMesh.add(marsLabel);
 
-    // --- JUPITER with advanced shaders ---
+    // --- JUPITER (HUD wireframe style) ---
     var jupiterGroup = new THREE.Group();
     
-    // Main Jupiter body with custom shader
-    var jupiterGeometry = new THREE.SphereGeometry(60, 128, 128);
-    
-    // Custom Jupiter shader with atmospheric scattering
-    var jupiterShader = {
-        uniforms: {
-            time: { value: 0 },
-            lightPos: { value: new THREE.Vector3(0, 0, 0) },
-            baseColor: { value: new THREE.Color(0xa89968) },
-            bandColor1: { value: new THREE.Color(0x9a8860) },
-            bandColor2: { value: new THREE.Color(0xb8a978) },
-            spotColor: { value: new THREE.Color(0x885544) }
-        },
-        vertexShader: `
-            varying vec3 vNormal;
-            varying vec3 vPosition;
-            varying vec2 vUv;
-            void main() {
-                vNormal = normalize(normalMatrix * normal);
-                vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
-                vUv = uv;
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-        `,
-        fragmentShader: `
-            uniform float time;
-            uniform vec3 lightPos;
-            uniform vec3 baseColor;
-            uniform vec3 bandColor1;
-            uniform vec3 bandColor2;
-            uniform vec3 spotColor;
-            varying vec3 vNormal;
-            varying vec3 vPosition;
-            varying vec2 vUv;
-            
-            float noise(vec2 p) {
-                return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
-            }
-            
-            float fbm(vec2 p) {
-                float value = 0.0;
-                float amplitude = 0.5;
-                for(int i = 0; i < 4; i++) {
-                    value += amplitude * noise(p);
-                    p *= 2.0;
-                    amplitude *= 0.5;
-                }
-                return value;
-            }
-            
-            void main() {
-                vec3 normal = normalize(vNormal);
-                vec3 lightDir = normalize(lightPos - vPosition);
-                
-                // Procedural bands
-                float bandPattern = sin(vUv.y * 25.0 + time * 0.1 + fbm(vUv * 8.0) * 0.5) * 0.5 + 0.5;
-                float turbulence = fbm(vUv * 12.0 + vec2(time * 0.05, 0.0)) * 0.3;
-                
-                // Mix colors for bands
-                vec3 bandMix = mix(bandColor1, bandColor2, bandPattern + turbulence);
-                vec3 color = mix(baseColor, bandMix, 0.7);
-                
-                // Great Red Spot
-                vec2 spotCenter = vec2(0.65, 0.35);
-                float spotDist = length(vUv - spotCenter);
-                float spot = smoothstep(0.08, 0.02, spotDist) * 0.8;
-                color = mix(color, spotColor, spot);
-                
-                // Atmospheric scattering
-                float fresnel = pow(1.0 - abs(dot(normal, vec3(0.0, 0.0, 1.0))), 3.0);
-                vec3 atmColor = vec3(0.6, 0.5, 0.4) * fresnel * 0.4;
-                
-                // Lighting
-                float diff = max(dot(normal, lightDir), 0.0);
-                float wrap = 0.5;
-                float wrapDiff = max((diff + wrap) / (1.0 + wrap), 0.0);
-                
-                // Terminator softening
-                float terminator = smoothstep(0.0, 0.3, wrapDiff);
-                
-                // Subsurface scattering approximation
-                vec3 subsurface = baseColor * 0.3 * (1.0 - diff) * terminator;
-                
-                color = color * (wrapDiff * 0.8 + 0.2) + subsurface + atmColor;
-                
-                gl_FragColor = vec4(color, 1.0);
-            }
-        `
-    };
-    
-    var jupiterMaterial = new THREE.ShaderMaterial({
-        uniforms: jupiterShader.uniforms,
-        vertexShader: jupiterShader.vertexShader,
-        fragmentShader: jupiterShader.fragmentShader,
-        side: THREE.FrontSide
-    });
-    
-    var jupiterMesh = new THREE.Mesh(jupiterGeometry, jupiterMaterial);
-    jupiterGroup.add(jupiterMesh);
-    
-    // Volumetric atmosphere layers
-    for (var i = 1; i <= 3; i++) {
-        var atmGeometry = new THREE.SphereGeometry(60 + i * 3, 64, 64);
-        var atmShader = {
-            uniforms: {
-                c: { value: 0.15 / i },
-                p: { value: 4.5 - i * 0.5 }
-            },
-            vertexShader: `
-                varying vec3 vNormal;
-                void main() {
-                    vNormal = normalize(normalMatrix * normal);
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `,
-            fragmentShader: `
-                uniform float c;
-                uniform float p;
-                varying vec3 vNormal;
-                void main() {
-                    float intensity = pow(c - dot(vNormal, vec3(0, 0, 1.0)), p);
-                    gl_FragColor = vec4(0.8, 0.7, 0.5, 1.0) * intensity;
-                }
-            `
-        };
-        var atmMaterial = new THREE.ShaderMaterial({
-            uniforms: atmShader.uniforms,
-            vertexShader: atmShader.vertexShader,
-            fragmentShader: atmShader.fragmentShader,
-            side: THREE.BackSide,
-            blending: THREE.AdditiveBlending,
-            transparent: true
-        });
-        jupiterGroup.add(new THREE.Mesh(atmGeometry, atmMaterial));
+    // Simple circle outline for Jupiter - HUD style
+    var jupiterRadius = 60;
+    var jupiterSegments = 64;
+    var jupiterOutlinePositions = new Float32Array(jupiterSegments * 3);
+    for (var ji = 0; ji < jupiterSegments; ji++) {
+        var jAngle = (ji / jupiterSegments) * Math.PI * 2;
+        jupiterOutlinePositions[ji * 3] = Math.cos(jAngle) * jupiterRadius;
+        jupiterOutlinePositions[ji * 3 + 1] = 0;
+        jupiterOutlinePositions[ji * 3 + 2] = Math.sin(jAngle) * jupiterRadius;
     }
-    
-    // Rim light enhancement
-    var rimGeometry = new THREE.SphereGeometry(60.5, 64, 64);
-    var rimMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-            glowColor: { value: new THREE.Color(0xffddaa) },
-            viewVector: { value: camera.position }
-        },
-        vertexShader: `
-            uniform vec3 viewVector;
-            varying float intensity;
-            void main() {
-                vec3 vNormal = normalize(normalMatrix * normal);
-                vec3 vNormel = normalize(normalMatrix * viewVector);
-                intensity = pow(0.7 - dot(vNormal, vNormel), 4.0);
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-        `,
-        fragmentShader: `
-            uniform vec3 glowColor;
-            varying float intensity;
-            void main() {
-                vec3 glow = glowColor * intensity;
-                gl_FragColor = vec4(glow, intensity * 0.3);
-            }
-        `,
-        side: THREE.FrontSide,
-        blending: THREE.AdditiveBlending,
-        transparent: true
+    var jupiterOutlineGeometry = new THREE.BufferGeometry();
+    jupiterOutlineGeometry.setAttribute('position', new THREE.BufferAttribute(jupiterOutlinePositions, 3));
+    var jupiterOutlineMaterial = new THREE.PointsMaterial({
+        color: 0xddaa66,
+        size: 1.5,
+        transparent: true,
+        opacity: 0.8
     });
-    jupiterGroup.add(new THREE.Mesh(rimGeometry, rimMaterial));
+    var jupiterOutline = new THREE.Points(jupiterOutlineGeometry, jupiterOutlineMaterial);
+    jupiterGroup.add(jupiterOutline);
+    
+    // Cross-hairs through center
+    var crosshairGeometry = new THREE.BufferGeometry();
+    var crosshairPositions = new Float32Array([
+        -jupiterRadius * 0.3, 0, 0,
+        jupiterRadius * 0.3, 0, 0,
+        0, 0, -jupiterRadius * 0.3,
+        0, 0, jupiterRadius * 0.3
+    ]);
+    crosshairGeometry.setAttribute('position', new THREE.BufferAttribute(crosshairPositions, 3));
+    var crosshairMaterial = new THREE.LineBasicMaterial({
+        color: 0xddaa66,
+        transparent: true,
+        opacity: 0.3
+    });
+    var crosshair = new THREE.LineSegments(crosshairGeometry, crosshairMaterial);
+    jupiterGroup.add(crosshair);
+    
+    // Center dot
+    var centerDotGeometry = new THREE.BufferGeometry();
+    centerDotGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0]), 3));
+    var centerDotMaterial = new THREE.PointsMaterial({
+        color: 0xffcc77,
+        size: 3,
+        transparent: true,
+        opacity: 0.6
+    });
+    jupiterGroup.add(new THREE.Points(centerDotGeometry, centerDotMaterial));
     
     // Jupiter label
-    var jupiterLabel = createTextSprite('JUPITER', '#eebb77');
-    jupiterLabel.position.set(0, -110, 0);
+    var jupiterLabel = createTextSprite('JUPITER', '#ddaa66');
+    jupiterLabel.position.set(0, -90, 0);
     jupiterLabel.scale.set(80, 20, 1);
     jupiterGroup.add(jupiterLabel);
-    
-    // --- GALILEAN MOONS ---
-    // Real orbital data (scaled for visibility)
-    // Distances in Jupiter radii (1 Rj ≈ 71,492 km), periods in Earth days
-    var galileanMoons = [
-        { name: 'Io', distance: 5.9, period: 1.77, radius: 1.8, color: 0xffdd66, angle: 0 },
-        { name: 'Europa', distance: 9.4, period: 3.55, radius: 1.5, color: 0xccddee, angle: Math.PI * 0.5 },
-        { name: 'Ganymede', distance: 15.0, period: 7.15, radius: 2.6, color: 0xaabbcc, angle: Math.PI },
-        { name: 'Callisto', distance: 26.3, period: 16.69, radius: 2.4, color: 0x887766, angle: Math.PI * 1.5 }
-    ];
-    
-    // Scale factor: Jupiter radius in our scene is 60, real Jupiter radius is ~71,492 km
-    // Moon distances need to be scaled relative to Jupiter's size
-    var moonDistanceScale = 1.8; // Compress orbits a bit for visibility
-    var moonObjects = [];
-    
-    galileanMoons.forEach(function(moonData) {
-        var moonGroup = new THREE.Group();
-        
-        // Moon body with subtle glow
-        var moonGeometry = new THREE.SphereGeometry(moonData.radius, 24, 24);
-        var moonMaterial = new THREE.MeshBasicMaterial({ color: moonData.color });
-        var moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
-        moonGroup.add(moonMesh);
-        
-        // Subtle glow around moon
-        var moonGlowGeometry = new THREE.SphereGeometry(moonData.radius * 1.4, 16, 16);
-        var moonGlowMaterial = new THREE.MeshBasicMaterial({
-            color: moonData.color,
-            transparent: true,
-            opacity: 0.15,
-            side: THREE.BackSide
-        });
-        moonGroup.add(new THREE.Mesh(moonGlowGeometry, moonGlowMaterial));
-        
-        // Moon label
-        var colorHex = '#' + moonData.color.toString(16).padStart(6, '0');
-        var moonLabel = createTextSprite(moonData.name.toUpperCase(), colorHex);
-        moonLabel.position.set(0, -moonData.radius - 8, 0);
-        moonLabel.scale.set(18, 4.5, 1);
-        moonGroup.add(moonLabel);
-        
-        // Store orbital data
-        moonGroup.userData = {
-            name: moonData.name,
-            orbitRadius: moonData.distance * moonDistanceScale,
-            period: moonData.period,
-            angle: moonData.angle
-        };
-        
-        // Initial position
-        var orbitRadius = moonData.distance * moonDistanceScale;
-        moonGroup.position.set(
-            Math.cos(moonData.angle) * orbitRadius,
-            0,
-            Math.sin(moonData.angle) * orbitRadius
-        );
-        
-        jupiterGroup.add(moonGroup);
-        moonObjects.push(moonGroup);
-        
-        // Moon orbit ring (faint)
-        var moonOrbitGeometry = new THREE.TorusGeometry(orbitRadius, 0.15, 8, 64);
-        var moonOrbitMaterial = new THREE.MeshBasicMaterial({
-            color: 0x556677,
-            transparent: true,
-            opacity: 0.12
-        });
-        var moonOrbitRing = new THREE.Mesh(moonOrbitGeometry, moonOrbitMaterial);
-        moonOrbitRing.rotation.x = Math.PI / 2;
-        jupiterGroup.add(moonOrbitRing);
-    });
     
     jupiterGroup.position.set(
         Math.cos(jupiterData.currentAngle) * 5.2 * AU_TO_PIXELS,
@@ -736,231 +617,85 @@ function orbitBackground() {
     // --- JUPITER'S HILL RADIUS SPHERE ---
     var hillGroup = new THREE.Group();
     
-    // Transparent outlined globe shader for Hill radius
-    var hillGlobeGeometry = new THREE.SphereGeometry(jupiterHillRadiusPixels, 64, 32);
-    var hillGlobeMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-            time: { value: 0 },
-            baseColor: { value: new THREE.Color(0x88aadd) },
-            edgeColor: { value: new THREE.Color(0xaaddff) }
-        },
-        vertexShader: `
-            varying vec3 vNormal;
-            varying vec3 vWorldPosition;
-            varying vec2 vUv;
-            varying vec3 vViewPosition;
-            void main() {
-                vNormal = normalize(normalMatrix * normal);
-                vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
-                vUv = uv;
-                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-                vViewPosition = -mvPosition.xyz;
-                gl_Position = projectionMatrix * mvPosition;
-            }
-        `,
-        fragmentShader: `
-            uniform float time;
-            uniform vec3 baseColor;
-            uniform vec3 edgeColor;
-            varying vec3 vNormal;
-            varying vec3 vWorldPosition;
-            varying vec2 vUv;
-            varying vec3 vViewPosition;
-            
-            void main() {
-                vec3 viewDir = normalize(vViewPosition);
-                
-                // Strong fresnel for visible edge outline
-                float fresnel = pow(1.0 - abs(dot(vNormal, viewDir)), 2.0);
-                
-                // Latitude/longitude grid lines - more visible
-                float lat = vUv.y * 3.14159;
-                float lon = vUv.x * 3.14159 * 2.0;
-                float latLines = abs(sin(lat * 6.0));
-                float lonLines = abs(sin(lon * 12.0));
-                float grid = smoothstep(0.85, 0.95, max(latLines, lonLines));
-                
-                // Animated pulse on grid
-                float pulse = sin(time * 2.0 + vUv.y * 8.0) * 0.5 + 0.5;
-                
-                // Edge outline - very visible
-                float edgeAlpha = fresnel * 0.7;
-                
-                // Grid lines
-                float gridAlpha = grid * 0.4 * (0.6 + pulse * 0.4);
-                
-                // Combine
-                vec3 color = mix(baseColor, edgeColor, fresnel);
-                float alpha = max(edgeAlpha, gridAlpha);
-                
-                // Minimum visibility
-                alpha = max(alpha, 0.08);
-                
-                gl_FragColor = vec4(color, alpha);
-            }
-        `,
-        transparent: true,
-        side: THREE.DoubleSide,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-    });
-    var hillGlobeMesh = new THREE.Mesh(hillGlobeGeometry, hillGlobeMaterial);
-    hillGroup.add(hillGlobeMesh);
-    
-    // Keep the wireframe as visible backup
-    var hillWireGeometry = new THREE.SphereGeometry(jupiterHillRadiusPixels, 32, 16);
-    var hillWireMaterial = new THREE.MeshBasicMaterial({
-        color: 0x99bbdd,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.15
-    });
-    var hillWireMesh = new THREE.Mesh(hillWireGeometry, hillWireMaterial);
-    hillGroup.add(hillWireMesh);
-    
-    var hillRingGeometry = new THREE.TorusGeometry(jupiterHillRadiusPixels, 0.8, 8, 96);
-    var hillRingMaterial = new THREE.MeshBasicMaterial({
-        color: 0xaaccee,
-        transparent: true,
-        opacity: 0.5
-    });
-    var hillRing = new THREE.Mesh(hillRingGeometry, hillRingMaterial);
-    hillRing.rotation.x = Math.PI / 2;
-    hillGroup.add(hillRing);
-    
-    // Second ring at different angle for 3D effect
-    var hillRing2 = new THREE.Mesh(
-        new THREE.TorusGeometry(jupiterHillRadiusPixels, 0.5, 8, 96),
-        new THREE.MeshBasicMaterial({ color: 0x88aacc, transparent: true, opacity: 0.35 })
-    );
-    hillRing2.rotation.x = Math.PI / 2;
-    hillRing2.rotation.z = Math.PI / 4;
-    hillGroup.add(hillRing2);
-    
-    // Third ring vertical
-    var hillRing3 = new THREE.Mesh(
-        new THREE.TorusGeometry(jupiterHillRadiusPixels, 0.4, 8, 96),
-        new THREE.MeshBasicMaterial({ color: 0x88aacc, transparent: true, opacity: 0.25 })
-    );
-    hillGroup.add(hillRing3);
-    
-    // Hill sphere boundary glow layer (activates on crossing)
-    var hillGlowGeometry = new THREE.SphereGeometry(jupiterHillRadiusPixels * 1.02, 48, 24);
-    var hillGlowMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-            time: { value: 0 },
-            activation: { value: 0 },
-            color: { value: new THREE.Color(0x66aaff) }
-        },
-        vertexShader: `
-            varying vec3 vNormal;
-            varying vec3 vPosition;
-            void main() {
-                vNormal = normalize(normalMatrix * normal);
-                vPosition = position;
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-        `,
-        fragmentShader: `
-            uniform float time;
-            uniform float activation;
-            uniform vec3 color;
-            varying vec3 vNormal;
-            varying vec3 vPosition;
-            void main() {
-                float fresnel = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 2.5);
-                float wave = sin(vPosition.y * 0.15 + time * 3.0) * 0.5 + 0.5;
-                float pulse = sin(time * 8.0) * 0.3 + 0.7;
-                float alpha = fresnel * activation * wave * pulse * 0.6;
-                gl_FragColor = vec4(color, alpha);
-            }
-        `,
-        transparent: true,
-        side: THREE.DoubleSide,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-    });
-    var hillGlowMesh = new THREE.Mesh(hillGlowGeometry, hillGlowMaterial);
-    hillGroup.add(hillGlowMesh);
-    
-    // Ripple rings for crossing effect
-    var rippleRings = [];
-    for (var ri = 0; ri < 3; ri++) {
-        var rippleGeometry = new THREE.RingGeometry(jupiterHillRadiusPixels - 2, jupiterHillRadiusPixels + 2, 64);
-        var rippleMaterial = new THREE.MeshBasicMaterial({
-            color: 0x88ccff,
-            transparent: true,
-            opacity: 0,
-            side: THREE.DoubleSide,
-            blending: THREE.AdditiveBlending
-        });
-        var rippleMesh = new THREE.Mesh(rippleGeometry, rippleMaterial);
-        rippleMesh.userData = { active: false, progress: 0, delay: ri * 0.15 };
-        hillGroup.add(rippleMesh);
-        rippleRings.push(rippleMesh);
+    // --- HILL RADIUS VISUALIZATION --- //
+    // Simple dotted ring to show Hill radius boundary
+    var hillRingSegments = 150;
+    var hillRingPositions = new Float32Array(hillRingSegments * 3);
+    for (var hri = 0; hri < hillRingSegments; hri++) {
+        var hrAngle = (hri / hillRingSegments) * Math.PI * 2;
+        hillRingPositions[hri * 3] = Math.cos(hrAngle) * jupiterHillRadiusPixels;
+        hillRingPositions[hri * 3 + 1] = 0;
+        hillRingPositions[hri * 3 + 2] = Math.sin(hrAngle) * jupiterHillRadiusPixels;
     }
-    
-    // --- HILL RADIUS BUBBLE --- //
-    // Extra translucent bubble around Jupiter to visualize Hill radius
-    var hillBubbleGeometry = new THREE.SphereGeometry(jupiterHillRadiusPixels * 1.05, 48, 24);
-    var hillBubbleMaterial = new THREE.MeshBasicMaterial({
-        color: 0x66aaff,
+    var hillRingGeometry = new THREE.BufferGeometry();
+    hillRingGeometry.setAttribute('position', new THREE.BufferAttribute(hillRingPositions, 3));
+    var hillRingMaterial = new THREE.PointsMaterial({
+        color: 0x88ddff,
+        size: 1.5,
         transparent: true,
-        opacity: 0.08,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        side: THREE.DoubleSide
+        opacity: 0.6,
+        sizeAttenuation: true
     });
-    var hillBubbleMesh = new THREE.Mesh(hillBubbleGeometry, hillBubbleMaterial);
-    hillBubbleMesh.userData = { baseScale: 1.0, baseOpacity: 0.08 };
-    hillGroup.add(hillBubbleMesh);
+    var hillRingDots = new THREE.Points(hillRingGeometry, hillRingMaterial);
+    hillGroup.add(hillRingDots);
+    // --- /HILL RADIUS VISUALIZATION --- //
+    
+    // Hill radius label - positioned on the side where comet approaches
+    // Comet approaches from negative X/Z direction, so place label there
+    var hillLabel = createTextSprite('HILL SPHERE', '#88ccff');
+    hillLabel.position.set(-jupiterHillRadiusPixels * 0.7, 0, -jupiterHillRadiusPixels * 0.7);
+    hillLabel.scale.set(80, 20, 1);
+    hillGroup.add(hillLabel);
+    
+    // Add entry/exit markers on the Hill sphere
+    // Entry marker (where comet enters)
+    var hillEntryMarkerGroup = new THREE.Group();
+    var hillEntryGeometry = new THREE.SphereGeometry(3, 16, 16);
+    var hillEntryMaterial = new THREE.MeshBasicMaterial({ color: 0x66ff66 });
+    hillEntryMarkerGroup.add(new THREE.Mesh(hillEntryGeometry, hillEntryMaterial));
+    
+    var hillEntryGlowGeometry = new THREE.SphereGeometry(5, 16, 16);
+    var hillEntryGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0x66ff66,
+        transparent: true,
+        opacity: 0.3,
+        side: THREE.BackSide
+    });
+    hillEntryMarkerGroup.add(new THREE.Mesh(hillEntryGlowGeometry, hillEntryGlowMaterial));
+    
+    var hillEntryLabel = createTextSprite('ENTRY', '#66ff66');
+    hillEntryLabel.position.set(0, -15, 0);
+    hillEntryLabel.scale.set(40, 10, 1);
+    hillEntryMarkerGroup.add(hillEntryLabel);
+    
+    // Position at Hill sphere surface on approach side
+    hillEntryMarkerGroup.position.set(-jupiterHillRadiusPixels * 0.7, 0, -jupiterHillRadiusPixels * 0.7);
+    hillGroup.add(hillEntryMarkerGroup);
+    
+    // Exit marker (where comet exits)
+    var hillExitMarkerGroup = new THREE.Group();
+    var hillExitGeometry = new THREE.SphereGeometry(3, 16, 16);
+    var hillExitMaterial = new THREE.MeshBasicMaterial({ color: 0xff6666 });
+    hillExitMarkerGroup.add(new THREE.Mesh(hillExitGeometry, hillExitMaterial));
+    
+    var hillExitGlowGeometry = new THREE.SphereGeometry(5, 16, 16);
+    var hillExitGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff6666,
+        transparent: true,
+        opacity: 0.3,
+        side: THREE.BackSide
+    });
+    hillExitMarkerGroup.add(new THREE.Mesh(hillExitGlowGeometry, hillExitGlowMaterial));
+    
+    var hillExitLabel = createTextSprite('EXIT', '#ff6666');
+    hillExitLabel.position.set(0, -15, 0);
+    hillExitLabel.scale.set(40, 10, 1);
+    hillExitMarkerGroup.add(hillExitLabel);
+    
+    // Position at Hill sphere surface on exit side
+    hillExitMarkerGroup.position.set(jupiterHillRadiusPixels * 0.7, 0, jupiterHillRadiusPixels * 0.7);
+    hillGroup.add(hillExitMarkerGroup);
     // --- /HILL RADIUS BUBBLE --- //
-    
-    // Impact burst particles
-    var burstParticleCount = 200;
-    var burstGeometry = new THREE.BufferGeometry();
-    var burstPositions = new Float32Array(burstParticleCount * 3);
-    var burstColors = new Float32Array(burstParticleCount * 3);
-    var burstSizes = new Float32Array(burstParticleCount);
-    var burstVelocities = [];
-    
-    for (var bi = 0; bi < burstParticleCount; bi++) {
-        burstPositions[bi * 3] = 0;
-        burstPositions[bi * 3 + 1] = 0;
-        burstPositions[bi * 3 + 2] = 0;
-        burstColors[bi * 3] = 0.5 + Math.random() * 0.5;
-        burstColors[bi * 3 + 1] = 0.7 + Math.random() * 0.3;
-        burstColors[bi * 3 + 2] = 1.0;
-        burstSizes[bi] = 1 + Math.random() * 2;
-        burstVelocities.push(new THREE.Vector3(
-            (Math.random() - 0.5) * 2,
-            (Math.random() - 0.5) * 2,
-            (Math.random() - 0.5) * 2
-        ).normalize().multiplyScalar(0.5 + Math.random() * 1.5));
-    }
-    burstGeometry.setAttribute('position', new THREE.BufferAttribute(burstPositions, 3));
-    burstGeometry.setAttribute('color', new THREE.BufferAttribute(burstColors, 3));
-    burstGeometry.setAttribute('size', new THREE.BufferAttribute(burstSizes, 1));
-    
-    var burstMaterial = new THREE.PointsMaterial({
-        size: 3,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-    });
-    var burstParticles = new THREE.Points(burstGeometry, burstMaterial);
-    hillGroup.add(burstParticles);
-    
-    // Hill crossing state
-    var hillCrossingState = {
-        wasInside: false,
-        crossingTime: 0,
-        burstActive: false,
-        burstProgress: 0,
-        crossingPoint: new THREE.Vector3()
-    };
     
     jupiterGroup.add(hillGroup);
 
@@ -1132,7 +867,7 @@ function orbitBackground() {
         cosmosEnd
     ], false, 'catmullrom', 0.3);
     
-    // Full journey path - faint grayish dotted line (will be updated with real API data)
+    // Full journey path - yellowish hyperbolic trajectory line (matching reference image)
     var fullPathPoints = trajectoryCurve.getPoints(500);
     var fullPathPositions = new Float32Array(fullPathPoints.length * 3);
     for (var fp = 0; fp < fullPathPoints.length; fp++) {
@@ -1143,10 +878,10 @@ function orbitBackground() {
     var fullPathGeometry = new THREE.BufferGeometry();
     fullPathGeometry.setAttribute('position', new THREE.BufferAttribute(fullPathPositions, 3));
     var fullPathMaterial = new THREE.PointsMaterial({
-        color: 0x99aabb,
-        size: 2.5,
+        color: 0xddaa66,
+        size: 2.0,
         transparent: true,
-        opacity: 0.45,
+        opacity: 0.7,
         sizeAttenuation: true,
         depthWrite: false,
         blending: THREE.AdditiveBlending
@@ -1154,6 +889,17 @@ function orbitBackground() {
     // Store as module-level for API update
     var fullPathDots = new THREE.Points(fullPathGeometry, fullPathMaterial);
     trajectoryGroup.add(fullPathDots);
+    
+    // Add solid trajectory line for better visibility (like reference image)
+    var trajectoryLineGeometry = new THREE.BufferGeometry().setFromPoints(fullPathPoints);
+    var trajectoryLineMaterial = new THREE.LineBasicMaterial({
+        color: 0xddaa66,
+        transparent: true,
+        opacity: 0.4,
+        linewidth: 2
+    });
+    var trajectoryLine = new THREE.Line(trajectoryLineGeometry, trajectoryLineMaterial);
+    trajectoryGroup.add(trajectoryLine);
     
     // Make fullPathDots accessible for real orbit update
     window._orbitFullPathDots = fullPathDots;
@@ -1216,11 +962,136 @@ function orbitBackground() {
     // Keep old reference for compatibility
     dottedTrajectoryMaterial = fullPathMaterial;
     
-    var perihelionMarkerGeometry = new THREE.SphereGeometry(1.5, 16, 16);
-    var perihelionMarkerMaterial = new THREE.MeshBasicMaterial({ color: 0xaa9977 });
+    // --- PERIHELION MARKER (enhanced) ---
+    var perihelionMarkerGroup = new THREE.Group();
+    
+    // Core sphere
+    var perihelionMarkerGeometry = new THREE.SphereGeometry(2.5, 16, 16);
+    var perihelionMarkerMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc66 });
     var perihelionMarker = new THREE.Mesh(perihelionMarkerGeometry, perihelionMarkerMaterial);
-    perihelionMarker.position.copy(perihelionPos);
-    trajectoryGroup.add(perihelionMarker);
+    perihelionMarkerGroup.add(perihelionMarker);
+    
+    // Glow sphere
+    var perihelionGlowGeometry = new THREE.SphereGeometry(4, 16, 16);
+    var perihelionGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffcc66,
+        transparent: true,
+        opacity: 0.3,
+        side: THREE.BackSide
+    });
+    perihelionMarkerGroup.add(new THREE.Mesh(perihelionGlowGeometry, perihelionGlowMaterial));
+    
+    // Outer glow
+    var perihelionOuterGlowGeometry = new THREE.SphereGeometry(6, 16, 16);
+    var perihelionOuterGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffcc66,
+        transparent: true,
+        opacity: 0.1,
+        side: THREE.BackSide
+    });
+    perihelionMarkerGroup.add(new THREE.Mesh(perihelionOuterGlowGeometry, perihelionOuterGlowMaterial));
+    
+    // Ring around perihelion
+    var perihelionRingGeometry = new THREE.TorusGeometry(5, 0.3, 8, 32);
+    var perihelionRingMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffcc66,
+        transparent: true,
+        opacity: 0.5
+    });
+    var perihelionRing = new THREE.Mesh(perihelionRingGeometry, perihelionRingMaterial);
+    perihelionRing.rotation.x = Math.PI / 2;
+    perihelionMarkerGroup.add(perihelionRing);
+    
+    // Perihelion label
+    var perihelionLabel = createTextSprite('PERIHELION', '#ffcc66');
+    perihelionLabel.position.set(0, -20, 0);
+    perihelionLabel.scale.set(70, 17, 1);
+    perihelionMarkerGroup.add(perihelionLabel);
+    
+    perihelionMarkerGroup.position.copy(perihelionPos);
+    trajectoryGroup.add(perihelionMarkerGroup);
+    
+    // --- FIND CLOSEST APPROACH TO JUPITER ---
+    // Sample the trajectory to find the point closest to Jupiter
+    var closestApproachT = 0;
+    var closestApproachDist = Infinity;
+    var sampleCount = 500;
+    
+    for (var si = 0; si < sampleCount; si++) {
+        var t = si / sampleCount;
+        var samplePoint = trajectoryCurve.getPoint(t);
+        var distToJupiter = samplePoint.distanceTo(jupiterPos);
+        if (distToJupiter < closestApproachDist) {
+            closestApproachDist = distToJupiter;
+            closestApproachT = t;
+        }
+    }
+    
+    var closestApproachPos = trajectoryCurve.getPoint(closestApproachT);
+    
+    // --- CLOSEST APPROACH MARKER ---
+    var closestApproachGroup = new THREE.Group();
+    
+    // Core sphere
+    var closestApproachGeometry = new THREE.SphereGeometry(2.5, 16, 16);
+    var closestApproachMaterial = new THREE.MeshBasicMaterial({ color: 0x66ffcc });
+    closestApproachGroup.add(new THREE.Mesh(closestApproachGeometry, closestApproachMaterial));
+    
+    // Glow sphere
+    var closestApproachGlowGeometry = new THREE.SphereGeometry(4, 16, 16);
+    var closestApproachGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0x66ffcc,
+        transparent: true,
+        opacity: 0.3,
+        side: THREE.BackSide
+    });
+    closestApproachGroup.add(new THREE.Mesh(closestApproachGlowGeometry, closestApproachGlowMaterial));
+    
+    // Outer glow
+    var closestApproachOuterGlowGeometry = new THREE.SphereGeometry(6, 16, 16);
+    var closestApproachOuterGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0x66ffcc,
+        transparent: true,
+        opacity: 0.1,
+        side: THREE.BackSide
+    });
+    closestApproachGroup.add(new THREE.Mesh(closestApproachOuterGlowGeometry, closestApproachOuterGlowMaterial));
+    
+    // Ring around closest approach
+    var closestApproachRingGeometry = new THREE.TorusGeometry(5, 0.3, 8, 32);
+    var closestApproachRingMaterial = new THREE.MeshBasicMaterial({
+        color: 0x66ffcc,
+        transparent: true,
+        opacity: 0.5
+    });
+    var closestApproachRing = new THREE.Mesh(closestApproachRingGeometry, closestApproachRingMaterial);
+    closestApproachRing.rotation.x = Math.PI / 2;
+    closestApproachGroup.add(closestApproachRing);
+    
+    // Closest approach label
+    var closestApproachLabel = createTextSprite('CLOSEST APPROACH', '#66ffcc');
+    closestApproachLabel.position.set(0, -20, 0);
+    closestApproachLabel.scale.set(90, 22, 1);
+    closestApproachGroup.add(closestApproachLabel);
+    
+    closestApproachGroup.position.copy(closestApproachPos);
+    trajectoryGroup.add(closestApproachGroup);
+    
+    // --- Line connecting closest approach to Jupiter ---
+    var approachLineGeometry = new THREE.BufferGeometry().setFromPoints([
+        closestApproachPos,
+        jupiterPos
+    ]);
+    var approachLineMaterial = new THREE.LineDashedMaterial({
+        color: 0x66ffcc,
+        transparent: true,
+        opacity: 0.4,
+        dashSize: 3,
+        gapSize: 2
+    });
+    var approachLine = new THREE.Line(approachLineGeometry, approachLineMaterial);
+    approachLine.computeLineDistances();
+    trajectoryGroup.add(approachLine);
     
     var targetMarkerGeometry = new THREE.TorusGeometry(3.5, 0.3, 8, 32);
     var targetMarkerMaterial = new THREE.MeshBasicMaterial({
@@ -1264,17 +1135,17 @@ function orbitBackground() {
     if (typeof gsap !== 'undefined') {
         // Collect emissive parts for opacity handling (materials only)
         var sunEmitters = sunGroup.children.filter(function(c){return c.material && c !== sunMesh;});
-        var jupiterBands = jupiterGroup.children.filter(function(c){return c.material && c !== jupiterMesh;});
+        var jupiterElements = jupiterGroup.children.filter(function(c){return c.material;});
         var cometAtmos = cometGroup.children.filter(function(c){return c.material && c !== cometGroup.children[0];});
 
         // Initial states (use scale vector components; opacity on materials)
         gsap.set(sunGroup.scale, { x:0.6, y:0.6, z:0.6 });
-        sunEmitters.forEach(function(m){ m.material.opacity *= 0.01; });
+        sunEmitters.forEach(function(m){ if(m.material.opacity) m.material.opacity *= 0.01; });
         gsap.set(jupiterGroup.scale, { x:0.4, y:0.4, z:0.4 });
-        jupiterBands.forEach(function(b){ b.material.opacity *= 0.01; });
+        jupiterElements.forEach(function(b){ if(b.material.opacity) b.material.opacity *= 0.01; });
         gsap.set(cometGroup.scale, { x:0.01, y:0.01, z:0.01 });
-        cometAtmos.forEach(function(a){ a.material.opacity *= 0.2; });
-        hillGroup.children.forEach(function(h){ if(h.material) h.material.opacity = 0; });
+        cometAtmos.forEach(function(a){ if(a.material.opacity) a.material.opacity *= 0.2; });
+        hillGroup.children.forEach(function(h){ if(h.material && h.material.opacity !== undefined) h.material.opacity = 0; });
         gsap.set(infoDiv, { autoAlpha: 0, y: -20 });
         gsap.set(camera.position, { z: 550, y: 400, x: -200 });
 
@@ -1284,9 +1155,9 @@ function orbitBackground() {
             .to(camera.position, { duration: 3.5, z: 220, y: 180, x: -80, onUpdate: function(){ camera.lookAt(0,0,0); }}, 0)
             .to(jupiterGroup.scale, { duration: 2.5, x:1, y:1, z:1}, 0.6)
             .to(cometGroup.scale, { duration: 1.8, x:1, y:1, z:1}, 1.2)
-            .to(hillGroup.children.map(function(h){return h.material;}), { duration: 2, opacity: function(i){ return i===0?0.03:i===1?0.15:0.7; }}, 1.5)
-            .to(sunEmitters.map(function(m){return m.material;}), { duration:1.8, opacity:function(){return 0.05 + Math.random()*0.07;} }, 1.0)
-            .to(jupiterBands.map(function(b){return b.material;}), { duration:2, opacity: function(){return 0.5;} }, 1.2)
+            .to(hillGroup.children.filter(function(h){return h.material;}).map(function(h){return h.material;}), { duration: 2, opacity: function(i){ return i===0?0.5:i===1?0.4:0.7; }}, 1.5)
+            .to(sunEmitters.filter(function(m){return m.material;}).map(function(m){return m.material;}), { duration:1.8, opacity:function(){return 0.05 + Math.random()*0.07;} }, 1.0)
+            .to(jupiterElements.filter(function(b){return b.material;}).map(function(b){return b.material;}), { duration:2, opacity: function(){return 0.8;} }, 1.2)
             .to(infoDiv, { duration: 1.2, autoAlpha: 1, y: 0}, 2.0)
             .addLabel('postIntro')
             .to(sunGroup.rotation, { duration: 6, y: '+=0.6', ease: 'power1.inOut' }, 'postIntro');
@@ -1297,15 +1168,25 @@ function orbitBackground() {
 
         // Continuous ambient motions
         sunEmitters.forEach(function(m,i){
-            gsap.to(m.material, { duration: 6+ i, opacity: '+=0.03', repeat:-1, yoyo:true, ease:'sine.inOut', delay: 2 + i*0.3 });
+            if(m.material) gsap.to(m.material, { duration: 6+ i, opacity: '+=0.03', repeat:-1, yoyo:true, ease:'sine.inOut', delay: 2 + i*0.3 });
         });
         gsap.to(jupiterGroup.rotation, { duration: 40, y: '+=6.283', repeat: -1, ease: 'none' });
         gsap.to(camera.position, { duration: 12, y: '+=20', x: '-=15', repeat: -1, yoyo: true, ease: 'sine.inOut', onUpdate: function(){ camera.lookAt(0,0,0); } });
         gsap.to(infoDiv, { duration: 3, boxShadow: '0 0 40px rgba(0,255,255,0.35), inset 0 0 25px rgba(0,255,255,0.08)', repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 4});
     }
 
-    function animate() {
+    var lastFrameTime = 0;
+    var frameInterval = 1000 / 30; // Cap at 30 FPS
+    var frameCount = 0;
+    
+    function animate(currentTime) {
         requestAnimationFrame(animate);
+        
+        // Throttle to 30 FPS
+        if (currentTime - lastFrameTime < frameInterval) return;
+        lastFrameTime = currentTime;
+        frameCount++;
+        
         var time = clock.getElapsedTime();
 
         parallaxStarLayers.forEach(function(layer, index) {
@@ -1325,8 +1206,8 @@ function orbitBackground() {
         // Update comet date/time label
         updateCometDateLabel(animationProgress);
         
-        // Update lit trail - shows comet's traveled path with gradient fade
-        if (trajectoryData && trajectoryData.litTrailGeometry) {
+        // Update lit trail - shows comet's traveled path with gradient fade (every 2nd frame)
+        if (frameCount % 2 === 0 && trajectoryData && trajectoryData.litTrailGeometry) {
             var litPositions = trajectoryData.litTrailGeometry.attributes.position.array;
             var litColors = trajectoryData.litTrailGeometry.attributes.color.array;
             var litSizes = trajectoryData.litTrailGeometry.attributes.size.array;
@@ -1374,26 +1255,29 @@ function orbitBackground() {
         var colors = tailParticles.geometry.attributes.color.array;
         var sizes = tailParticles.geometry.attributes.size.array;
         
-        for (var i = 0; i < tailParticleCount; i++) {
-            var t = i / tailParticleCount;
-            var spread = t * 20;
-            var length = t * tailLength;
-            
-            positions[i * 3] = cometPos.x + sunDir.x * length + (Math.random() - 0.5) * spread;
-            positions[i * 3 + 1] = cometPos.y + sunDir.y * length + (Math.random() - 0.5) * spread * 0.5;
-            positions[i * 3 + 2] = cometPos.z + sunDir.z * length + (Math.random() - 0.5) * spread;
-            
-            var fade = 1 - t;
-            var brightness = 0.5 + fade * 0.4;
-            colors[i * 3] = brightness * 0.85;
-            colors[i * 3 + 1] = brightness * 0.9;
-            colors[i * 3 + 2] = brightness;
-            
-            sizes[i] = (1 - t * 0.7) * 3;
+        // Only update particles every 3rd frame for performance
+        if (frameCount % 3 === 0) {
+            for (var i = 0; i < tailParticleCount; i++) {
+                var t = i / tailParticleCount;
+                var spread = t * 20;
+                var length = t * tailLength;
+                
+                positions[i * 3] = cometPos.x + sunDir.x * length + (Math.random() - 0.5) * spread;
+                positions[i * 3 + 1] = cometPos.y + sunDir.y * length + (Math.random() - 0.5) * spread * 0.5;
+                positions[i * 3 + 2] = cometPos.z + sunDir.z * length + (Math.random() - 0.5) * spread;
+                
+                var fade = 1 - t;
+                var brightness = 0.5 + fade * 0.4;
+                colors[i * 3] = brightness * 0.85;
+                colors[i * 3 + 1] = brightness * 0.9;
+                colors[i * 3 + 2] = brightness;
+                
+                sizes[i] = (1 - t * 0.7) * 3;
+            }
+            tailParticles.geometry.attributes.position.needsUpdate = true;
+            tailParticles.geometry.attributes.color.needsUpdate = true;
+            tailParticles.geometry.attributes.size.needsUpdate = true;
         }
-        tailParticles.geometry.attributes.position.needsUpdate = true;
-        tailParticles.geometry.attributes.color.needsUpdate = true;
-        tailParticles.geometry.attributes.size.needsUpdate = true;
 
         var ionPoints = [];
         var ionLength = tailLength * 1.5;
@@ -1418,138 +1302,23 @@ function orbitBackground() {
 
         jupiterGroup.rotation.y += 0.0008;
         
-        // --- ANIMATE GALILEAN MOONS ---
-        moonObjects.forEach(function(moon) {
-            var data = moon.userData;
-            // Angular velocity based on orbital period (faster for closer moons)
-            var angularSpeed = (2 * Math.PI) / (data.period * 60); // Speed up for visibility
-            data.angle += angularSpeed;
-            
-            // Update position
-            moon.position.set(
-                Math.cos(data.angle) * data.orbitRadius,
-                0,
-                Math.sin(data.angle) * data.orbitRadius
-            );
-            
-            // Counter-rotate to keep same face toward Jupiter (tidal locking)
-            moon.rotation.y = -data.angle;
-        });
-        
-        // Update shader uniforms
-        if (jupiterMaterial.uniforms) {
-            jupiterMaterial.uniforms.time.value = time;
-            jupiterMaterial.uniforms.lightPos.value.copy(sunGroup.position);
+        // --- HILL RADIUS RING --- //
+        // Gentle rotation animation for the Hill radius ring
+        if (hillRingDots) {
+            hillRingDots.rotation.y += 0.001;
         }
-        
-        hillGroup.children[0].material.uniforms.time.value = time; // Hill globe shader
-        hillGroup.children[1].material.opacity = 0.02 + Math.sin(time * 1.5) * 0.01; // Wireframe
-        hillGroup.children[2].material.opacity = 0.25 + Math.sin(time * 2) * 0.1; // Main ring
-        hillRing.material.opacity = 0.25 + Math.sin(time * 2.5) * 0.1;
-        
-        // --- HILL SPHERE CROSSING EFFECT ---
-        var inHillSphere = distToJupiter < jupiterHillRadius;
-        var nearBoundary = Math.abs(distToJupiter - jupiterHillRadius) < 0.05; // Within 0.05 AU of boundary
-        
-        // Detect crossing moment
-        if (inHillSphere !== hillCrossingState.wasInside) {
-            // Crossing occurred!
-            hillCrossingState.crossingTime = time;
-            hillCrossingState.burstActive = true;
-            hillCrossingState.burstProgress = 0;
-            
-            // Get crossing point in Hill sphere local coordinates
-            var cometLocalPos = cometPos.clone().sub(jupiterGroup.position);
-            hillCrossingState.crossingPoint.copy(cometLocalPos.normalize().multiplyScalar(jupiterHillRadiusPixels));
-            
-            // Trigger ripples
-            rippleRings.forEach(function(ring, idx) {
-                ring.userData.active = true;
-                ring.userData.progress = -ring.userData.delay;
-                ring.lookAt(cometLocalPos);
-                ring.position.copy(hillCrossingState.crossingPoint);
-            });
-            
-            // Initialize burst particles at crossing point
-            var burstPos = burstParticles.geometry.attributes.position.array;
-            for (var bp = 0; bp < burstParticleCount; bp++) {
-                burstPos[bp * 3] = hillCrossingState.crossingPoint.x;
-                burstPos[bp * 3 + 1] = hillCrossingState.crossingPoint.y;
-                burstPos[bp * 3 + 2] = hillCrossingState.crossingPoint.z;
-            }
-            burstParticles.geometry.attributes.position.needsUpdate = true;
-            
-            // GSAP flash animation
-            if (typeof gsap !== 'undefined') {
-                gsap.to(hillGlowMaterial.uniforms.activation, { value: 1, duration: 0.3, ease: 'power2.out' });
-                gsap.to(hillGlowMaterial.uniforms.activation, { value: 0, duration: 1.5, delay: 0.5, ease: 'power2.in' });
-            }
-        }
-        hillCrossingState.wasInside = inHillSphere;
-        
-        // Update Hill glow shader
-        hillGlowMaterial.uniforms.time.value = time;
-        
-        // Proximity glow when near boundary
-        if (nearBoundary && !hillCrossingState.burstActive) {
-            var proximityGlow = 1 - Math.abs(distToJupiter - jupiterHillRadius) / 0.05;
-            hillGlowMaterial.uniforms.activation.value = Math.max(hillGlowMaterial.uniforms.activation.value, proximityGlow * 0.4);
-        }
-        
-        // Animate ripple rings
-        rippleRings.forEach(function(ring) {
-            if (ring.userData.active) {
-                ring.userData.progress += 0.02;
-                var p = ring.userData.progress;
-                
-                if (p > 0 && p < 1) {
-                    ring.scale.setScalar(1 + p * 0.8);
-                    ring.material.opacity = Math.sin(p * Math.PI) * 0.6;
-                } else if (p >= 1) {
-                    ring.material.opacity = 0;
-                    ring.userData.active = false;
-                    ring.scale.setScalar(1);
-                } else {
-                    ring.material.opacity = 0;
-                }
-            }
-        });
-        
-        // --- HILL RADIUS BUBBLE --- //
-        // Gentle breathing animation for the Hill radius bubble
-        if (hillBubbleMesh) {
-            var breathe = Math.sin(time * 0.5) * 0.5 + 0.5; // 0 to 1 oscillation
-            var scaleOffset = breathe * 0.03; // Scale oscillates 1.0 to 1.03
-            var opacityOffset = breathe * 0.07; // Opacity oscillates 0.05 to 0.12
-            
-            hillBubbleMesh.scale.setScalar(hillBubbleMesh.userData.baseScale + scaleOffset);
-            hillBubbleMaterial.opacity = 0.05 + opacityOffset;
-        }
-        // --- /HILL RADIUS BUBBLE --- //
-        
-        // Animate burst particles
-        if (hillCrossingState.burstActive) {
-            hillCrossingState.burstProgress += 0.015;
-            var bp = hillCrossingState.burstProgress;
-            
-            if (bp < 1) {
-                burstMaterial.opacity = Math.sin(bp * Math.PI) * 0.8;
-                
-                var burstPos = burstParticles.geometry.attributes.position.array;
-                for (var bi = 0; bi < burstParticleCount; bi++) {
-                    burstPos[bi * 3] += burstVelocities[bi].x * (1 - bp * 0.5);
-                    burstPos[bi * 3 + 1] += burstVelocities[bi].y * (1 - bp * 0.5);
-                    burstPos[bi * 3 + 2] += burstVelocities[bi].z * (1 - bp * 0.5);
-                }
-                burstParticles.geometry.attributes.position.needsUpdate = true;
-            } else {
-                burstMaterial.opacity = 0;
-                hillCrossingState.burstActive = false;
-            }
-        }
+        // --- /HILL RADIUS RING --- //
 
         targetMarker.rotation.z = time * 2;
         targetMarker.material.opacity = 0.5 + Math.sin(time * 4) * 0.3;
+        
+        // Animate perihelion marker
+        perihelionRing.rotation.z = time * 1.5;
+        perihelionRingMaterial.opacity = 0.4 + Math.sin(time * 3) * 0.2;
+        
+        // Animate closest approach marker
+        closestApproachRing.rotation.z = -time * 1.5;
+        closestApproachRingMaterial.opacity = 0.4 + Math.sin(time * 3 + 1) * 0.2;
 
         targetRotation.x = mouse.y * 0.15;
         targetRotation.y = mouse.x * 0.25;
@@ -1567,10 +1336,12 @@ function orbitBackground() {
         var daysSincePerihelion = Math.round((now - cometData.perihelionDate) / (1000 * 60 * 60 * 24));
         var simulatedDay = Math.round(animationProgress * totalJourneyDays);
         
+        var inHillSphere = distToJupiter < jupiterHillRadius;
         var approachingHill = distToHillEdge < 0.3 && distToHillEdge > 0;
         var beyondHill = animationProgress > 0.75;
 
-        infoDiv.innerHTML = 
+        // Only update info div every 10 frames to reduce DOM manipulation
+        if (frameCount % 10 === 0) infoDiv.innerHTML = 
             '<div style="font-size:11px;font-weight:600;margin-bottom:6px;color:#bbc;letter-spacing:0.5px;">3I/ATLAS</div>' +
             '<div style="font-size:8px;color:#778;margin-bottom:8px;line-height:1.2;">Interstellar visitor • Hyperbolic trajectory<br>Post-perihelion phase</div>' +
             '<div style="border-top:1px solid rgba(100,120,140,0.2);padding-top:6px;margin-bottom:6px;">' +
