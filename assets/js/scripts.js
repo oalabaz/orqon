@@ -43,9 +43,12 @@ function entrance_modal_setup() {
 	
 	// Check if already dismissed this session
 	if (sessionStorage.getItem('entranceModalDismissed') === 'true') {
-		modal.classList.add('hidden');
+		// Already dismissed, keep it hidden (it starts hidden by default)
 		return;
 	}
+	
+	// First visit this session - show the modal
+	modal.classList.remove('hidden');
 	
 	function closeModal() {
 		if (modal.classList.contains('hidden')) return;
