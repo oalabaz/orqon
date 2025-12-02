@@ -13,7 +13,7 @@ function universal_volume_slider_setup() {
 	
         var volumeContainer = document.createElement('div');
         volumeContainer.id = 'volume-slider-container';
-        volumeContainer.style.cssText = 'position:fixed;top:50%;left:20px;transform:translateY(-50%);background:rgba(9,14,22,0.92);padding:10px;border-radius:24px;border:1px solid rgba(120,140,170,0.28);box-shadow:0 6px 24px rgba(0,0,0,0.35);backdrop-filter:blur(8px);z-index:1000;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);cursor:pointer;';
+        volumeContainer.style.cssText = 'position:fixed;top:50%;left:20px;transform:translateY(-50%);background:rgba(9,14,22,0.92);padding:10px;border-radius:24px;border:1px solid rgba(120,140,170,0.28);box-shadow:0 6px 24px rgba(0,0,0,0.35);backdrop-filter:blur(8px);z-index:1000;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);cursor:pointer;overflow:hidden;';
 	
 	// Slider wrapper (hidden when collapsed) - now on top
         var sliderWrapper = document.createElement('div');
@@ -198,6 +198,38 @@ function universal_volume_slider_setup() {
             isDragging = true;
             expandSlider(); // Ensure slider stays expanded while dragging
             handleVolumeChange(e);
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        
+        // Allow dragging from anywhere on the slider wrapper
+        sliderWrapper.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            expandSlider();
+            // Calculate volume from wrapper position
+            var rect = sliderWrapper.getBoundingClientRect();
+            var padding = 8;
+            var barHeight = volumeCanvas.height - padding * 2;
+            var y = e.clientY - rect.top - padding;
+            var relY = Math.max(0, Math.min(barHeight, y));
+            var vol = Math.round((1 - relY / barHeight) * 100);
+            vol = Math.max(0, Math.min(100, vol));
+            
+            globalVolume = vol / 100;
+            animatedVol = vol;
+            targetVol = vol;
+            drawVolumeSlider(vol);
+            
+            var audio = document.getElementById('glowmaster-audio');
+            if (audio) {
+                if (globalAudioFadeInterval) {
+                    clearInterval(globalAudioFadeInterval);
+                    globalAudioFadeInterval = null;
+                }
+                audio.volume = globalVolume;
+            }
+            updateGlobalVolumeDisplay(vol);
+            e.preventDefault();
             e.stopPropagation();
         });
         
