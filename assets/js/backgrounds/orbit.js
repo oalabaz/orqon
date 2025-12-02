@@ -715,16 +715,40 @@ function orbitBackground() {
     var hillEntryMarkerGroup = new THREE.Group();
     var hillEntryGeometry = new THREE.SphereGeometry(3, 16, 16);
     var hillEntryMaterial = new THREE.MeshBasicMaterial({ color: 0x66ff66 });
-    hillEntryMarkerGroup.add(new THREE.Mesh(hillEntryGeometry, hillEntryMaterial));
+    var hillEntryCore = new THREE.Mesh(hillEntryGeometry, hillEntryMaterial);
+    hillEntryMarkerGroup.add(hillEntryCore);
     
     var hillEntryGlowGeometry = new THREE.SphereGeometry(5, 16, 16);
     var hillEntryGlowMaterial = new THREE.MeshBasicMaterial({
         color: 0x66ff66,
         transparent: true,
-        opacity: 0.3,
+        opacity: 0.4,
         side: THREE.BackSide
     });
-    hillEntryMarkerGroup.add(new THREE.Mesh(hillEntryGlowGeometry, hillEntryGlowMaterial));
+    var hillEntryGlow = new THREE.Mesh(hillEntryGlowGeometry, hillEntryGlowMaterial);
+    hillEntryMarkerGroup.add(hillEntryGlow);
+    
+    // Outer glow layer for entry
+    var hillEntryOuterGlowGeometry = new THREE.SphereGeometry(8, 16, 16);
+    var hillEntryOuterGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0x44dd44,
+        transparent: true,
+        opacity: 0.15,
+        side: THREE.BackSide
+    });
+    var hillEntryOuterGlow = new THREE.Mesh(hillEntryOuterGlowGeometry, hillEntryOuterGlowMaterial);
+    hillEntryMarkerGroup.add(hillEntryOuterGlow);
+    
+    // Ring around entry point
+    var hillEntryRingGeometry = new THREE.TorusGeometry(6, 0.3, 8, 32);
+    var hillEntryRingMaterial = new THREE.MeshBasicMaterial({
+        color: 0x66ff66,
+        transparent: true,
+        opacity: 0.5
+    });
+    var hillEntryRing = new THREE.Mesh(hillEntryRingGeometry, hillEntryRingMaterial);
+    hillEntryRing.rotation.x = Math.PI / 2;
+    hillEntryMarkerGroup.add(hillEntryRing);
     
     var hillEntryLabel = createTextSprite('ENTRY', '#66ff66');
     hillEntryLabel.position.set(0, -15, 0);
@@ -739,16 +763,40 @@ function orbitBackground() {
     var hillExitMarkerGroup = new THREE.Group();
     var hillExitGeometry = new THREE.SphereGeometry(3, 16, 16);
     var hillExitMaterial = new THREE.MeshBasicMaterial({ color: 0xff6666 });
-    hillExitMarkerGroup.add(new THREE.Mesh(hillExitGeometry, hillExitMaterial));
+    var hillExitCore = new THREE.Mesh(hillExitGeometry, hillExitMaterial);
+    hillExitMarkerGroup.add(hillExitCore);
     
     var hillExitGlowGeometry = new THREE.SphereGeometry(5, 16, 16);
     var hillExitGlowMaterial = new THREE.MeshBasicMaterial({
         color: 0xff6666,
         transparent: true,
-        opacity: 0.3,
+        opacity: 0.4,
         side: THREE.BackSide
     });
-    hillExitMarkerGroup.add(new THREE.Mesh(hillExitGlowGeometry, hillExitGlowMaterial));
+    var hillExitGlow = new THREE.Mesh(hillExitGlowGeometry, hillExitGlowMaterial);
+    hillExitMarkerGroup.add(hillExitGlow);
+    
+    // Outer glow layer for exit
+    var hillExitOuterGlowGeometry = new THREE.SphereGeometry(8, 16, 16);
+    var hillExitOuterGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0xdd4444,
+        transparent: true,
+        opacity: 0.15,
+        side: THREE.BackSide
+    });
+    var hillExitOuterGlow = new THREE.Mesh(hillExitOuterGlowGeometry, hillExitOuterGlowMaterial);
+    hillExitMarkerGroup.add(hillExitOuterGlow);
+    
+    // Ring around exit point
+    var hillExitRingGeometry = new THREE.TorusGeometry(6, 0.3, 8, 32);
+    var hillExitRingMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff6666,
+        transparent: true,
+        opacity: 0.5
+    });
+    var hillExitRing = new THREE.Mesh(hillExitRingGeometry, hillExitRingMaterial);
+    hillExitRing.rotation.x = Math.PI / 2;
+    hillExitMarkerGroup.add(hillExitRing);
     
     var hillExitLabel = createTextSprite('EXIT', '#ff6666');
     hillExitLabel.position.set(0, -15, 0);
@@ -1077,45 +1125,55 @@ function orbitBackground() {
     // --- PERIHELION MARKER (enhanced) ---
     var perihelionMarkerGroup = new THREE.Group();
     
-    // Core sphere
+    // Core sphere - bright golden
     var perihelionMarkerGeometry = new THREE.SphereGeometry(2.5, 16, 16);
-    var perihelionMarkerMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc66 });
+    var perihelionMarkerMaterial = new THREE.MeshBasicMaterial({ color: 0xffd700 });
     var perihelionMarker = new THREE.Mesh(perihelionMarkerGeometry, perihelionMarkerMaterial);
     perihelionMarkerGroup.add(perihelionMarker);
     
-    // Glow sphere
+    // Glow sphere - golden
     var perihelionGlowGeometry = new THREE.SphereGeometry(4, 16, 16);
     var perihelionGlowMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffcc66,
+        color: 0xffd700,
         transparent: true,
-        opacity: 0.3,
+        opacity: 0.4,
         side: THREE.BackSide
     });
     perihelionMarkerGroup.add(new THREE.Mesh(perihelionGlowGeometry, perihelionGlowMaterial));
     
-    // Outer glow
-    var perihelionOuterGlowGeometry = new THREE.SphereGeometry(6, 16, 16);
+    // Outer glow - warm golden
+    var perihelionOuterGlowGeometry = new THREE.SphereGeometry(8, 16, 16);
     var perihelionOuterGlowMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffcc66,
+        color: 0xffaa00,
         transparent: true,
-        opacity: 0.1,
+        opacity: 0.15,
         side: THREE.BackSide
     });
     perihelionMarkerGroup.add(new THREE.Mesh(perihelionOuterGlowGeometry, perihelionOuterGlowMaterial));
     
-    // Ring around perihelion
+    // Third outer glow layer for more dramatic effect
+    var perihelionOuterGlow2Geometry = new THREE.SphereGeometry(12, 16, 16);
+    var perihelionOuterGlow2Material = new THREE.MeshBasicMaterial({
+        color: 0xff8800,
+        transparent: true,
+        opacity: 0.08,
+        side: THREE.BackSide
+    });
+    perihelionMarkerGroup.add(new THREE.Mesh(perihelionOuterGlow2Geometry, perihelionOuterGlow2Material));
+    
+    // Ring around perihelion - golden
     var perihelionRingGeometry = new THREE.TorusGeometry(5, 0.3, 8, 32);
     var perihelionRingMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffcc66,
+        color: 0xffd700,
         transparent: true,
-        opacity: 0.5
+        opacity: 0.6
     });
     var perihelionRing = new THREE.Mesh(perihelionRingGeometry, perihelionRingMaterial);
     perihelionRing.rotation.x = Math.PI / 2;
     perihelionMarkerGroup.add(perihelionRing);
     
-    // Perihelion label
-    var perihelionLabel = createTextSprite('PERIHELION', '#ffcc66');
+    // Perihelion label - golden
+    var perihelionLabel = createTextSprite('PERIHELION', '#ffd700');
     perihelionLabel.position.set(0, -20, 0);
     perihelionLabel.scale.set(70, 17, 1);
     perihelionMarkerGroup.add(perihelionLabel);
@@ -1735,6 +1793,50 @@ function orbitBackground() {
         var inHillSphere = distToJupiter < jupiterHillRadius;
         var approachingHill = distToHillEdge < 0.3 && distToHillEdge > 0;
         var beyondHill = animationProgress > 0.75;
+        
+        // Check if near perihelion (closest approach to sun)
+        var distToPerihelion = cometPos.distanceTo(perihelionPos);
+        var nearPerihelion = distToPerihelion < 50; // Within 50 pixels of perihelion point
+        
+        // Animated glow effect on info panel based on current phase
+        var glowColor, glowIntensity;
+        var pulseSpeed = time * 2;
+        var pulse = 0.4 + Math.sin(pulseSpeed) * 0.3;
+        
+        if (nearPerihelion) {
+            // Near perihelion - bright golden glow
+            var perihelionPulse = 0.5 + Math.sin(pulseSpeed * 1.5) * 0.4;
+            glowColor = 'rgba(255, 215, 0, ' + perihelionPulse + ')';
+            glowIntensity = 15 + Math.sin(pulseSpeed * 1.5) * 5;
+            infoDiv.style.borderColor = 'rgba(255, 215, 0, 0.7)';
+        } else if (inHillSphere) {
+            // Inside Hill sphere - yellow/gold warning glow
+            glowColor = 'rgba(204, 180, 100, ' + pulse + ')';
+            glowIntensity = 12 + Math.sin(pulseSpeed) * 4;
+            infoDiv.style.borderColor = 'rgba(204, 180, 100, 0.6)';
+        } else if (approachingHill) {
+            // Approaching - soft amber glow
+            glowColor = 'rgba(170, 150, 100, ' + (pulse * 0.7) + ')';
+            glowIntensity = 8 + Math.sin(pulseSpeed) * 3;
+            infoDiv.style.borderColor = 'rgba(170, 150, 100, 0.5)';
+        } else if (beyondHill) {
+            // Exited - cool blue glow (mission complete feel)
+            glowColor = 'rgba(100, 150, 180, ' + (pulse * 0.6) + ')';
+            glowIntensity = 8 + Math.sin(pulseSpeed) * 3;
+            infoDiv.style.borderColor = 'rgba(100, 150, 180, 0.5)';
+        } else if (animationProgress < 0.15) {
+            // Early journey - cyan/comet color
+            glowColor = 'rgba(68, 200, 220, ' + (pulse * 0.5) + ')';
+            glowIntensity = 6 + Math.sin(pulseSpeed) * 2;
+            infoDiv.style.borderColor = 'rgba(68, 200, 220, 0.4)';
+        } else {
+            // Default - subtle neutral glow
+            glowColor = 'rgba(110, 130, 150, ' + (pulse * 0.3) + ')';
+            glowIntensity = 4 + Math.sin(pulseSpeed) * 2;
+            infoDiv.style.borderColor = 'rgba(110, 130, 150, 0.4)';
+        }
+        
+        infoDiv.style.boxShadow = '0 6px 16px rgba(0,0,0,0.45), 0 0 ' + glowIntensity + 'px ' + glowColor + ', inset 0 0 ' + (glowIntensity * 0.3) + 'px ' + glowColor;
 
         // Only update info div every 10 frames to reduce DOM manipulation
         if (frameCount % 10 === 0) infoText.innerHTML = 
