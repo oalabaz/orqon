@@ -1367,6 +1367,11 @@ function orbitBackground() {
     var transitionStartTime = 0;
     var resumeAmbientTweenAfterTransition = false;
     
+    // Two-phase unlock transition: first zoom out, then move to bird's eye
+    var unlockTransitionPhase = 0; // 0 = not unlocking, 1 = zooming out, 2 = moving to bird's eye
+    var cameraTransitionMidpoint = { x: 0, y: 0, z: 0 };
+    var cameraTransitionLookMid = { x: 0, y: 0, z: 0 };
+    
     // Lock icon (using ti-unlock/ti-lock icons)
     var lockIcon = document.createElement('span');
     lockIcon.id = 'focus-lock-icon';
@@ -1515,22 +1520,42 @@ function orbitBackground() {
     }
     
     function unlockFocus() {
-        // Start camera transition back to fixed position
+        // Two-phase transition: first zoom out from comet, then rotate to bird's eye
+        var currentCurve = (window._orbitTrajectoryData && window._orbitTrajectoryData.curve) || trajectoryCurve;
+        var cometPos = currentCurve.getPoint(animationProgress);
+        
+        // Phase 1 start: current camera position (close to comet)
         cameraTransitionStart.x = camera.position.x;
         cameraTransitionStart.y = camera.position.y;
         cameraTransitionStart.z = camera.position.z;
         
-        // Target: return to bird's eye view position (matching initial camera setup)
+        // Phase 1 target (midpoint): zoom out from comet to a distant view
+        // Position camera at a distance looking at comet, but pulled back
+        var dirFromComet = new THREE.Vector3(
+            camera.position.x - cometPos.x,
+            camera.position.y - cometPos.y,
+            camera.position.z - cometPos.z
+        ).normalize();
+        
+        // Midpoint: far from comet (500 units) in same direction
+        cameraTransitionMidpoint.x = cometPos.x + dirFromComet.x * 400;
+        cameraTransitionMidpoint.y = cometPos.y + dirFromComet.y * 400 + 100; // Rise up a bit
+        cameraTransitionMidpoint.z = cometPos.z + dirFromComet.z * 400;
+        
+        // Phase 2 target: bird's eye view position
         cameraTransitionTarget.x = -80;
         cameraTransitionTarget.y = 180;
         cameraTransitionTarget.z = 220;
         
-        // Look at transition (from comet to scene center)
-        var currentCurve = (window._orbitTrajectoryData && window._orbitTrajectoryData.curve) || trajectoryCurve;
-        var cometPos = currentCurve.getPoint(animationProgress);
+        // Look at transitions
+        // Phase 1: keep looking at comet
         cameraTransitionLookStart.x = cometPos.x;
         cameraTransitionLookStart.y = cometPos.y;
         cameraTransitionLookStart.z = cometPos.z;
+        cameraTransitionLookMid.x = cometPos.x;
+        cameraTransitionLookMid.y = cometPos.y;
+        cameraTransitionLookMid.z = cometPos.z;
+        // Phase 2: transition to scene center
         cameraTransitionLookTarget.x = 0;
         cameraTransitionLookTarget.y = 0;
         cameraTransitionLookTarget.z = 0;
@@ -1538,7 +1563,8 @@ function orbitBackground() {
         cameraTransitioning = true;
         cameraTransitionProgress = 0;
         transitionStartTime = performance.now();
-        resumeAmbientTweenAfterTransition = true; // Will resume after transition completes
+        resumeAmbientTweenAfterTransition = true;
+        unlockTransitionPhase = 1; // Start with phase 1 (zoom out)
         
         focusLocked = false;
         lockIcon.className = 'ti-unlock';
@@ -1733,58 +1759,117 @@ function orbitBackground() {
         function easeInOutCubic(t) {
             return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         }
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
         
         // Camera control based on focus state and transition
         if (cameraTransitioning) {
-            // Smooth camera transition between modes
             var elapsed = (performance.now() - transitionStartTime) / 1000;
-            cameraTransitionProgress = Math.min(elapsed / cameraTransitionDuration, 1);
-            var eased = easeInOutCubic(cameraTransitionProgress);
             
-            // Interpolate camera position
-            camera.position.x = cameraTransitionStart.x + (cameraTransitionTarget.x - cameraTransitionStart.x) * eased;
-            camera.position.y = cameraTransitionStart.y + (cameraTransitionTarget.y - cameraTransitionStart.y) * eased;
-            camera.position.z = cameraTransitionStart.z + (cameraTransitionTarget.z - cameraTransitionStart.z) * eased;
-            
-            // Interpolate look-at target
-            var lookX = cameraTransitionLookStart.x + (cameraTransitionLookTarget.x - cameraTransitionLookStart.x) * eased;
-            var lookY = cameraTransitionLookStart.y + (cameraTransitionLookTarget.y - cameraTransitionLookStart.y) * eased;
-            var lookZ = cameraTransitionLookStart.z + (cameraTransitionLookTarget.z - cameraTransitionLookStart.z) * eased;
-            camera.lookAt(lookX, lookY, lookZ);
-            
-            // Update transition target for focus mode (comet moves during transition)
-            if (focusLocked) {
-                var defaultDir = new THREE.Vector3(0, 0.3, 1).normalize();
-                cameraTransitionTarget.x = cometPos.x + defaultDir.x * focusZoomDistance;
-                cameraTransitionTarget.y = cometPos.y + defaultDir.y * focusZoomDistance;
-                cameraTransitionTarget.z = cometPos.z + defaultDir.z * focusZoomDistance;
-                cameraTransitionLookTarget.x = cometPos.x;
-                cameraTransitionLookTarget.y = cometPos.y;
-                cameraTransitionLookTarget.z = cometPos.z;
-            }
-            
-            // End transition
-            if (cameraTransitionProgress >= 1) {
-                cameraTransitioning = false;
+            // Two-phase unlock transition running in parallel
+            if (unlockTransitionPhase === 1) {
+                // Both animations run simultaneously but at different rates
+                // Zoom out: faster (1.2s), Rotation: slower (2s)
+                var zoomDuration = 1.2;
+                var rotateDuration = 2.0;
                 
-                // Resume ambient tween after unlocking transition completes
-                if (resumeAmbientTweenAfterTransition && cameraAmbientTween) {
-                    // Kill old tween and create new one from current position
-                    cameraAmbientTween.kill();
-                    cameraAmbientTween = gsap.to(camera.position, { 
-                        duration: 12, 
-                        y: '+=20', 
-                        x: '-=15', 
-                        repeat: -1, 
-                        yoyo: true, 
-                        ease: 'sine.inOut', 
-                        onUpdate: function(){ 
-                            if (!cameraTransitioning && !focusLocked) {
-                                camera.lookAt(0,0,0); 
-                            }
-                        } 
-                    });
-                    resumeAmbientTweenAfterTransition = false;
+                var zoomProgress = Math.min(elapsed / zoomDuration, 1);
+                var rotateProgress = Math.min(elapsed / rotateDuration, 1);
+                
+                var zoomEased = easeOutCubic(zoomProgress);  // Fast start, slow end for zoom
+                var rotateEased = easeInOutCubic(rotateProgress);  // Smooth for rotation
+                
+                // Blend position: zoom out fast, rotate to bird's eye slower
+                // Start -> Midpoint (zoom) blended with Start -> Target (rotation)
+                var zoomX = cameraTransitionStart.x + (cameraTransitionMidpoint.x - cameraTransitionStart.x) * zoomEased;
+                var zoomY = cameraTransitionStart.y + (cameraTransitionMidpoint.y - cameraTransitionStart.y) * zoomEased;
+                var zoomZ = cameraTransitionStart.z + (cameraTransitionMidpoint.z - cameraTransitionStart.z) * zoomEased;
+                
+                // Blend zoom position toward final target based on rotation progress
+                camera.position.x = zoomX + (cameraTransitionTarget.x - zoomX) * rotateEased;
+                camera.position.y = zoomY + (cameraTransitionTarget.y - zoomY) * rotateEased;
+                camera.position.z = zoomZ + (cameraTransitionTarget.z - zoomZ) * rotateEased;
+                
+                // Look-at: start looking at comet, transition to scene center
+                var lookX = cameraTransitionLookStart.x + (cameraTransitionLookTarget.x - cameraTransitionLookStart.x) * rotateEased;
+                var lookY = cameraTransitionLookStart.y + (cameraTransitionLookTarget.y - cameraTransitionLookStart.y) * rotateEased;
+                var lookZ = cameraTransitionLookStart.z + (cameraTransitionLookTarget.z - cameraTransitionLookStart.z) * rotateEased;
+                camera.lookAt(lookX, lookY, lookZ);
+                
+                // End transition when both complete
+                if (zoomProgress >= 1 && rotateProgress >= 1) {
+                    cameraTransitioning = false;
+                    unlockTransitionPhase = 0;
+                    
+                    // Resume ambient tween
+                    if (resumeAmbientTweenAfterTransition && cameraAmbientTween) {
+                        cameraAmbientTween.kill();
+                        cameraAmbientTween = gsap.to(camera.position, { 
+                            duration: 12, 
+                            y: '+=20', 
+                            x: '-=15', 
+                            repeat: -1, 
+                            yoyo: true, 
+                            ease: 'sine.inOut', 
+                            onUpdate: function(){ 
+                                if (!cameraTransitioning && !focusLocked) {
+                                    camera.lookAt(0,0,0); 
+                                }
+                            } 
+                        });
+                        resumeAmbientTweenAfterTransition = false;
+                    }
+                }
+            } else {
+                // Single-phase transition (for locking focus)
+                cameraTransitionProgress = Math.min(elapsed / cameraTransitionDuration, 1);
+                var eased = easeInOutCubic(cameraTransitionProgress);
+                
+                // Interpolate camera position
+                camera.position.x = cameraTransitionStart.x + (cameraTransitionTarget.x - cameraTransitionStart.x) * eased;
+                camera.position.y = cameraTransitionStart.y + (cameraTransitionTarget.y - cameraTransitionStart.y) * eased;
+                camera.position.z = cameraTransitionStart.z + (cameraTransitionTarget.z - cameraTransitionStart.z) * eased;
+                
+                // Interpolate look-at target
+                var lookX = cameraTransitionLookStart.x + (cameraTransitionLookTarget.x - cameraTransitionLookStart.x) * eased;
+                var lookY = cameraTransitionLookStart.y + (cameraTransitionLookTarget.y - cameraTransitionLookStart.y) * eased;
+                var lookZ = cameraTransitionLookStart.z + (cameraTransitionLookTarget.z - cameraTransitionLookStart.z) * eased;
+                camera.lookAt(lookX, lookY, lookZ);
+                
+                // Update transition target for focus mode (comet moves during transition)
+                if (focusLocked) {
+                    var defaultDir = new THREE.Vector3(0, 0.3, 1).normalize();
+                    cameraTransitionTarget.x = cometPos.x + defaultDir.x * focusZoomDistance;
+                    cameraTransitionTarget.y = cometPos.y + defaultDir.y * focusZoomDistance;
+                    cameraTransitionTarget.z = cometPos.z + defaultDir.z * focusZoomDistance;
+                    cameraTransitionLookTarget.x = cometPos.x;
+                    cameraTransitionLookTarget.y = cometPos.y;
+                    cameraTransitionLookTarget.z = cometPos.z;
+                }
+                
+                // End transition
+                if (cameraTransitionProgress >= 1) {
+                    cameraTransitioning = false;
+                    
+                    // Resume ambient tween after unlocking transition completes
+                    if (resumeAmbientTweenAfterTransition && cameraAmbientTween) {
+                        cameraAmbientTween.kill();
+                        cameraAmbientTween = gsap.to(camera.position, { 
+                            duration: 12, 
+                            y: '+=20', 
+                            x: '-=15', 
+                            repeat: -1, 
+                            yoyo: true, 
+                            ease: 'sine.inOut', 
+                            onUpdate: function(){ 
+                                if (!cameraTransitioning && !focusLocked) {
+                                    camera.lookAt(0,0,0); 
+                                }
+                            } 
+                        });
+                        resumeAmbientTweenAfterTransition = false;
+                    }
                 }
             }
         } else if (focusLocked) {
