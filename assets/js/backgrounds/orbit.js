@@ -1631,10 +1631,21 @@ function orbitBackground() {
     
     document.addEventListener('wheel', function(e) {
         if (focusLocked) {
+            // Don't capture wheel events on volume control or other UI elements
+            var volumeContainer = document.getElementById('volume-slider-container');
+            var audioControl = document.getElementById('audio-control-bubble');
+            if (volumeContainer && volumeContainer.contains(e.target)) {
+                return; // Let volume control handle it
+            }
+            if (audioControl && audioControl.contains(e.target)) {
+                return; // Let audio control handle it
+            }
+            
             e.preventDefault();
             e.stopPropagation();
             // Scroll down = zoom out (increase distance), scroll up = zoom in (decrease distance)
-            var zoomDelta = e.deltaY > 0 ? 500 : -500;  // Massive zoom steps
+            // ~166 per scroll = 3 scrolls to go full range (500 / 3)
+            var zoomDelta = e.deltaY > 0 ? 166 : -166;
             focusZoomDistance = Math.max(minFocusDistance, Math.min(maxFocusDistance, focusZoomDistance + zoomDelta));
         }
     }, { passive: false, capture: true });
