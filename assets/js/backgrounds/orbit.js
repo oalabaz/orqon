@@ -899,23 +899,31 @@ function orbitBackground() {
     tailGeometry.setAttribute('size', new THREE.BufferAttribute(tailSizes, 1));
     
     var tailMaterial = new THREE.PointsMaterial({
-        size: 1.5,
+        size: 3.5,
         vertexColors: true,
         transparent: true,
-        opacity: 0.4,
-        sizeAttenuation: true
+        opacity: 0.6,
+        sizeAttenuation: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
     });
     var tailParticles = new THREE.Points(tailGeometry, tailMaterial);
+    tailParticles.frustumCulled = false;  // Always render, never cull
+    tailParticles.renderOrder = 100;  // Render on top
     scene.add(tailParticles);
 
     // --- ION TAIL ---
     var ionTailGeometry = new THREE.BufferGeometry();
     var ionTailMaterial = new THREE.LineBasicMaterial({
-        color: 0x667788,
+        color: 0x88aacc,
         transparent: true,
-        opacity: 0.3
+        opacity: 0.5,
+        linewidth: 2,
+        depthWrite: false
     });
     var ionTail = new THREE.Line(ionTailGeometry, ionTailMaterial);
+    ionTail.frustumCulled = false;  // Always render, never cull
+    ionTail.renderOrder = 99;  // Render just below dust tail
     scene.add(ionTail);
 
     // --- TRAJECTORY PATH ---
@@ -1967,7 +1975,7 @@ function orbitBackground() {
         var distToHillEdge = Math.max(0, distToJupiter - jupiterHillRadius);
         
         var sunDir = cometPos.clone().normalize();
-        var tailLength = Math.max(30, 120 / Math.max(0.5, distFromSun));
+        var tailLength = Math.max(50, 180 / Math.max(0.5, distFromSun));  // Longer tail
         
         var positions = tailParticles.geometry.attributes.position.array;
         var colors = tailParticles.geometry.attributes.color.array;
@@ -1976,7 +1984,7 @@ function orbitBackground() {
         // Update particles for smooth motion
         for (var i = 0; i < tailParticleCount; i++) {
                 var t = i / tailParticleCount;
-                var spread = t * 20;
+                var spread = t * 25;  // Wider spread
                 var length = t * tailLength;
                 
                 positions[i * 3] = cometPos.x + sunDir.x * length + (Math.random() - 0.5) * spread;
@@ -1984,21 +1992,21 @@ function orbitBackground() {
                 positions[i * 3 + 2] = cometPos.z + sunDir.z * length + (Math.random() - 0.5) * spread;
                 
                 var fade = 1 - t;
-                var brightness = 0.5 + fade * 0.4;
+                var brightness = 0.6 + fade * 0.4;  // Brighter
                 colors[i * 3] = brightness * 0.85;
-                colors[i * 3 + 1] = brightness * 0.9;
+                colors[i * 3 + 1] = brightness * 0.92;
                 colors[i * 3 + 2] = brightness;
                 
-                sizes[i] = (1 - t * 0.7) * 3;
+                sizes[i] = (1 - t * 0.6) * 5;  // Larger particles
             }
             tailParticles.geometry.attributes.position.needsUpdate = true;
             tailParticles.geometry.attributes.color.needsUpdate = true;
             tailParticles.geometry.attributes.size.needsUpdate = true;
 
         var ionPoints = [];
-        var ionLength = tailLength * 1.5;
-        for (var i = 0; i <= 20; i++) {
-            var t = i / 20;
+        var ionLength = tailLength * 1.8;  // Longer ion tail
+        for (var i = 0; i <= 30; i++) {  // More points for smoother line
+            var t = i / 30;
             ionPoints.push(
                 cometPos.x + sunDir.x * t * ionLength,
                 cometPos.y + sunDir.y * t * ionLength,
