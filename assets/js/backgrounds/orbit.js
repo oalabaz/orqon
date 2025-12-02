@@ -1221,11 +1221,25 @@ function orbitBackground() {
     // --- INFO HUD ---
     var infoDiv = document.createElement('div');
     infoDiv.id = 'orbit-info';
-    infoDiv.style.cssText = 'position:fixed;top:16px;left:16px;color:#aabbcc;font-family:Consolas,Monaco,monospace;font-size:10px;pointer-events:auto;line-height:1.4;z-index:100;max-width:280px;background:rgba(10,14,22,0.9);padding:28px 14px 14px 14px;border-radius:4px;border:1px solid rgba(110,130,150,0.35);box-shadow:0 6px 16px rgba(0,0,0,0.45);backdrop-filter:blur(3px);cursor:pointer;';
+    infoDiv.style.cssText = 'position:fixed;top:16px;left:16px;color:#aabbcc;font-family:Consolas,Monaco,monospace;font-size:10px;pointer-events:auto;line-height:1.4;z-index:100;max-width:280px;background:rgba(10,14,22,0.92);padding:28px 14px 14px 14px;border-radius:5px;border:1px solid rgba(110,130,150,0.4);box-shadow:0 6px 16px rgba(0,0,0,0.45);backdrop-filter:blur(6px);cursor:pointer;transition:all 0.2s ease;';
     infoDiv.setAttribute('role', 'button');
     infoDiv.setAttribute('aria-pressed', 'false');
     infoDiv.tabIndex = 0;
     document.body.appendChild(infoDiv);
+    
+    // Add hover effects to make it feel like a button
+    infoDiv.addEventListener('mouseenter', function() {
+        infoDiv.style.background = 'rgba(15,20,30,0.95)';
+        infoDiv.style.borderColor = 'rgba(130,150,180,0.5)';
+        infoDiv.style.boxShadow = '0 8px 20px rgba(0,0,0,0.5)';
+    });
+    infoDiv.addEventListener('mouseleave', function() {
+        if (!focusLocked) {
+            infoDiv.style.background = 'rgba(10,14,22,0.92)';
+            infoDiv.style.borderColor = 'rgba(110,130,150,0.4)';
+            infoDiv.style.boxShadow = '0 6px 16px rgba(0,0,0,0.45)';
+        }
+    });
     
     // Create text container for info content
     var infoText = document.createElement('div');
@@ -1394,7 +1408,6 @@ function orbitBackground() {
     }
 
     function handleInfoPanelPointerUp(e) {
-        if (focusLocked) return;
         if (e.pointerType === 'mouse' && e.button !== 0) return;
         if (shouldIgnoreFocusToggleTarget(e.target)) return;
         requestFocusToggle();
