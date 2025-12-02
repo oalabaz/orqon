@@ -63,40 +63,11 @@ function orbitBackground() {
     
     // Fetch real ephemeris from NASA JPL Horizons
     function fetchRealOrbit() {
-        // Query for comet C/2024 G3 (ATLAS) - using 10 years of data
-        var startDate = '2025-10-01';
-        var stopDate = '2035-12-31';
-        var stepSize = '10d'; // Every 10 days
-        
-        var apiUrl = 'https://ssd.jpl.nasa.gov/api/horizons.api?' +
-            'format=json' +
-            '&COMMAND=\'C/2024 G3\'' +
-            '&OBJ_DATA=NO' +
-            '&MAKE_EPHEM=YES' +
-            '&EPHEM_TYPE=VECTORS' +
-            '&CENTER=\'500@10\'' +  // Sun-centered
-            '&START_TIME=\'' + startDate + '\'' +
-            '&STOP_TIME=\'' + stopDate + '\'' +
-            '&STEP_SIZE=\'' + stepSize + '\'' +
-            '&VEC_TABLE=\'2\'' +
-            '&CSV_FORMAT=YES';
-        
-        console.log('Fetching real orbit from NASA JPL Horizons...');
-        
-        fetch(apiUrl)
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.result) {
-                    parseHorizonsData(data.result);
-                } else {
-                    console.warn('No orbit data returned, using fallback');
-                    generateFallbackOrbit();
-                }
-            })
-            .catch(function(error) {
-                console.warn('Failed to fetch orbit data:', error);
-                generateFallbackOrbit();
-            });
+        // For the Jupiter Hill sphere flyby visualization, we use a smooth artistic trajectory
+        // The real comet C/2024 G3 doesn't actually pass through Jupiter's Hill sphere
+        // So we use the fallback orbit which provides a visually appealing flyby path
+        console.log('Using smooth flyby trajectory for Hill sphere visualization');
+        generateFallbackOrbit();
     }
     
     function parseHorizonsData(result) {
@@ -199,46 +170,60 @@ function orbitBackground() {
         var hillRadiusAU = jupiterHillRadius * hillRadiusVisualScale;
         var hillRadiusPx = hillRadiusAU * AU_TO_PIXELS;
         
-        // Entry point at Hill sphere edge
-        var entryPoint = jupiterPos.clone().add(new THREE.Vector3(-hillRadiusPx * 0.9, 0, -hillRadiusPx * 0.5));
-        // Closest approach inside Hill sphere (smooth curve through)
-        var closestPoint = jupiterPos.clone().add(new THREE.Vector3(-hillRadiusPx * 0.2, 5, hillRadiusPx * 0.3));
-        // Exit from Hill sphere
-        var exitPoint = jupiterPos.clone().add(new THREE.Vector3(hillRadiusPx * 0.7, 10, hillRadiusPx * 0.8));
-        // Final escape direction
-        var escapePoint = jupiterPos.clone().add(new THREE.Vector3(hillRadiusPx * 1.5, 20, hillRadiusPx * 1.3));
-        var escapeEnd = jupiterPos.clone().add(new THREE.Vector3(hillRadiusPx * 2.2, 30, hillRadiusPx * 1.7));
+        // More control points around Jupiter for smoother curve
+        // Approach points leading to Hill sphere
+        var approachPoint1 = jupiterPos.clone().add(new THREE.Vector3(-hillRadiusPx * 1.8, -5, -hillRadiusPx * 1.2));
+        var approachPoint2 = jupiterPos.clone().add(new THREE.Vector3(-hillRadiusPx * 1.3, -2, -hillRadiusPx * 0.9));
         
-        // Smooth approach from perihelion to Hill sphere entry
-        var numApproach = Math.floor(numPoints * 0.4);
+        // Entry into Hill sphere - gradual curve
+        var entryPoint1 = jupiterPos.clone().add(new THREE.Vector3(-hillRadiusPx * 0.95, 0, -hillRadiusPx * 0.6));
+        var entryPoint2 = jupiterPos.clone().add(new THREE.Vector3(-hillRadiusPx * 0.7, 2, -hillRadiusPx * 0.3));
+        
+        // Inside Hill sphere - smooth arc through closest approach
+        var insidePoint1 = jupiterPos.clone().add(new THREE.Vector3(-hillRadiusPx * 0.4, 4, hillRadiusPx * 0.05));
+        var closestPoint = jupiterPos.clone().add(new THREE.Vector3(-hillRadiusPx * 0.15, 6, hillRadiusPx * 0.35));
+        var insidePoint2 = jupiterPos.clone().add(new THREE.Vector3(hillRadiusPx * 0.15, 7, hillRadiusPx * 0.55));
+        
+        // Exit from Hill sphere - gradual departure
+        var exitPoint1 = jupiterPos.clone().add(new THREE.Vector3(hillRadiusPx * 0.45, 9, hillRadiusPx * 0.7));
+        var exitPoint2 = jupiterPos.clone().add(new THREE.Vector3(hillRadiusPx * 0.75, 11, hillRadiusPx * 0.85));
+        var exitPoint3 = jupiterPos.clone().add(new THREE.Vector3(hillRadiusPx * 1.0, 14, hillRadiusPx * 1.0));
+        
+        // Extended escape trajectory - continue well beyond Hill sphere
+        var escapePoint1 = jupiterPos.clone().add(new THREE.Vector3(hillRadiusPx * 1.5, 20, hillRadiusPx * 1.3));
+        var escapePoint2 = jupiterPos.clone().add(new THREE.Vector3(hillRadiusPx * 2.5, 35, hillRadiusPx * 2.0));
+        var escapePoint3 = jupiterPos.clone().add(new THREE.Vector3(hillRadiusPx * 4.0, 50, hillRadiusPx * 3.0));
+        var escapeEnd = jupiterPos.clone().add(new THREE.Vector3(hillRadiusPx * 6.0, 70, hillRadiusPx * 4.5));
+        
+        // Smooth approach from perihelion to Jupiter approach zone
+        var numApproach = Math.floor(numPoints * 0.25);
         for (var j = 0; j < numApproach; j++) {
             var t2 = j / numApproach;
             // Smooth cubic interpolation
             var smoothT = t2 * t2 * (3 - 2 * t2);
             var pt = new THREE.Vector3(
-                perihelionPoint.x + (entryPoint.x - perihelionPoint.x) * smoothT,
-                perihelionPoint.y + (entryPoint.y - perihelionPoint.y) * smoothT + Math.sin(smoothT * Math.PI) * 20,
-                perihelionPoint.z + (entryPoint.z - perihelionPoint.z) * smoothT
+                perihelionPoint.x + (approachPoint1.x - perihelionPoint.x) * smoothT,
+                perihelionPoint.y + (approachPoint1.y - perihelionPoint.y) * smoothT + Math.sin(smoothT * Math.PI) * 15,
+                perihelionPoint.z + (approachPoint1.z - perihelionPoint.z) * smoothT
             );
             points.push(pt);
         }
         
-        // Smooth flyby through Hill sphere (entry -> closest -> exit)
-        var flybyPoints = [entryPoint, closestPoint, exitPoint, escapePoint, escapeEnd];
-        var numFlyby = Math.floor(numPoints * 0.35);
+        // Smooth flyby through Hill sphere with many control points for smooth curve
+        var flybyPoints = [
+            approachPoint1, approachPoint2,
+            entryPoint1, entryPoint2,
+            insidePoint1, closestPoint, insidePoint2,
+            exitPoint1, exitPoint2, exitPoint3,
+            escapePoint1, escapePoint2, escapePoint3, escapeEnd
+        ];
+        var numFlyby = Math.floor(numPoints * 0.55);
+        
+        // Use Catmull-Rom spline with lower tension for very smooth curve
+        var flybyCurve = new THREE.CatmullRomCurve3(flybyPoints, false, 'catmullrom', 0.3);
         for (var k = 0; k < numFlyby; k++) {
-            var t3 = k / numFlyby;
-            var segmentIndex = Math.min(Math.floor(t3 * (flybyPoints.length - 1)), flybyPoints.length - 2);
-            var segmentT = (t3 * (flybyPoints.length - 1)) - segmentIndex;
-            var smoothT3 = segmentT * segmentT * (3 - 2 * segmentT);
-            
-            var p1 = flybyPoints[segmentIndex];
-            var p2 = flybyPoints[segmentIndex + 1];
-            var pt = new THREE.Vector3(
-                p1.x + (p2.x - p1.x) * smoothT3,
-                p1.y + (p2.y - p1.y) * smoothT3,
-                p1.z + (p2.z - p1.z) * smoothT3
-            );
+            var t3 = k / (numFlyby - 1);
+            var pt = flybyCurve.getPoint(t3);
             points.push(pt);
         }
         
@@ -939,8 +924,15 @@ function orbitBackground() {
     var perihelionPos = new THREE.Vector3(cometData.perihelionDistance * AU_TO_PIXELS, 0, 0);
     var jupiterPos = jupiterGroup.position.clone();
     
+    // --- INTERSTELLAR APPROACH (before perihelion) ---
+    // The comet comes from interstellar space, approaching the Sun
+    var interstellarStart = new THREE.Vector3(-800, 100, -600);  // Far away, coming from deep space
+    var interstellarMid1 = new THREE.Vector3(-500, 70, -350);
+    var interstellarMid2 = new THREE.Vector3(-250, 40, -150);
+    var interstellarApproach = new THREE.Vector3(-80, 15, -40);  // Approaching perihelion
+    
     // Calculate smooth flyby trajectory through Hill sphere
-    // Entry point - approaching from the inner solar system
+    // Entry point - approaching from the inner solar system (after perihelion)
     var hillEntryPos = jupiterPos.clone().add(new THREE.Vector3(-jupiterHillRadiusPixels * 0.9, -5, -jupiterHillRadiusPixels * 0.6));
     
     // Closest approach - grazes through the Hill sphere (smooth curve, no sharp turn)
@@ -954,14 +946,19 @@ function orbitBackground() {
     var escapePos2 = jupiterPos.clone().add(new THREE.Vector3(jupiterHillRadiusPixels * 2.0, 30, jupiterHillRadiusPixels * 1.6));
     var escapeEnd = jupiterPos.clone().add(new THREE.Vector3(jupiterHillRadiusPixels * 2.5, 40, jupiterHillRadiusPixels * 1.9));
     
-    // Smooth approach curve from perihelion
+    // Smooth approach curve from perihelion to Jupiter
     var midPoint = new THREE.Vector3(
         (perihelionPos.x + hillEntryPos.x) / 2,
         20,
         (perihelionPos.z + hillEntryPos.z) / 2 + 50
     );
     
+    // Full trajectory including interstellar approach
     var trajectoryCurve = new THREE.CatmullRomCurve3([
+        interstellarStart,
+        interstellarMid1,
+        interstellarMid2,
+        interstellarApproach,
         perihelionPos,
         midPoint,
         hillEntryPos,
@@ -1006,34 +1003,61 @@ function orbitBackground() {
     var trajectoryLine = new THREE.Line(trajectoryLineGeometry, trajectoryLineMaterial);
     trajectoryGroup.add(trajectoryLine);
     
-    // --- UNALTERED TRAJECTORY (if course was not corrected by Jupiter) ---
-    // This shows where the comet would have continued on its original hyperbolic path
+    // --- ORIGINAL TRAJECTORY (ghost of uncorrected path after perihelion) ---
+    // Course correction happened AT perihelion
+    // This ghost shows where the comet WOULD have gone - crashing into Jupiter
+    // Only shows the divergent path AFTER perihelion (not the shared approach)
     var unalteredPoints = [];
-    var eHyper = 1.00001;
-    var qHyper = cometData.perihelionDistance;
-    var inclinationHyper = Math.PI * 0.25;
     
-    // Generate the original hyperbolic trajectory (no Jupiter deflection)
-    for (var upi = 0; upi < 300; upi++) {
-        var nuDegU = -160 + (upi / 300) * 320;
-        var nuU = nuDegU * Math.PI / 180;
-        var rU = qHyper * (1 + eHyper) / (1 + eHyper * Math.cos(nuU));
-        if (rU > 60) continue;
-        
-        var xOrbitU = rU * Math.cos(nuU);
-        var yOrbitU = rU * Math.sin(nuU);
-        var xU = xOrbitU;
-        var yU = yOrbitU * Math.sin(inclinationHyper);
-        var zU = yOrbitU * Math.cos(inclinationHyper);
-        
-        unalteredPoints.push(new THREE.Vector3(
-            xU * AU_TO_PIXELS,
-            yU * AU_TO_PIXELS * 0.3,
-            zU * AU_TO_PIXELS
-        ));
-    }
+    // Get Jupiter position for reference
+    var jupiterPosForUnaltered = jupiterGroup.position.clone();
+    var hillRadiusForUnaltered = jupiterHillRadiusPixels;
     
-    // Create subtle dashed line for unaltered path
+    // The original trajectory headed more directly toward Jupiter (collision course)
+    // Calculate direction from perihelion toward Jupiter's center
+    var toJupiterDirect = new THREE.Vector3().subVectors(jupiterPosForUnaltered, perihelionPos).normalize();
+    
+    // Ghost path starts at perihelion and heads DIRECTLY toward Jupiter
+    // This is the path that was avoided by the course correction
+    
+    // Waypoints for collision course - starts from perihelion
+    var ghostStart = perihelionPos.clone(); // Starts exactly at perihelion
+    
+    var ghostApproach1 = perihelionPos.clone().add(toJupiterDirect.clone().multiplyScalar(hillRadiusForUnaltered * 0.6));
+    ghostApproach1.y += 3;
+    
+    var ghostApproach2 = perihelionPos.clone().add(toJupiterDirect.clone().multiplyScalar(hillRadiusForUnaltered * 1.2));
+    ghostApproach2.y += 5;
+    
+    var ghostApproach3 = perihelionPos.clone().add(toJupiterDirect.clone().multiplyScalar(hillRadiusForUnaltered * 1.8));
+    ghostApproach3.y += 6;
+    
+    // Enters Hill sphere heading toward Jupiter center
+    var ghostEntry = jupiterPosForUnaltered.clone().add(new THREE.Vector3(-hillRadiusForUnaltered * 0.6, 4, -hillRadiusForUnaltered * 0.2));
+    
+    // Goes DEEP into Hill sphere - on collision course
+    var ghostDeep1 = jupiterPosForUnaltered.clone().add(new THREE.Vector3(-hillRadiusForUnaltered * 0.25, 2, hillRadiusForUnaltered * 0.05));
+    var ghostDeep2 = jupiterPosForUnaltered.clone().add(new THREE.Vector3(-hillRadiusForUnaltered * 0.08, 0, hillRadiusForUnaltered * 0.08));
+    
+    // Impact point - crashes into Jupiter!
+    var ghostImpact = jupiterPosForUnaltered.clone().add(new THREE.Vector3(0, -2, 0));
+    
+    // Create smooth curve for ghost collision course (starts at perihelion only)
+    var ghostCurve = new THREE.CatmullRomCurve3([
+        ghostStart,         // Starts at perihelion (where correction happened)
+        ghostApproach1,
+        ghostApproach2,
+        ghostApproach3,
+        ghostEntry,
+        ghostDeep1,
+        ghostDeep2,
+        ghostImpact         // Crashes into Jupiter
+    ], false, 'catmullrom', 0.4);
+    
+    // Get points along the curve
+    unalteredPoints = ghostCurve.getPoints(200);
+    
+    // Create dashed line for original collision course (reddish to indicate danger)
     var unalteredPositions = new Float32Array(unalteredPoints.length * 3);
     for (var upj = 0; upj < unalteredPoints.length; upj++) {
         unalteredPositions[upj * 3] = unalteredPoints[upj].x;
@@ -1043,23 +1067,48 @@ function orbitBackground() {
     var unalteredGeometry = new THREE.BufferGeometry();
     unalteredGeometry.setAttribute('position', new THREE.BufferAttribute(unalteredPositions, 3));
     var unalteredMaterial = new THREE.PointsMaterial({
-        color: 0x666688,
-        size: 1.0,
+        color: 0xaa6666,  // Reddish color to indicate collision course
+        size: 1.5,
         transparent: true,
-        opacity: 0.25,
+        opacity: 0.35,
         sizeAttenuation: true,
         depthWrite: false
     });
     var unalteredPath = new THREE.Points(unalteredGeometry, unalteredMaterial);
     trajectoryGroup.add(unalteredPath);
     
-    // Add subtle label for unaltered path
-    var unalteredLabel = createTextSprite('UNALTERED TRAJECTORY', '#556677');
-    var labelPos = unalteredPoints[Math.floor(unalteredPoints.length * 0.7)] || new THREE.Vector3(200, 30, 150);
-    unalteredLabel.position.set(labelPos.x + 20, labelPos.y + 15, labelPos.z);
-    unalteredLabel.scale.set(60, 15, 1);
+    // Add a line for the original collision course - reddish dashed
+    var unalteredLineGeometry = new THREE.BufferGeometry().setFromPoints(unalteredPoints);
+    var unalteredLineMaterial = new THREE.LineDashedMaterial({
+        color: 0xaa6666,  // Reddish to indicate danger
+        transparent: true,
+        opacity: 0.25,
+        dashSize: 8,
+        gapSize: 6
+    });
+    var unalteredLine = new THREE.Line(unalteredLineGeometry, unalteredLineMaterial);
+    unalteredLine.computeLineDistances();
+    trajectoryGroup.add(unalteredLine);
+    
+    // Add label for ghost collision course
+    var unalteredLabel = createTextSprite('UNCORRECTED PATH', '#aa6666');
+    var labelPos = unalteredPoints[Math.floor(unalteredPoints.length * 0.4)] || new THREE.Vector3(200, 30, 150);
+    unalteredLabel.position.set(labelPos.x - 25, labelPos.y + 18, labelPos.z);
+    unalteredLabel.scale.set(50, 13, 1);
     trajectoryGroup.add(unalteredLabel);
-    // --- /UNALTERED TRAJECTORY ---
+    
+    // Add "IMPACT" label near Jupiter where ghost path ends
+    var impactLabel = createTextSprite('IMPACT', '#ff4444');
+    impactLabel.position.set(jupiterPosForUnaltered.x - 15, jupiterPosForUnaltered.y + 30, jupiterPosForUnaltered.z);
+    impactLabel.scale.set(35, 10, 1);
+    trajectoryGroup.add(impactLabel);
+    
+    // Add "COURSE CORRECTED" marker near perihelion
+    var correctionLabel = createTextSprite('COURSE CORRECTED', '#66dd66');
+    correctionLabel.position.set(perihelionPos.x + 30, perihelionPos.y + 25, perihelionPos.z);
+    correctionLabel.scale.set(55, 14, 1);
+    trajectoryGroup.add(correctionLabel);
+    // --- /ORIGINAL TRAJECTORY ---
     
     // Make fullPathDots accessible for real orbit update
     window._orbitFullPathDots = fullPathDots;
@@ -1307,6 +1356,17 @@ function orbitBackground() {
     // --- FOCUS MODE WITH LOCK ---
     var focusLocked = false;
     
+    // Camera transition state for smooth switching between modes
+    var cameraTransitioning = false;
+    var cameraTransitionProgress = 0;
+    var cameraTransitionDuration = 1.5; // seconds
+    var cameraTransitionStart = { x: 0, y: 0, z: 0 };
+    var cameraTransitionTarget = { x: 0, y: 0, z: 0 };
+    var cameraTransitionLookStart = { x: 0, y: 0, z: 0 };
+    var cameraTransitionLookTarget = { x: 0, y: 0, z: 0 };
+    var transitionStartTime = 0;
+    var resumeAmbientTweenAfterTransition = false;
+    
     // Lock icon (using ti-unlock/ti-lock icons)
     var lockIcon = document.createElement('span');
     lockIcon.id = 'focus-lock-icon';
@@ -1362,6 +1422,32 @@ function orbitBackground() {
         if (!document.body.classList.contains('bg-focus-mode')) {
             activateFocusMode();
         }
+
+        // Start camera transition to follow comet
+        var currentCurve = (window._orbitTrajectoryData && window._orbitTrajectoryData.curve) || trajectoryCurve;
+        var cometPos = currentCurve.getPoint(animationProgress);
+        
+        cameraTransitionStart.x = camera.position.x;
+        cameraTransitionStart.y = camera.position.y;
+        cameraTransitionStart.z = camera.position.z;
+        
+        // Target: position camera behind/above comet
+        var defaultDir = new THREE.Vector3(0, 0.3, 1).normalize();
+        cameraTransitionTarget.x = cometPos.x + defaultDir.x * 500;
+        cameraTransitionTarget.y = cometPos.y + defaultDir.y * 500;
+        cameraTransitionTarget.z = cometPos.z + defaultDir.z * 500;
+        
+        // Look at transition
+        cameraTransitionLookStart.x = 0;
+        cameraTransitionLookStart.y = 0;
+        cameraTransitionLookStart.z = 0;
+        cameraTransitionLookTarget.x = cometPos.x;
+        cameraTransitionLookTarget.y = cometPos.y;
+        cameraTransitionLookTarget.z = cometPos.z;
+        
+        cameraTransitioning = true;
+        cameraTransitionProgress = 0;
+        transitionStartTime = performance.now();
 
         focusLocked = true;
         
@@ -1429,16 +1515,39 @@ function orbitBackground() {
     }
     
     function unlockFocus() {
+        // Start camera transition back to fixed position
+        cameraTransitionStart.x = camera.position.x;
+        cameraTransitionStart.y = camera.position.y;
+        cameraTransitionStart.z = camera.position.z;
+        
+        // Target: return to bird's eye view position (matching initial camera setup)
+        cameraTransitionTarget.x = -80;
+        cameraTransitionTarget.y = 180;
+        cameraTransitionTarget.z = 220;
+        
+        // Look at transition (from comet to scene center)
+        var currentCurve = (window._orbitTrajectoryData && window._orbitTrajectoryData.curve) || trajectoryCurve;
+        var cometPos = currentCurve.getPoint(animationProgress);
+        cameraTransitionLookStart.x = cometPos.x;
+        cameraTransitionLookStart.y = cometPos.y;
+        cameraTransitionLookStart.z = cometPos.z;
+        cameraTransitionLookTarget.x = 0;
+        cameraTransitionLookTarget.y = 0;
+        cameraTransitionLookTarget.z = 0;
+        
+        cameraTransitioning = true;
+        cameraTransitionProgress = 0;
+        transitionStartTime = performance.now();
+        resumeAmbientTweenAfterTransition = true; // Will resume after transition completes
+        
         focusLocked = false;
         lockIcon.className = 'ti-unlock';
         lockIcon.style.color = '#888';
         lockIcon.title = 'Click to lock focus';
         document.body.classList.remove('focus-locked');
         deactivateFocusMode();
-
-        if (cameraAmbientTween) {
-            cameraAmbientTween.resume();
-        }
+        
+        // Don't resume ambient tween yet - wait for transition to complete
         
         // Fade volume down to 50%
         var audio = document.getElementById('glowmaster-audio');
@@ -1592,7 +1701,7 @@ function orbitBackground() {
             if(m.material) gsap.to(m.material, { duration: 6+ i, opacity: '+=0.03', repeat:-1, yoyo:true, ease:'sine.inOut', delay: 2 + i*0.3 });
         });
         gsap.to(jupiterGroup.rotation, { duration: 40, y: '+=6.283', repeat: -1, ease: 'none' });
-        cameraAmbientTween = gsap.to(camera.position, { duration: 12, y: '+=20', x: '-=15', repeat: -1, yoyo: true, ease: 'sine.inOut', onUpdate: function(){ camera.lookAt(0,0,0); } });
+        cameraAmbientTween = gsap.to(camera.position, { duration: 12, y: '+=20', x: '-=15', repeat: -1, yoyo: true, ease: 'sine.inOut', onUpdate: function(){ if (!cameraTransitioning && !focusLocked) camera.lookAt(0,0,0); } });
         gsap.to(infoDiv, { duration: 3, boxShadow: '0 0 40px rgba(0,255,255,0.35), inset 0 0 25px rgba(0,255,255,0.08)', repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 4});
     }
 
@@ -1609,8 +1718,65 @@ function orbitBackground() {
         var cometPos = currentCurve.getPoint(animationProgress);
         cometGroup.position.copy(cometPos);
         
-        // Camera control based on focus state
-        if (focusLocked) {
+        // Smooth easing function for camera transitions
+        function easeInOutCubic(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+        
+        // Camera control based on focus state and transition
+        if (cameraTransitioning) {
+            // Smooth camera transition between modes
+            var elapsed = (performance.now() - transitionStartTime) / 1000;
+            cameraTransitionProgress = Math.min(elapsed / cameraTransitionDuration, 1);
+            var eased = easeInOutCubic(cameraTransitionProgress);
+            
+            // Interpolate camera position
+            camera.position.x = cameraTransitionStart.x + (cameraTransitionTarget.x - cameraTransitionStart.x) * eased;
+            camera.position.y = cameraTransitionStart.y + (cameraTransitionTarget.y - cameraTransitionStart.y) * eased;
+            camera.position.z = cameraTransitionStart.z + (cameraTransitionTarget.z - cameraTransitionStart.z) * eased;
+            
+            // Interpolate look-at target
+            var lookX = cameraTransitionLookStart.x + (cameraTransitionLookTarget.x - cameraTransitionLookStart.x) * eased;
+            var lookY = cameraTransitionLookStart.y + (cameraTransitionLookTarget.y - cameraTransitionLookStart.y) * eased;
+            var lookZ = cameraTransitionLookStart.z + (cameraTransitionLookTarget.z - cameraTransitionLookStart.z) * eased;
+            camera.lookAt(lookX, lookY, lookZ);
+            
+            // Update transition target for focus mode (comet moves during transition)
+            if (focusLocked) {
+                var defaultDir = new THREE.Vector3(0, 0.3, 1).normalize();
+                cameraTransitionTarget.x = cometPos.x + defaultDir.x * focusZoomDistance;
+                cameraTransitionTarget.y = cometPos.y + defaultDir.y * focusZoomDistance;
+                cameraTransitionTarget.z = cometPos.z + defaultDir.z * focusZoomDistance;
+                cameraTransitionLookTarget.x = cometPos.x;
+                cameraTransitionLookTarget.y = cometPos.y;
+                cameraTransitionLookTarget.z = cometPos.z;
+            }
+            
+            // End transition
+            if (cameraTransitionProgress >= 1) {
+                cameraTransitioning = false;
+                
+                // Resume ambient tween after unlocking transition completes
+                if (resumeAmbientTweenAfterTransition && cameraAmbientTween) {
+                    // Kill old tween and create new one from current position
+                    cameraAmbientTween.kill();
+                    cameraAmbientTween = gsap.to(camera.position, { 
+                        duration: 12, 
+                        y: '+=20', 
+                        x: '-=15', 
+                        repeat: -1, 
+                        yoyo: true, 
+                        ease: 'sine.inOut', 
+                        onUpdate: function(){ 
+                            if (!cameraTransitioning && !focusLocked) {
+                                camera.lookAt(0,0,0); 
+                            }
+                        } 
+                    });
+                    resumeAmbientTweenAfterTransition = false;
+                }
+            }
+        } else if (focusLocked) {
             // When focus locked, position camera at focusZoomDistance from comet
             // Calculate direction from comet to current camera position
             var dirX = camera.position.x - cometPos.x;
@@ -1773,6 +1939,18 @@ function orbitBackground() {
         // Animate closest approach marker
         closestApproachRing.rotation.z = -time * 1.5;
         closestApproachRingMaterial.opacity = 0.4 + Math.sin(time * 3 + 1) * 0.2;
+        
+        // Animate Hill sphere entry marker
+        hillEntryRing.rotation.z = time * 2;
+        hillEntryGlowMaterial.opacity = 0.3 + Math.sin(time * 4) * 0.2;
+        hillEntryOuterGlowMaterial.opacity = 0.1 + Math.sin(time * 3 + 0.5) * 0.08;
+        hillEntryRingMaterial.opacity = 0.4 + Math.sin(time * 4 + 1) * 0.25;
+        
+        // Animate Hill sphere exit marker
+        hillExitRing.rotation.z = -time * 2;
+        hillExitGlowMaterial.opacity = 0.3 + Math.sin(time * 4 + 2) * 0.2;
+        hillExitOuterGlowMaterial.opacity = 0.1 + Math.sin(time * 3 + 2.5) * 0.08;
+        hillExitRingMaterial.opacity = 0.4 + Math.sin(time * 4 + 3) * 0.25;
 
         targetRotation.x = mouse.y * 0.15;
         targetRotation.y = mouse.x * 0.25;
