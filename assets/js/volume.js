@@ -20,6 +20,9 @@ function universal_volume_slider_setup() {
         sliderWrapper.id = 'volume-slider-wrapper';
         sliderWrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:0;height:0;width:24px;overflow:hidden;opacity:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);';
 	
+        // Volume icon reference (created later but declared here for scope)
+        var volumeIcon = null;
+        
         // Canvas-based volume slider
         var volumeCanvas = document.createElement('canvas');
         volumeCanvas.id = 'global-volume-slider';
@@ -112,6 +115,44 @@ function universal_volume_slider_setup() {
         // Canvas interaction
         var isDragging = false;
         
+        // Track expanded state
+        var isExpanded = false;
+        var collapseTimeout = null;
+        
+        function expandSlider() {
+            // Clear any pending collapse
+            if (collapseTimeout) {
+                clearTimeout(collapseTimeout);
+                collapseTimeout = null;
+            }
+            isExpanded = true;
+            sliderWrapper.style.height = '80px';
+            sliderWrapper.style.opacity = '1';
+            sliderWrapper.style.marginBottom = '0';
+            if (volumeIcon) volumeIcon.style.color = '#c7e3ff';
+        }
+        
+        function collapseSlider() {
+            isExpanded = false;
+            sliderWrapper.style.height = '0';
+            sliderWrapper.style.opacity = '0';
+            sliderWrapper.style.marginBottom = '0';
+            if (volumeIcon) volumeIcon.style.color = '#9cb6d6';
+        }
+        
+        function collapseSliderDelayed() {
+            // Clear any existing timeout
+            if (collapseTimeout) {
+                clearTimeout(collapseTimeout);
+            }
+            // Delay collapse by 800ms
+            collapseTimeout = setTimeout(function() {
+                if (!isDragging) {
+                    collapseSlider();
+                }
+            }, 800);
+        }
+        
         function getVolumeFromY(y) {
             var padding = 8;
             var barHeight = volumeCanvas.height - padding * 2;
@@ -155,12 +196,48 @@ function universal_volume_slider_setup() {
         
         volumeCanvas.addEventListener('mousedown', function(e) {
             isDragging = true;
+            expandSlider(); // Ensure slider stays expanded while dragging
             handleVolumeChange(e);
+            e.stopPropagation();
+        });
+        
+        // Click on canvas to set volume immediately (for single clicks)
+        volumeCanvas.addEventListener('click', function(e) {
+            handleVolumeChange(e);
+            e.stopPropagation();
+        });
+        
+        // Also handle clicks on the slider wrapper (larger hit area)
+        sliderWrapper.addEventListener('click', function(e) {
+            // Calculate volume based on click position relative to wrapper
+            var rect = sliderWrapper.getBoundingClientRect();
+            var padding = 8;
+            var barHeight = volumeCanvas.height - padding * 2;
+            var y = e.clientY - rect.top - padding;
+            var relY = Math.max(0, Math.min(barHeight, y));
+            var vol = Math.round((1 - relY / barHeight) * 100);
+            vol = Math.max(0, Math.min(100, vol));
+            
+            globalVolume = vol / 100;
+            animatedVol = vol;
+            targetVol = vol;
+            drawVolumeSlider(vol);
+            
+            var audio = document.getElementById('glowmaster-audio');
+            if (audio) {
+                if (globalAudioFadeInterval) {
+                    clearInterval(globalAudioFadeInterval);
+                    globalAudioFadeInterval = null;
+                }
+                audio.volume = globalVolume;
+            }
+            updateGlobalVolumeDisplay(vol);
             e.stopPropagation();
         });
         
         volumeCanvas.addEventListener('touchstart', function(e) {
             isDragging = true;
+            expandSlider(); // Ensure slider stays expanded while dragging
             handleVolumeChange(e);
             e.preventDefault();
             e.stopPropagation();
@@ -180,17 +257,27 @@ function universal_volume_slider_setup() {
         }, { passive: false });
         
         document.addEventListener('mouseup', function() {
-            isDragging = false;
+            if (isDragging) {
+                isDragging = false;
+                // Delayed collapse after drag ends
+                var container = document.getElementById('volume-slider-container');
+                if (container && !container.matches(':hover')) {
+                    collapseSliderDelayed();
+                }
+            }
         });
         
         document.addEventListener('touchend', function() {
-            isDragging = false;
+            if (isDragging) {
+                isDragging = false;
+                collapseSliderDelayed();
+            }
         });
 	
 	volumeContainer.appendChild(sliderWrapper);
 	
 	// Volume icon (visible when collapsed) - now on bottom
-        var volumeIcon = document.createElement('span');
+        volumeIcon = document.createElement('span');
         volumeIcon.id = 'volume-icon';
         volumeIcon.style.cssText = 'color:#9cb6d6;font-size:16px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;';
         // Set initial SVG based on volume
@@ -199,19 +286,56 @@ function universal_volume_slider_setup() {
 	
 	document.body.appendChild(volumeContainer);
 	
-	// Expand on hover (vertical)
+	// Expand on hover (vertical) - for mouse users
 	volumeContainer.addEventListener('mouseenter', function() {
-                sliderWrapper.style.height = '80px';
-                sliderWrapper.style.opacity = '1';
-                sliderWrapper.style.marginBottom = '0';
-                volumeIcon.style.color = '#c7e3ff';
-        });
-        volumeContainer.addEventListener('mouseleave', function() {
-                sliderWrapper.style.height = '0';
-                sliderWrapper.style.opacity = '0';
-                sliderWrapper.style.marginBottom = '0';
-                volumeIcon.style.color = '#9cb6d6';
-        });
+		expandSlider();
+	});
+	volumeContainer.addEventListener('mouseleave', function() {
+		// Don't collapse if currently dragging the slider
+		if (!isDragging) {
+			collapseSliderDelayed();
+		}
+	});
+	
+	// Pointer events for all input types (mouse, touch, pen)
+	volumeContainer.addEventListener('pointerdown', function(e) {
+		expandSlider();
+	});
+	
+	// Keep slider visible while dragging, collapse when done (if pointer outside)
+	document.addEventListener('pointerup', function(e) {
+		if (isDragging) {
+			setTimeout(function() {
+				var container = document.getElementById('volume-slider-container');
+				if (container && !container.matches(':hover')) {
+					collapseSliderDelayed();
+				}
+			}, 50);
+		}
+		// Also collapse if pointer up outside container
+		if (isExpanded && !volumeContainer.contains(e.target) && !isDragging) {
+			collapseSliderDelayed();
+		}
+	});
+	
+	// Touch support - expand immediately on any touch to the container
+	volumeContainer.addEventListener('touchstart', function(e) {
+		expandSlider();
+	}, { passive: true });
+	
+	// Collapse with delay when touch ends (if not dragging slider)
+	volumeContainer.addEventListener('touchend', function(e) {
+		if (!isDragging) {
+			collapseSliderDelayed();
+		}
+	}, { passive: true });
+	
+	// Also collapse when touch leaves the container area
+	document.addEventListener('touchend', function(e) {
+		if (isExpanded && !volumeContainer.contains(e.target) && !isDragging) {
+			collapseSliderDelayed();
+		}
+	}, { passive: true });
 
 	// Track for auto-hide timeout
 	var volumeAutoHideTimeout = null;
@@ -260,16 +384,7 @@ function universal_volume_slider_setup() {
 	}, 100);
 	
 	function showGlobalVolumeSliderTemporarily() {
-		var wrapper = document.getElementById('volume-slider-wrapper');
-		var icon = document.getElementById('volume-icon');
-		if (wrapper) {
-                        wrapper.style.height = '80px';
-                        wrapper.style.opacity = '1';
-                        wrapper.style.marginBottom = '0';
-		}
-		if (icon) {
-			icon.style.color = '#aaddff';
-		}
+		expandSlider();
 		// Clear existing timeout
 		if (volumeAutoHideTimeout) {
 			clearTimeout(volumeAutoHideTimeout);
@@ -279,17 +394,10 @@ function universal_volume_slider_setup() {
 			// Only hide if not being hovered
 			var container = document.getElementById('volume-slider-container');
 			if (container && !container.matches(':hover')) {
-				if (wrapper) {
-                                        wrapper.style.height = '0';
-                                        wrapper.style.opacity = '0';
-                                        wrapper.style.marginBottom = '0';
-                                }
-                                if (icon) {
-                                        icon.style.color = '#9cb6d6';
-                                }
-                        }
-                }, 2000);
-        }
+				collapseSlider();
+			}
+		}, 2000);
+	}
 }
 
 function updateGlobalVolumeDisplay(vol) {
