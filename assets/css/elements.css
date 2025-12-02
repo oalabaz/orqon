@@ -44,6 +44,8 @@
     justify-content: center;
     align-items: center;
     opacity: 1;
+	padding: 10px;
+	box-sizing: border-box;
     transition: opacity 0.5s ease, visibility 0.5s ease;
 }
 
@@ -69,9 +71,10 @@
 	width: min(640px, 92vw);
     max-height: 85vh;
     overflow-y: auto;
+	box-sizing: border-box;
     background: rgba(8, 12, 18, 0.92);
     border: 1px solid rgba(100, 180, 255, 0.25);
-    border-radius: 4px;
+	border-radius: 8px;
     box-shadow: 
         0 0 60px rgba(0, 200, 255, 0.15),
         0 0 120px rgba(0, 150, 255, 0.08),
@@ -197,7 +200,7 @@
 @media (max-width: 768px) {
 	.entrance-modal {
 		align-items: flex-start;
-		padding: 1.5rem 1.25rem;
+		padding: max(10px, 1.5rem) max(10px, 1.25rem);
 	}
 
 	.entrance-modal-panel {
@@ -216,7 +219,7 @@
 
 @media (max-width: 480px) {
 	.entrance-modal {
-		padding: 1rem;
+		padding: max(10px, 1rem);
 	}
 
 	.entrance-modal-panel {

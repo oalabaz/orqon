@@ -33,6 +33,24 @@ if (isIpadOS()) is_mobile_device = true
 // --- ENTRANCE MODAL --- //
 var glowmasterAudio = null;
 
+function loadEntranceModalPartial() {
+	var container = document.getElementById('entrance-modal-container');
+	if (!container) return Promise.resolve();
+
+	// Fetch modal markup once so modal logic can bind to real elements
+	return fetch('entrance-modal.html')
+		.then(function(response) {
+			if (!response.ok) throw new Error('Failed to fetch entrance-modal.html');
+			return response.text();
+		})
+		.then(function(html) {
+			container.innerHTML = html;
+		})
+		.catch(function(error) {
+			console.warn('Unable to load entrance modal:', error);
+		});
+}
+
 function entrance_modal_setup() {
 	var modal = document.getElementById('entrance-modal');
 	var closeBtn = document.getElementById('modal-close');
@@ -146,7 +164,8 @@ function core_init() {
 	entrance_modal_setup() // --- ENTRANCE MODAL ---
 	universal_volume_slider_setup() // --- UNIVERSAL VOLUME SLIDER ---
 }
-core_init()
+
+loadEntranceModalPartial().finally(core_init)
 
 /** 2. Page Loading
  *******************************************************************/
