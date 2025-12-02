@@ -120,9 +120,20 @@ function universal_volume_slider_setup() {
             return Math.max(0, Math.min(100, vol));
         }
         
+        function getClientYFromEvent(e) {
+            if (e.touches && e.touches.length) {
+                return e.touches[0].clientY;
+            }
+            if (e.changedTouches && e.changedTouches.length) {
+                return e.changedTouches[0].clientY;
+            }
+            return e.clientY;
+        }
+        
         function handleVolumeChange(e) {
             var rect = volumeCanvas.getBoundingClientRect();
-            var y = e.clientY - rect.top;
+            var clientY = getClientYFromEvent(e);
+            var y = clientY - rect.top;
             var vol = getVolumeFromY(y);
             
             globalVolume = vol / 100;
@@ -148,13 +159,31 @@ function universal_volume_slider_setup() {
             e.stopPropagation();
         });
         
+        volumeCanvas.addEventListener('touchstart', function(e) {
+            isDragging = true;
+            handleVolumeChange(e);
+            e.preventDefault();
+            e.stopPropagation();
+        }, { passive: false });
+        
         document.addEventListener('mousemove', function(e) {
             if (isDragging) {
                 handleVolumeChange(e);
             }
         });
         
+        document.addEventListener('touchmove', function(e) {
+            if (isDragging) {
+                handleVolumeChange(e);
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
         document.addEventListener('mouseup', function() {
+            isDragging = false;
+        });
+        
+        document.addEventListener('touchend', function() {
             isDragging = false;
         });
 	
