@@ -13,12 +13,12 @@ function universal_volume_slider_setup() {
 	
         var volumeContainer = document.createElement('div');
         volumeContainer.id = 'volume-slider-container';
-        volumeContainer.style.cssText = 'position:fixed;top:50%;left:20px;transform:translateY(-50%);background:rgba(9,14,22,0.92);padding:10px;border-radius:24px;border:1px solid rgba(120,140,170,0.28);box-shadow:0 6px 24px rgba(0,0,0,0.35);backdrop-filter:blur(8px);z-index:1000;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);cursor:pointer;overflow:hidden;';
+        volumeContainer.style.cssText = 'position:fixed;top:50%;left:20px;transform:translateY(-50%);background:rgba(9,14,22,0.92);padding:6px;border-radius:9999px;border:1px solid rgba(120,140,170,0.28);box-shadow:0 6px 24px rgba(0,0,0,0.35);backdrop-filter:blur(8px);z-index:1000;display:flex;flex-direction:column;align-items:center;gap:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);cursor:pointer;overflow:hidden;';
 	
 	// Slider wrapper (hidden when collapsed) - now on top
         var sliderWrapper = document.createElement('div');
         sliderWrapper.id = 'volume-slider-wrapper';
-        sliderWrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:0;height:0;width:24px;overflow:hidden;opacity:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);';
+        sliderWrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:0;height:0;width:44px;overflow:hidden;opacity:0;box-sizing:border-box;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);';
 	
         // Volume icon reference (created later but declared here for scope)
         var volumeIcon = null;
@@ -27,7 +27,7 @@ function universal_volume_slider_setup() {
         var volumeCanvas = document.createElement('canvas');
         volumeCanvas.id = 'global-volume-slider';
         volumeCanvas.width = 24;
-        volumeCanvas.height = 80;
+        volumeCanvas.height = 100;
         volumeCanvas.style.cssText = 'cursor:pointer;';
         sliderWrapper.appendChild(volumeCanvas);
         
@@ -126,7 +126,8 @@ function universal_volume_slider_setup() {
                 collapseTimeout = null;
             }
             isExpanded = true;
-            sliderWrapper.style.height = '80px';
+            sliderWrapper.style.height = '110px';
+            sliderWrapper.style.paddingTop = '10px';
             sliderWrapper.style.opacity = '1';
             sliderWrapper.style.marginBottom = '0';
             if (volumeIcon) volumeIcon.style.color = '#c7e3ff';
@@ -135,6 +136,7 @@ function universal_volume_slider_setup() {
         function collapseSlider() {
             isExpanded = false;
             sliderWrapper.style.height = '0';
+            sliderWrapper.style.paddingTop = '0';
             sliderWrapper.style.opacity = '0';
             sliderWrapper.style.marginBottom = '0';
             if (volumeIcon) volumeIcon.style.color = '#9cb6d6';
@@ -202,15 +204,12 @@ function universal_volume_slider_setup() {
             e.stopPropagation();
         });
         
-        // Allow dragging from anywhere on the slider wrapper
-        sliderWrapper.addEventListener('mousedown', function(e) {
-            isDragging = true;
-            expandSlider();
-            // Calculate volume from wrapper position
-            var rect = sliderWrapper.getBoundingClientRect();
+        // Helper to handle volume from wrapper/canvas position
+        function handleVolumeFromPosition(clientY) {
+            var rect = volumeCanvas.getBoundingClientRect();
             var padding = 8;
             var barHeight = volumeCanvas.height - padding * 2;
-            var y = e.clientY - rect.top - padding;
+            var y = clientY - rect.top - padding;
             var relY = Math.max(0, Math.min(barHeight, y));
             var vol = Math.round((1 - relY / barHeight) * 100);
             vol = Math.max(0, Math.min(100, vol));
@@ -229,9 +228,26 @@ function universal_volume_slider_setup() {
                 audio.volume = globalVolume;
             }
             updateGlobalVolumeDisplay(vol);
+        }
+        
+        // Allow dragging from anywhere on the slider wrapper
+        sliderWrapper.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            expandSlider();
+            handleVolumeFromPosition(e.clientY);
             e.preventDefault();
             e.stopPropagation();
         });
+        
+        // Touch support for slider wrapper
+        sliderWrapper.addEventListener('touchstart', function(e) {
+            isDragging = true;
+            expandSlider();
+            var clientY = getClientYFromEvent(e);
+            handleVolumeFromPosition(clientY);
+            e.preventDefault();
+            e.stopPropagation();
+        }, { passive: false });
         
         // Click on canvas to set volume immediately (for single clicks)
         volumeCanvas.addEventListener('click', function(e) {
@@ -241,29 +257,7 @@ function universal_volume_slider_setup() {
         
         // Also handle clicks on the slider wrapper (larger hit area)
         sliderWrapper.addEventListener('click', function(e) {
-            // Calculate volume based on click position relative to wrapper
-            var rect = sliderWrapper.getBoundingClientRect();
-            var padding = 8;
-            var barHeight = volumeCanvas.height - padding * 2;
-            var y = e.clientY - rect.top - padding;
-            var relY = Math.max(0, Math.min(barHeight, y));
-            var vol = Math.round((1 - relY / barHeight) * 100);
-            vol = Math.max(0, Math.min(100, vol));
-            
-            globalVolume = vol / 100;
-            animatedVol = vol;
-            targetVol = vol;
-            drawVolumeSlider(vol);
-            
-            var audio = document.getElementById('glowmaster-audio');
-            if (audio) {
-                if (globalAudioFadeInterval) {
-                    clearInterval(globalAudioFadeInterval);
-                    globalAudioFadeInterval = null;
-                }
-                audio.volume = globalVolume;
-            }
-            updateGlobalVolumeDisplay(vol);
+            handleVolumeFromPosition(e.clientY);
             e.stopPropagation();
         });
         
@@ -311,9 +305,37 @@ function universal_volume_slider_setup() {
 	// Volume icon (visible when collapsed) - now on bottom
         volumeIcon = document.createElement('span');
         volumeIcon.id = 'volume-icon';
-        volumeIcon.style.cssText = 'color:#9cb6d6;font-size:16px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;';
+        volumeIcon.style.cssText = 'color:#9cb6d6;font-size:16px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;cursor:pointer;';
         // Set initial SVG based on volume
         updateVolumeIconSVG(volumeIcon, Math.round(globalVolume * 100));
+        
+        // Click on icon to toggle mute/unmute
+        volumeIcon.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var audio = document.getElementById('glowmaster-audio');
+            
+            if (globalVolume > 0) {
+                // Mute: store current volume and set to 0
+                volumeBeforeMute = globalVolume;
+                globalVolume = 0;
+            } else {
+                // Unmute: restore previous volume (default to 0.5 if was 0)
+                globalVolume = volumeBeforeMute > 0 ? volumeBeforeMute : 0.5;
+            }
+            
+            var newVol = Math.round(globalVolume * 100);
+            animateToVolume(newVol);
+            
+            if (audio) {
+                if (globalAudioFadeInterval) {
+                    clearInterval(globalAudioFadeInterval);
+                    globalAudioFadeInterval = null;
+                }
+                audio.volume = globalVolume;
+            }
+            updateGlobalVolumeDisplay(newVol);
+        });
+        
         volumeContainer.appendChild(volumeIcon);
 	
 	document.body.appendChild(volumeContainer);
@@ -445,16 +467,16 @@ function updateVolumeIconSVG(icon, vol) {
 	var svg = '';
 	if (vol === 0) {
 		// FiVolumeX - muted with X
-		svg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>';
+		svg = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>';
 	} else if (vol <= 33) {
 		// FiVolume - low (no waves)
-		svg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon></svg>';
+		svg = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon></svg>';
 	} else if (vol <= 66) {
 		// FiVolume1 - medium (one wave)
-		svg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>';
+		svg = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>';
 	} else {
 		// FiVolume2 - high (two waves)
-		svg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>';
+		svg = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>';
 	}
 	icon.innerHTML = svg;
 }
@@ -463,7 +485,7 @@ function showGlobalVolumeSlider() {
 	var wrapper = document.getElementById('volume-slider-wrapper');
 	var icon = document.getElementById('volume-icon');
 	if (wrapper) {
-		wrapper.style.height = '80px';
+		wrapper.style.height = '110px';
 		wrapper.style.opacity = '1';
 		wrapper.style.marginBottom = '0';
 	}
