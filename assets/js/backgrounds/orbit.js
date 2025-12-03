@@ -2092,10 +2092,11 @@ function orbitBackground() {
             glowIntensity = 15 + Math.sin(pulseSpeed * 1.5) * 5;
             infoDiv.style.borderColor = 'rgba(255, 215, 0, 0.7)';
         } else if (inHillSphere) {
-            // Inside Hill sphere - yellow/gold warning glow
-            glowColor = 'rgba(204, 180, 100, ' + pulse + ')';
-            glowIntensity = 12 + Math.sin(pulseSpeed) * 4;
-            infoDiv.style.borderColor = 'rgba(204, 180, 100, 0.6)';
+            // Inside Hill sphere - bright cyan/teal glow like perihelion
+            var hillPulse = 0.5 + Math.sin(pulseSpeed * 1.5) * 0.4;
+            glowColor = 'rgba(100, 220, 255, ' + hillPulse + ')';
+            glowIntensity = 15 + Math.sin(pulseSpeed * 1.5) * 5;
+            infoDiv.style.borderColor = 'rgba(100, 220, 255, 0.7)';
         } else if (approachingHill) {
             // Approaching - soft amber glow
             glowColor = 'rgba(170, 150, 100, ' + (pulse * 0.7) + ')';
