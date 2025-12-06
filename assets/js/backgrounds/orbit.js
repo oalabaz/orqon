@@ -888,43 +888,71 @@ function orbitBackground() {
     scene.add(cometGroup);
 
     // --- COMET DUST TAIL ---
-    var tailParticleCount = 800;
+    var tailParticleCount = 400;
     var tailGeometry = new THREE.BufferGeometry();
     var tailPositions = new Float32Array(tailParticleCount * 3);
     var tailColors = new Float32Array(tailParticleCount * 3);
-    var tailSizes = new Float32Array(tailParticleCount);
+    
+    // Pre-calculate static offsets for particles
+    var tailOffsets = new Float32Array(tailParticleCount * 3);
+    for (var ti = 0; ti < tailParticleCount; ti++) {
+        tailOffsets[ti * 3] = (Math.random() - 0.5) * 2;
+        tailOffsets[ti * 3 + 1] = (Math.random() - 0.5) * 2;
+        tailOffsets[ti * 3 + 2] = (Math.random() - 0.5) * 2;
+        // Initialize colors (cyan gradient)
+        var fade = 1 - (ti / tailParticleCount);
+        tailColors[ti * 3] = 0.5 + fade * 0.5;
+        tailColors[ti * 3 + 1] = 0.7 + fade * 0.3;
+        tailColors[ti * 3 + 2] = 1.0;
+    }
     
     tailGeometry.setAttribute('position', new THREE.BufferAttribute(tailPositions, 3));
     tailGeometry.setAttribute('color', new THREE.BufferAttribute(tailColors, 3));
-    tailGeometry.setAttribute('size', new THREE.BufferAttribute(tailSizes, 1));
     
+    // Simple PointsMaterial - reliable and performant
     var tailMaterial = new THREE.PointsMaterial({
-        size: 3.5,
+        size: 4,
         vertexColors: true,
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.7,
         sizeAttenuation: true,
         depthWrite: false,
         blending: THREE.AdditiveBlending
     });
     var tailParticles = new THREE.Points(tailGeometry, tailMaterial);
-    tailParticles.frustumCulled = false;  // Always render, never cull
-    tailParticles.renderOrder = 100;  // Render on top
+    tailParticles.frustumCulled = false;
+    tailParticles.renderOrder = 100;
     scene.add(tailParticles);
-
+    
     // --- ION TAIL ---
+    var ionSegments = 30;
     var ionTailGeometry = new THREE.BufferGeometry();
+    var ionPositions = new Float32Array((ionSegments + 1) * 3);
+    ionTailGeometry.setAttribute('position', new THREE.BufferAttribute(ionPositions, 3));
+    
     var ionTailMaterial = new THREE.LineBasicMaterial({
-        color: 0x88aacc,
+        color: 0x6699ff,
         transparent: true,
-        opacity: 0.5,
+        opacity: 0.6,
         linewidth: 2,
         depthWrite: false
     });
     var ionTail = new THREE.Line(ionTailGeometry, ionTailMaterial);
-    ionTail.frustumCulled = false;  // Always render, never cull
-    ionTail.renderOrder = 99;  // Render just below dust tail
+    ionTail.frustumCulled = false;
+    ionTail.renderOrder = 99;
     scene.add(ionTail);
+    
+    // --- SIMPLE COMA GLOW (no shader) ---
+    var comaHaloGeometry = new THREE.SphereGeometry(18, 16, 16);  // Reduced segments
+    var comaHaloMaterial = new THREE.MeshBasicMaterial({
+        color: 0x6699bb,
+        transparent: true,
+        opacity: 0.15,
+        side: THREE.BackSide,
+        depthWrite: false
+    });
+    var comaHalo = new THREE.Mesh(comaHaloGeometry, comaHaloMaterial);
+    cometGroup.add(comaHalo);
 
     // --- TRAJECTORY PATH ---
     var trajectoryGroup = new THREE.Group();
@@ -1975,47 +2003,104 @@ function orbitBackground() {
         var distToHillEdge = Math.max(0, distToJupiter - jupiterHillRadius);
         
         var sunDir = cometPos.clone().normalize();
-        var tailLength = Math.max(50, 180 / Math.max(0.5, distFromSun));  // Longer tail
+        var tailLength = Math.max(80, 250 / Math.max(0.5, distFromSun));
         
         var positions = tailParticles.geometry.attributes.position.array;
         var colors = tailParticles.geometry.attributes.color.array;
-        var sizes = tailParticles.geometry.attributes.size.array;
         
-        // Update particles for smooth motion
+        // Tail points AWAY from sun
+        var tailDirX = sunDir.x;
+        var tailDirY = sunDir.y;
+        var tailDirZ = sunDir.z;
+        
+        // Create orthonormal basis for 3D volumetric spread
+        // Find a vector not parallel to tailDir for cross product
+        var upX = 0, upY = 1, upZ = 0;
+        if (Math.abs(tailDirY) > 0.9) { upX = 1; upY = 0; upZ = 0; }
+        
+        // First perpendicular (cross product: up × tailDir)
+        var perp1X = upY * tailDirZ - upZ * tailDirY;
+        var perp1Y = upZ * tailDirX - upX * tailDirZ;
+        var perp1Z = upX * tailDirY - upY * tailDirX;
+        var perp1Len = Math.sqrt(perp1X * perp1X + perp1Y * perp1Y + perp1Z * perp1Z);
+        perp1X /= perp1Len; perp1Y /= perp1Len; perp1Z /= perp1Len;
+        
+        // Second perpendicular (cross product: tailDir × perp1)
+        var perp2X = tailDirY * perp1Z - tailDirZ * perp1Y;
+        var perp2Y = tailDirZ * perp1X - tailDirX * perp1Z;
+        var perp2Z = tailDirX * perp1Y - tailDirY * perp1X;
+        
         for (var i = 0; i < tailParticleCount; i++) {
-                var t = i / tailParticleCount;
-                var spread = t * 25;  // Wider spread
-                var length = t * tailLength;
-                
-                positions[i * 3] = cometPos.x + sunDir.x * length + (Math.random() - 0.5) * spread;
-                positions[i * 3 + 1] = cometPos.y + sunDir.y * length + (Math.random() - 0.5) * spread * 0.5;
-                positions[i * 3 + 2] = cometPos.z + sunDir.z * length + (Math.random() - 0.5) * spread;
-                
-                var fade = 1 - t;
-                var brightness = 0.6 + fade * 0.4;  // Brighter
-                colors[i * 3] = brightness * 0.85;
-                colors[i * 3 + 1] = brightness * 0.92;
-                colors[i * 3 + 2] = brightness;
-                
-                sizes[i] = (1 - t * 0.6) * 5;  // Larger particles
-            }
-            tailParticles.geometry.attributes.position.needsUpdate = true;
-            tailParticles.geometry.attributes.color.needsUpdate = true;
-            tailParticles.geometry.attributes.size.needsUpdate = true;
-
-        var ionPoints = [];
-        var ionLength = tailLength * 1.8;  // Longer ion tail
-        for (var i = 0; i <= 30; i++) {  // More points for smoother line
-            var t = i / 30;
-            ionPoints.push(
-                cometPos.x + sunDir.x * t * ionLength,
-                cometPos.y + sunDir.y * t * ionLength,
-                cometPos.z + sunDir.z * t * ionLength
-            );
+            var t = i / tailParticleCount;
+            
+            // Animated flow - particles drift outward over time
+            var flowOffset = (time * 0.5 + i * 0.01) % 1.0;
+            var animT = (t + flowOffset) % 1.0;
+            
+            var length = animT * tailLength;
+            var spread = animT * 30; // Increased spread for more volume
+            var curveAmount = animT * animT * 10;
+            
+            // Get pre-computed random offsets (range -1 to 1)
+            var offX = tailOffsets[i * 3];
+            var offY = tailOffsets[i * 3 + 1];
+            var offZ = tailOffsets[i * 3 + 2];
+            
+            // Convert to cylindrical-ish 3D distribution around tail axis
+            var angle = offX * Math.PI + time * 0.3 + i * 0.05; // Rotating spiral
+            var radius = (0.3 + offY * 0.7) * spread; // Radial distance from tail axis
+            var axialJitter = offZ * spread * 0.3; // Jitter along tail direction
+            
+            // Subtle wave motion in 3D
+            var wave = Math.sin(time * 2 + i * 0.1) * animT * 2;
+            var wave2 = Math.cos(time * 1.5 + i * 0.15) * animT * 2;
+            
+            // Position = comet + along tail + radial spread in perp1/perp2 plane + curve
+            var radialX = Math.cos(angle) * radius;
+            var radialY = Math.sin(angle) * radius;
+            
+            positions[i * 3] = cometPos.x + tailDirX * (length + axialJitter) 
+                + perp1X * (radialX + wave) + perp2X * (radialY + wave2) + tailDirX * curveAmount * 0.5;
+            positions[i * 3 + 1] = cometPos.y + tailDirY * (length + axialJitter) 
+                + perp1Y * (radialX + wave) + perp2Y * (radialY + wave2);
+            positions[i * 3 + 2] = cometPos.z + tailDirZ * (length + axialJitter) 
+                + perp1Z * (radialX + wave) + perp2Z * (radialY + wave2) + tailDirZ * curveAmount * 0.5;
+            
+            // Animated color - particles fade as they flow outward
+            var fade = 1 - animT;
+            var shimmer = 0.8 + Math.sin(time * 4 + i * 0.2) * 0.2;
+            colors[i * 3] = (0.5 + fade * 0.5) * shimmer;
+            colors[i * 3 + 1] = (0.7 + fade * 0.3) * shimmer;
+            colors[i * 3 + 2] = shimmer;
         }
-        ionTailGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(ionPoints), 3));
+        tailParticles.geometry.attributes.position.needsUpdate = true;
+        tailParticles.geometry.attributes.color.needsUpdate = true;
 
-        comaMesh.scale.setScalar(1 + Math.sin(time * 3) * 0.15);
+        // Ion tail with 3D wave animation - uses same perp basis
+        var ionLength = tailLength * 1.5;
+        var ionPosAttr = ionTailGeometry.attributes.position.array;
+        
+        for (var ion = 0; ion <= ionSegments; ion++) {
+            var ionT = ion / ionSegments;
+            // 3D spiral wave effect
+            var ionAngle = time * 2 + ionT * 8;
+            var ionWaveRadius = ionT * ionT * 6;
+            var ionWaveX = Math.cos(ionAngle) * ionWaveRadius;
+            var ionWaveY = Math.sin(ionAngle) * ionWaveRadius;
+            
+            ionPosAttr[ion * 3] = cometPos.x + tailDirX * ionT * ionLength 
+                + perp1X * ionWaveX + perp2X * ionWaveY;
+            ionPosAttr[ion * 3 + 1] = cometPos.y + tailDirY * ionT * ionLength 
+                + perp1Y * ionWaveX + perp2Y * ionWaveY;
+            ionPosAttr[ion * 3 + 2] = cometPos.z + tailDirZ * ionT * ionLength 
+                + perp1Z * ionWaveX + perp2Z * ionWaveY;
+        }
+        ionTailGeometry.attributes.position.needsUpdate = true;
+        
+        // Animate ion tail opacity
+        ionTailMaterial.opacity = 0.4 + Math.sin(time * 2) * 0.2;
+
+        comaMesh.scale.setScalar(1 + Math.sin(time * 3) * 0.1);
         
         sunGroup.children.forEach(function(child, i) {
             if (i > 5) {

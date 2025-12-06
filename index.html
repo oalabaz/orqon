@@ -788,7 +788,7 @@
                                             
                                         </div>
                                         <div class="cover">
-                                            <video class="lazy-video" muted loop playsinline preload="none" disablePictureInPicture style="width: 100%; height: 100%; object-fit: cover; will-change: transform;" data-src="assets/videos/3.mp4" poster="assets/images/work/preview/2.jpg">
+                                            <video class="lazy-video" muted loop playsinline preload="none" disablePictureInPicture data-src="assets/videos/3.mp4" poster="assets/images/work/preview/2.jpg">
                                             </video>
                                         </div>
 
@@ -817,7 +817,7 @@
                                            
                                         </div>
                                         <div class="cover">
-                                            <video class="lazy-video" muted loop playsinline preload="none" disablePictureInPicture style="width: 100%; height: 100%; object-fit: cover; will-change: transform;" data-src="assets/videos/2.mp4" poster="assets/images/work/preview/4.jpg">
+                                            <video class="lazy-video" muted loop playsinline preload="none" disablePictureInPicture data-src="assets/videos/2.mp4" poster="assets/images/work/preview/4.jpg">
                                             </video>
                                         </div>
 
@@ -846,7 +846,7 @@
                                          
                                         </div>
                                         <div class="cover">
-                                            <video class="lazy-video" muted loop playsinline preload="none" disablePictureInPicture style="width: 100%; height: 100%; object-fit: cover; will-change: transform;" data-src="assets/videos/4.mp4" poster="assets/images/work/preview/4.jpg">
+                                            <video class="lazy-video" muted loop playsinline preload="none" disablePictureInPicture data-src="assets/videos/4.mp4" poster="assets/images/work/preview/4.jpg">
                                             </video>
                                         </div>
 
@@ -875,7 +875,7 @@
                                           
                                         </div>
                                         <div class="cover">
-                                            <video class="lazy-video" muted loop playsinline preload="none" disablePictureInPicture style="width: 100%; height: 100%; object-fit: cover; will-change: transform;" data-src="assets/videos/5.mp4" poster="assets/images/work/preview/5.jpg">
+                                            <video class="lazy-video" muted loop playsinline preload="none" disablePictureInPicture data-src="assets/videos/5.mp4" poster="assets/images/work/preview/5.jpg">
                                             </video>
                                         </div>
 
@@ -1166,22 +1166,65 @@
             document.addEventListener('DOMContentLoaded', function() {
                 const lazyVideos = document.querySelectorAll('.lazy-video');
                 
+                // Set poster as background for smooth placeholder
+                lazyVideos.forEach(video => {
+                    if (video.poster) {
+                        video.style.backgroundImage = `url(${video.poster})`;
+                    }
+                });
+                
                 const videoObserver = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
                         const video = entry.target;
                         if (entry.isIntersecting) {
+                            // Load video only when visible
                             if (!video.src && video.dataset.src) {
                                 video.src = video.dataset.src;
                                 video.load();
+                                
+                                // Add loaded class when video can play
+                                video.addEventListener('canplay', function onCanPlay() {
+                                    video.classList.add('loaded');
+                                    video.removeEventListener('canplay', onCanPlay);
+                                }, { once: true });
                             }
-                            video.play().catch(() => {});
+                            
+                            // Only play if video is loaded
+                            if (video.src) {
+                                video.play().catch(() => {
+                                    video.classList.add('paused');
+                                });
+                            }
                         } else {
+                            // Pause and optionally unload to save memory
                             video.pause();
+                            video.classList.add('paused');
+                            
+                            // Unload video completely when far from viewport to save memory
+                            // Keep the poster background visible
+                            if (video.src && !entry.isIntersecting) {
+                                const rect = video.getBoundingClientRect();
+                                const isVeryFar = rect.bottom < -500 || rect.top > window.innerHeight + 500;
+                                
+                                if (isVeryFar) {
+                                    video.src = '';
+                                    video.load();
+                                    video.classList.remove('loaded');
+                                }
+                            }
                         }
                     });
-                }, { threshold: 0.25 });
+                }, { 
+                    threshold: 0.1,
+                    rootMargin: '100px 0px' // Start loading a bit before visible
+                });
                 
                 lazyVideos.forEach(video => videoObserver.observe(video));
+                
+                // Reduce quality on low-end devices
+                if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) {
+                    document.documentElement.classList.add('low-performance-mode');
+                }
             });
         </script>
 

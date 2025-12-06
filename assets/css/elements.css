@@ -760,6 +760,43 @@
 	display: none;
 }
 
+/* Video placeholder and lazy loading styles */
+.work-grid .item .cover video {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	background-color: #111;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.work-grid .item .cover video.lazy-video {
+	opacity: 0;
+	transition: opacity 0.5s ease;
+}
+
+.work-grid .item .cover video.lazy-video.loaded {
+	opacity: 1;
+}
+
+.work-grid .item .cover video.lazy-video.paused {
+	opacity: 1;
+}
+
+/* Poster placeholder styling */
+.work-grid .item .cover {
+	overflow: hidden;
+}
+
+.work-grid .item .cover video[poster] {
+	background-size: cover;
+	background-position: center;
+}
+
 /** 11. Skill Tags
 *******************************************************************/
 
