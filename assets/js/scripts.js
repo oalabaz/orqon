@@ -31,7 +31,7 @@ if (window.mobileAndTabletCheck()) is_mobile_device = true
 if (isIpadOS()) is_mobile_device = true
 
 // --- ENTRANCE MODAL --- //
-var glowmasterAudio = null;
+var backgroundAudio = null;
 
 function loadEntranceModalPartial() {
 	var container = document.getElementById('entrance-modal-container');
@@ -54,8 +54,9 @@ function loadEntranceModalPartial() {
 function entrance_modal_setup() {
 	var modal = document.getElementById('entrance-modal');
 	var closeBtn = document.getElementById('modal-close');
+	var actionBtn = document.getElementById('entrance-modal-action');
 	var overlay = document.querySelector('.entrance-modal-overlay');
-	glowmasterAudio = document.getElementById('glowmaster-audio');
+	backgroundAudio = document.getElementById('background-audio');
 	
 	if (!modal) return;
 	
@@ -91,24 +92,24 @@ function entrance_modal_setup() {
 				ease: 'power2.in',
 				onComplete: function() {
 					modal.classList.add('hidden');
-					startGlowmasterAudio();
+					startBackgroundAudio();
 				}
 			});
 		} else {
 			modal.classList.add('hidden');
-			startGlowmasterAudio();
+			startBackgroundAudio();
 		}
 		
 		sessionStorage.setItem('entranceModalDismissed', 'true');
 	}
 	
-	function startGlowmasterAudio() {
-		if (!glowmasterAudio) return;
+	function startBackgroundAudio() {
+		if (!backgroundAudio) return;
 		
-		glowmasterAudio.volume = 0.7;
-		glowmasterAudio.play()
+		backgroundAudio.volume = 0.7;
+		backgroundAudio.play()
 			.then(function() {
-				console.log('Glowmaster playback started');
+				console.log('Background audio playback started');
 				// Update audio control UI if it exists
 				var audioBubble = document.getElementById('audio-control-bubble');
 				if (audioBubble) {
@@ -128,6 +129,11 @@ function entrance_modal_setup() {
 	// Close button click
 	if (closeBtn) {
 		closeBtn.addEventListener('click', closeModal);
+	}
+
+	// Action button click
+	if (actionBtn) {
+		actionBtn.addEventListener('click', closeModal);
 	}
 	
 	// Overlay click (click outside)

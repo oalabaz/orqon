@@ -185,7 +185,7 @@ function universal_volume_slider_setup() {
             targetVol = vol;
             drawVolumeSlider(vol);
             
-            var audio = document.getElementById('glowmaster-audio');
+            var audio = document.getElementById('background-audio');
             if (audio) {
                 if (globalAudioFadeInterval) {
                     clearInterval(globalAudioFadeInterval);
@@ -219,7 +219,7 @@ function universal_volume_slider_setup() {
             targetVol = vol;
             drawVolumeSlider(vol);
             
-            var audio = document.getElementById('glowmaster-audio');
+            var audio = document.getElementById('background-audio');
             if (audio) {
                 if (globalAudioFadeInterval) {
                     clearInterval(globalAudioFadeInterval);
@@ -312,7 +312,7 @@ function universal_volume_slider_setup() {
         // Click on icon to toggle mute/unmute
         volumeIcon.addEventListener('click', function(e) {
             e.stopPropagation();
-            var audio = document.getElementById('glowmaster-audio');
+            var audio = document.getElementById('background-audio');
             
             if (globalVolume > 0) {
                 // Mute: store current volume and set to 0
@@ -407,7 +407,7 @@ function universal_volume_slider_setup() {
 		globalVolume = newVol / 100;
 		animateToVolume(newVol);
 		
-		var audio = document.getElementById('glowmaster-audio');
+		var audio = document.getElementById('background-audio');
 		if (audio) {
 			if (globalAudioFadeInterval) {
 				clearInterval(globalAudioFadeInterval);
@@ -420,7 +420,7 @@ function universal_volume_slider_setup() {
 	
 	// Update volume display periodically to reflect live changes (from audio fades)
 	setInterval(function() {
-		var audio = document.getElementById('glowmaster-audio');
+		var audio = document.getElementById('background-audio');
 		if (audio) {
 			var vol = Math.round(audio.volume * 100);
 			var displayedVol = Math.round(globalVolume * 100);

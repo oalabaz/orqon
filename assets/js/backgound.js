@@ -17,12 +17,10 @@ function init_backgrounds() {
 	var isFirstVisit = localStorage.getItem('bg_visited') === null;
 	
 	if (isFirstVisit) {
-		// First visit: set orbit as default and lock it
+		// First visit: set orbit as default but DO NOT lock it
 		option_hero_background_mode = 'orbit';
-		localStorage.setItem('locked_background_mode', 'orbit');
 		localStorage.setItem('bg_visited', 'true');
 		localStorage.setItem('bg_index', '0');
-		lockedBg = 'orbit';
 	} else if (lockedBg) {
 		// Background is locked, use the locked background
 		option_hero_background_mode = lockedBg;
@@ -140,7 +138,7 @@ function init_backgrounds() {
 
 	// 2. News Ticker
 	var newsItems = [
-		{ text: "NEW SINGLE 'STARLIT' OUT NOW ON SOUNDCLOUD - CLICK TO LISTEN", link: "https://soundcloud.com/oalabaz/starlit" },
+		{ text: "NEW SINGLE 'CenterLine' OUT NOW ON SOUNDCLOUD - CLICK TO LISTEN", link: "https://soundcloud.com/oalabaz/centerline" },
 		{ text: "CHECK OUT MY LATEST MEDIUM ARTICLE", link: "https://medium.com/@orkunalabaz/sten-a-thermodynamic-framework-for-solar-routed-space-power-6d0dd8203bd8" }
 	];
 
@@ -231,16 +229,16 @@ function init_backgrounds() {
 	var $audioBubble = $('<div id="audio-control-bubble">' +
 		'<span class="audio-icon ti-control-play"></span>' +
 		'<div class="track-info">' +
-			'<span class="track-name">GLOWMASTER</span>' +
+			'<span class="track-name">ABUNDANCE v4.0</span>' +
 			'<span class="track-artist">ORQON</span>' +
 		'</div>' +
-		'<a href="https://soundcloud.com/oalabaz" target="_blank" class="soundcloud-link ti-soundcloud" title="Listen on SoundCloud"></a>' +
+		'<a href="https://soundcloud.com/oalabaz/abundance-v4-0" target="_blank" class="soundcloud-link ti-soundcloud" title="Listen on SoundCloud"></a>' +
 	'</div>');
 
 	$audioBubble.on('click', function(e) {
 		if ($(e.target).closest('.soundcloud-link').length) return;
 		
-		var audio = document.getElementById('glowmaster-audio');
+		var audio = document.getElementById('background-audio');
 		if (!audio) return;
 		
 		var $icon = $(this).find('.audio-icon');
@@ -261,7 +259,7 @@ function init_backgrounds() {
 	
 	// Update icon when audio ends/pauses externally
 	$(document).ready(function() {
-		var audio = document.getElementById('glowmaster-audio');
+		var audio = document.getElementById('background-audio');
 		if (audio) {
 			audio.addEventListener('ended', function() {
 				$audioBubble.find('.audio-icon').removeClass('ti-control-pause').addClass('ti-control-play');

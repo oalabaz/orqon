@@ -1505,7 +1505,7 @@ function orbitBackground() {
         document.body.classList.add('focus-locked');
         updateFocusButtonState(true);
         
-        var audio = document.getElementById('glowmaster-audio');
+        var audio = document.getElementById('background-audio');
         if (audio) {
             // Clear any existing fade (use global variable from scripts.js)
             if (typeof globalAudioFadeInterval !== 'undefined' && globalAudioFadeInterval) {
@@ -1612,7 +1612,7 @@ function orbitBackground() {
         // Don't resume ambient tween yet - wait for transition to complete
         
         // Fade volume down to 50%
-        var audio = document.getElementById('glowmaster-audio');
+        var audio = document.getElementById('background-audio');
         if (audio && !audio.paused) {
             if (typeof globalAudioFadeInterval !== 'undefined' && globalAudioFadeInterval) {
                 clearInterval(globalAudioFadeInterval);
