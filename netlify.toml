@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  # command = "npm run build" # Commenting out to serve pre-built dist
   publish = "dist"
 
 [dev]
