@@ -55,10 +55,12 @@
         rel="stylesheet">
 
 
-    <!-- STYLESHEETS -->
+    <!-- STYLESHEETS -->
+    <link rel="stylesheet" crossorigin href="/assets/main-DPZRgPJV.css">
+
 
 
-  <link rel="stylesheet" crossorigin href="/assets/main-DPZRgPJV.css">
+  <link rel="stylesheet" crossorigin href="/assets/main-9zv7zHLS.css">
 </head>
 
 <body>
@@ -1114,6 +1116,34 @@
     </div>
     <!-- MAIN -->
 
+    <!-- BOTTOM CONTROLS -->
+    <div id="bottom-controls-wrapper">
+        
+<div id="bg-selector-bubble">
+    <span id="bg-name">Loading...</span>
+    <span id="bg-lock-btn" class="ti-unlock" style="font-size: 14px; padding: 2px;" title="Lock background"></span>
+</div>
+
+        
+<div id="audio-control-bubble">
+    <span class="audio-icon ti-control-play"></span>
+    <div class="track-info">
+        <span class="track-name">Loading...</span>
+        <span class="track-artist">...</span>
+    </div>
+    <a href="#" target="_blank" class="soundcloud-link ti-soundcloud" title="Listen on SoundCloud"></a>
+</div>
+
+        
+<div id="news-ticker" class="ticker">
+    <div class="ticker-mask" style="overflow: hidden; height: 100%; display: flex; align-items: center; width: 100%;">
+        <span id="ticker-text" style="display: inline-block;"></span>
+    </div>
+</div>
+
+    </div>
+    <!-- /BOTTOM CONTROLS -->
+
             <!-- JAVASCRIPT FILES -->
         <script src="assets/js/plugins.js"></script>
         <script src="config.js"></script>
@@ -1132,6 +1162,11 @@
         <script src="assets/js/backgrounds/galaxy.js"></script>
         <script src="assets/js/backgrounds/orbit.js"></script>
         <script src="assets/js/backgound.js"></script>
+
+        <!-- Bottom Controls Scripts -->
+        <script src="assets/js/news-ticker.js"></script>
+        <script src="assets/js/audio-bubble.js"></script>
+        <script src="assets/js/background-selector.js"></script>
 
         <!-- Lazy Video Loading -->
         <script>
