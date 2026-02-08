@@ -1,0 +1,19 @@
+{
+  "name": "orqon.com",
+  "version": "1.0.0",
+  "description": "A personal portfolio website for Orkun Alabaz (Orqon).",
+  "main": "config.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^6.4.1",
+    "vite-plugin-html-inject": "^1.1.2"
+  }
+}

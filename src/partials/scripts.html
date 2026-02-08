@@ -1,0 +1,90 @@
+        <!-- JAVASCRIPT FILES -->
+        <script src="assets/js/plugins.js"></script>
+        <script src="config.js"></script>
+        <script src="assets/js/volume.js"></script>
+        <script src="assets/js/scripts.js"></script>
+        <script src="assets/js/backgrounds/color.js"></script>
+        <script src="assets/js/backgrounds/square.js"></script>
+        <script src="assets/js/backgrounds/asteroids.js"></script>
+        <script src="assets/js/backgrounds/circle.js"></script>
+        <script src="assets/js/backgrounds/lines.js"></script>
+        <script src="assets/js/backgrounds/twisted.js"></script>
+        <script src="assets/js/backgrounds/network.js"></script>
+        <script src="assets/js/backgrounds/knowledge.js"></script>
+        <script src="assets/js/backgrounds/knowledge_core.js"></script>
+        <script src="assets/js/backgrounds/tunnel.js"></script>
+        <script src="assets/js/backgrounds/galaxy.js"></script>
+        <script src="assets/js/backgrounds/orbit.js"></script>
+        <script src="assets/js/backgound.js"></script>
+
+        <!-- Bottom Controls Scripts -->
+        <script src="assets/js/news-ticker.js"></script>
+        <script src="assets/js/audio-bubble.js"></script>
+        <script src="assets/js/background-selector.js"></script>
+
+        <!-- Lazy Video Loading -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const lazyVideos = document.querySelectorAll('.lazy-video');
+                
+                // Set poster as background for smooth placeholder
+                lazyVideos.forEach(video => {
+                    if (video.poster) {
+                        video.style.backgroundImage = `url(${video.poster})`;
+                    }
+                });
+                
+                const videoObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        const video = entry.target;
+                        if (entry.isIntersecting) {
+                            // Load video only when visible
+                            if (!video.src && video.dataset.src) {
+                                video.src = video.dataset.src;
+                                video.load();
+                                
+                                // Add loaded class when video can play
+                                video.addEventListener('canplay', function onCanPlay() {
+                                    video.classList.add('loaded');
+                                    video.removeEventListener('canplay', onCanPlay);
+                                }, { once: true });
+                            }
+                            
+                            // Only play if video is loaded
+                            if (video.src) {
+                                video.play().catch(() => {
+                                    video.classList.add('paused');
+                                });
+                            }
+                        } else {
+                            // Pause and optionally unload to save memory
+                            video.pause();
+                            video.classList.add('paused');
+                            
+                            // Unload video completely when far from viewport to save memory
+                            // Keep the poster background visible
+                            if (video.src && !entry.isIntersecting) {
+                                const rect = video.getBoundingClientRect();
+                                const isVeryFar = rect.bottom < -500 || rect.top > window.innerHeight + 500;
+                                
+                                if (isVeryFar) {
+                                    video.src = '';
+                                    video.load();
+                                    video.classList.remove('loaded');
+                                }
+                            }
+                        }
+                    });
+                }, { 
+                    threshold: 0.1,
+                    rootMargin: '100px 0px' // Start loading a bit before visible
+                });
+                
+                lazyVideos.forEach(video => videoObserver.observe(video));
+                
+                // Reduce quality on low-end devices
+                if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) {
+                    document.documentElement.classList.add('low-performance-mode');
+                }
+            });
+        </script>
