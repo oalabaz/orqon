@@ -1,0 +1,341 @@
+/******************************************************************
+	
+  
+
+	-----------------------------
+	----- TABLE OF CONTENTS -----
+	-----------------------------
+	
+	--  1. Warning Yellow
+    --  2. Future Blue
+	--  3. Dynamic Red
+	--  4. Mystic Orange
+	--  5. Dreamy Turquoise
+	--  6. Polar White
+	--  7. Sweet Purple
+	--  8. Eco Green
+    --  9. Acid Green
+    -- 10. Coated Grey
+ 
+ 
+ ******************************************************************/
+
+/** 1. Warning Yellow
+*******************************************************************/
+
+.colors_warning_yellow .c_cursor_inner,
+.colors_warning_yellow .m-menu-button:hover .burger .line {
+	background: #e3af00 !important;
+}
+
+.colors_warning_yellow .c_cursor_outer .bg,
+.colors_warning_yellow .c_cursor_outer .circle,
+.colors_warning_yellow .m-menu .m-menu-inner .main-items > li a.is-active span:after {
+	border-color: #e3af00 !important;
+}
+
+.colors_warning_yellow ::selection {
+	color: #fdc60c !important;
+}
+
+.colors_warning_yellow ::-moz-selection {
+	color: #fdc60c !important;
+}
+
+.colors_warning_yellow .m-menu .m-menu-inner .main-items li:hover p,
+.colors_warning_yellow .m-menu .m-menu-inner .main-items a.is-active p,
+.colors_warning_yellow .m-menu .m-menu-inner .social-items a:hover span,
+.colors_warning_yellow .glightbox-container .gbtn:hover span,
+.colors_warning_yellow .m-menu .m-menu-inner .main-items > li a.is-active span,
+.colors_warning_yellow .m-menu .m-menu-inner .main-items > li a:hover span,
+.colors_warning_yellow .options-panel .close-button:hover {
+	color: #fdc60c !important;
+}
+
+/** 2. Future Blue
+*******************************************************************/
+
+.colors_future_blue .c_cursor_inner,
+.colors_future_blue .m-menu-button:hover .burger .line {
+	background: #1338f3 !important;
+}
+
+.colors_future_blue .c_cursor_outer .bg,
+.colors_future_blue .c_cursor_outer .circle,
+.colors_future_blue .m-menu .m-menu-inner .main-items > li a.is-active span:after {
+	border-color: #1338f3 !important;
+}
+
+.colors_future_blue ::selection {
+	color: #1338f3 !important;
+}
+
+.colors_future_blue ::-moz-selection {
+	color: #1338f3 !important;
+}
+
+.colors_future_blue .m-menu .m-menu-inner .main-items li:hover p,
+.colors_future_blue .m-menu .m-menu-inner .main-items a.is-active p,
+.colors_future_blue .m-menu .m-menu-inner .social-items a:hover span,
+.colors_future_blue .glightbox-container .gbtn:hover span,
+.colors_future_blue .m-menu .m-menu-inner .main-items > li a.is-active span,
+.colors_future_blue .m-menu .m-menu-inner .main-items > li a:hover span,
+.colors_future_blue .options-panel .close-button:hover {
+	color: #1338f3 !important;
+}
+
+/** 3. Dynamic Red
+*******************************************************************/
+
+.colors_dynamic_red .c_cursor_inner,
+.colors_dynamic_red .m-menu-button:hover .burger .line {
+	background: #f31313 !important;
+}
+
+.colors_dynamic_red .c_cursor_outer .bg,
+.colors_dynamic_red .c_cursor_outer .circle,
+.colors_dynamic_red .m-menu .m-menu-inner .main-items > li a.is-active span:after {
+	border-color: #f31313 !important;
+}
+
+.colors_dynamic_red ::selection {
+	color: #f31313 !important;
+}
+
+.colors_dynamic_red ::-moz-selection {
+	color: #f31313 !important;
+}
+
+.colors_dynamic_red .m-menu .m-menu-inner .main-items li:hover p,
+.colors_dynamic_red .m-menu .m-menu-inner .main-items a.is-active p,
+.colors_dynamic_red .m-menu .m-menu-inner .social-items a:hover span,
+.colors_dynamic_red .glightbox-container .gbtn:hover span,
+.colors_dynamic_red .m-menu .m-menu-inner .main-items > li a.is-active span,
+.colors_dynamic_red .m-menu .m-menu-inner .main-items > li a:hover span,
+.colors_dynamic_red .options-panel .close-button:hover {
+	color: #f31313 !important;
+}
+
+/** 4. Mystic Orange
+*******************************************************************/
+
+.colors_mystic_orange .c_cursor_inner,
+.colors_mystic_orange .m-menu-button:hover .burger .line {
+	background: #ff6f1e !important;
+}
+
+.colors_mystic_orange .c_cursor_outer .bg,
+.colors_mystic_orange .c_cursor_outer .circle,
+.colors_mystic_orange .m-menu .m-menu-inner .main-items > li a.is-active span:after {
+	border-color: #ff6f1e !important;
+}
+
+.colors_mystic_orange ::selection {
+	color: #ff6f1e !important;
+}
+
+.colors_mystic_orange ::-moz-selection {
+	color: #ff6f1e !important;
+}
+
+.colors_mystic_orange .m-menu .m-menu-inner .main-items li:hover p,
+.colors_mystic_orange .m-menu .m-menu-inner .main-items a.is-active p,
+.colors_mystic_orange .m-menu .m-menu-inner .social-items a:hover span,
+.colors_mystic_orange .glightbox-container .gbtn:hover span,
+.colors_mystic_orange .m-menu .m-menu-inner .main-items > li a.is-active span,
+.colors_mystic_orange .m-menu .m-menu-inner .main-items > li a:hover span,
+.colors_mystic_orange .options-panel .close-button:hover {
+	color: #ff6f1e !important;
+}
+
+/** 5. Dreamy Turquoise
+*******************************************************************/
+
+.colors_dreamy_turquoise .c_cursor_inner,
+.colors_dreamy_turquoise .m-menu-button:hover .burger .line {
+	background: #0bc5fc !important;
+}
+
+.colors_dreamy_turquoise .c_cursor_outer .bg,
+.colors_dreamy_turquoise .c_cursor_outer .circle,
+.colors_dreamy_turquoise .m-menu .m-menu-inner .main-items > li a.is-active span:after {
+	border-color: #0bc5fc !important;
+}
+
+.colors_dreamy_turquoise ::selection {
+	color: #0bc5fc !important;
+}
+
+.colors_dreamy_turquoise ::-moz-selection {
+	color: #0bc5fc !important;
+}
+
+.colors_dreamy_turquoise .m-menu .m-menu-inner .main-items li:hover p,
+.colors_dreamy_turquoise .m-menu .m-menu-inner .main-items a.is-active p,
+.colors_dreamy_turquoise .m-menu .m-menu-inner .social-items a:hover span,
+.colors_dreamy_turquoise .glightbox-container .gbtn:hover span,
+.colors_dreamy_turquoise .m-menu .m-menu-inner .main-items > li a.is-active span,
+.colors_dreamy_turquoise .m-menu .m-menu-inner .main-items > li a:hover span,
+.colors_dreamy_turquoise .options-panel .close-button:hover {
+	color: #0bc5fc !important;
+}
+
+/** 6. Polar White
+*******************************************************************/
+
+.colors_polar_white .c_cursor_inner,
+.colors_polar_white .m-menu-button:hover .burger .line {
+	background: #fff !important;
+}
+
+.colors_polar_white .c_cursor_outer .bg,
+.colors_polar_white .c_cursor_outer .circle,
+.colors_polar_white .m-menu .m-menu-inner .main-items > li a.is-active span:after {
+	border-color: #fff !important;
+}
+
+.colors_polar_white ::selection {
+	color: #fff !important;
+}
+
+.colors_polar_white ::-moz-selection {
+	color: #fff !important;
+}
+
+.colors_polar_white .m-menu .m-menu-inner .main-items li:hover p,
+.colors_polar_white .m-menu .m-menu-inner .main-items a.is-active p,
+.colors_polar_white .m-menu .m-menu-inner .social-items a:hover span,
+.colors_polar_white .glightbox-container .gbtn:hover span,
+.colors_polar_white .m-menu .m-menu-inner .main-items > li a.is-active span,
+.colors_polar_white .m-menu .m-menu-inner .main-items > li a:hover span,
+.colors_polar_white .options-panel .close-button:hover {
+	color: #fff !important;
+}
+
+/** 7. Sweet Purple
+*******************************************************************/
+
+.colors_sweet_purple .c_cursor_inner,
+.colors_sweet_purple .m-menu-button:hover .burger .line {
+	background: #ff99cc !important;
+}
+
+.colors_sweet_purple .c_cursor_outer .bg,
+.colors_sweet_purple .c_cursor_outer .circle,
+.colors_sweet_purple .m-menu .m-menu-inner .main-items > li a.is-active span:after {
+	border-color: #ff99cc !important;
+}
+
+.colors_sweet_purple ::selection {
+	color: #ff99cc !important;
+}
+
+.colors_sweet_purple ::-moz-selection {
+	color: #ff99cc !important;
+}
+
+.colors_sweet_purple .m-menu .m-menu-inner .main-items li:hover p,
+.colors_sweet_purple .m-menu .m-menu-inner .main-items a.is-active p,
+.colors_sweet_purple .m-menu .m-menu-inner .social-items a:hover span,
+.colors_sweet_purple .glightbox-container .gbtn:hover span,
+.colors_sweet_purple .m-menu .m-menu-inner .main-items > li a.is-active span,
+.colors_sweet_purple .m-menu .m-menu-inner .main-items > li a:hover span,
+.colors_sweet_purple .options-panel .close-button:hover {
+	color: #ff99cc !important;
+}
+
+/** 8. Eco Green
+*******************************************************************/
+
+.colors_eco_green .c_cursor_inner,
+.colors_eco_green .m-menu-button:hover .burger .line {
+	background: #0dd02e !important;
+}
+
+.colors_eco_green .c_cursor_outer .bg,
+.colors_eco_green .c_cursor_outer .circle,
+.colors_eco_green .m-menu .m-menu-inner .main-items > li a.is-active span:after {
+	border-color: #0dd02e !important;
+}
+
+.colors_eco_green ::selection {
+	color: #0dd02e !important;
+}
+
+.colors_eco_green ::-moz-selection {
+	color: #0dd02e !important;
+}
+
+.colors_eco_green .m-menu .m-menu-inner .main-items li:hover p,
+.colors_eco_green .m-menu .m-menu-inner .main-items a.is-active p,
+.colors_eco_green .m-menu .m-menu-inner .social-items a:hover span,
+.colors_eco_green .glightbox-container .gbtn:hover span,
+.colors_eco_green .m-menu .m-menu-inner .main-items > li a.is-active span,
+.colors_eco_green .m-menu .m-menu-inner .main-items > li a:hover span,
+.colors_eco_green .options-panel .close-button:hover {
+	color: #0dd02e !important;
+}
+
+/** 9. Acid Green
+*******************************************************************/
+
+.colors_acid_green .c_cursor_inner,
+.colors_acid_green .m-menu-button:hover .burger .line {
+	background: #cceb00 !important;
+}
+
+.colors_acid_green .c_cursor_outer .bg,
+.colors_acid_green .c_cursor_outer .circle,
+.colors_acid_green .m-menu .m-menu-inner .main-items > li a.is-active span:after {
+	border-color: #cceb00 !important;
+}
+
+.colors_acid_green ::selection {
+	color: #cceb00 !important;
+}
+
+.colors_acid_green ::-moz-selection {
+	color: #cceb00 !important;
+}
+
+.colors_acid_green .m-menu .m-menu-inner .main-items li:hover p,
+.colors_acid_green .m-menu .m-menu-inner .main-items a.is-active p,
+.colors_acid_green .m-menu .m-menu-inner .social-items a:hover span,
+.colors_acid_green .glightbox-container .gbtn:hover span,
+.colors_acid_green .m-menu .m-menu-inner .main-items > li a.is-active span,
+.colors_acid_green .m-menu .m-menu-inner .main-items > li a:hover span,
+.colors_acid_green .options-panel .close-button:hover {
+	color: #cceb00 !important;
+}
+
+/** 10. Coated Grey
+*******************************************************************/
+
+.colors_coated_grey .c_cursor_inner,
+.colors_coated_grey .m-menu-button:hover .burger .line {
+	background: #c0c0c0 !important;
+}
+
+.colors_coated_grey .c_cursor_outer .bg,
+.colors_coated_grey .c_cursor_outer .circle,
+.colors_coated_grey .m-menu .m-menu-inner .main-items > li a.is-active span:after {
+	border-color: #c0c0c0 !important;
+}
+
+.colors_coated_grey ::selection {
+	color: #c0c0c0 !important;
+}
+
+.colors_coated_grey ::-moz-selection {
+	color: #c0c0c0 !important;
+}
+
+.colors_coated_grey .m-menu .m-menu-inner .main-items li:hover p,
+.colors_coated_grey .m-menu .m-menu-inner .main-items a.is-active p,
+.colors_coated_grey .m-menu .m-menu-inner .social-items a:hover span,
+.colors_coated_grey .glightbox-container .gbtn:hover span,
+.colors_coated_grey .m-menu .m-menu-inner .main-items > li a.is-active span,
+.colors_coated_grey .m-menu .m-menu-inner .main-items > li a:hover span,
+.colors_coated_grey .options-panel .close-button:hover {
+	color: #c0c0c0 !important;
+}
